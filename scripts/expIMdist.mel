@@ -1,0 +1,57 @@
+/* global proc expIMdist(string $objs[], string $pathfile)
+
+	Exports the per frame inter-object distances between n number of
+	objects to a given path.
+	
+    Inputs:
+    	$objs[] = list of objects
+    	$pathfile = full path and file name to write the data to
+    	
+    	 Written by David Baier  08/22/2016
+ */
+global proc expIMdist(string $objs[], string $pathfile)
+{
+	// if pathfile is {} then open browser
+	if (size($pathfile) == 0)
+    {
+    	string $pointfiles[] = getXrommPointfiles("Save as",0,"CSV files (*.csv)",1);
+	    $pathfile = $pointfiles[0]; 
+    }
+    // write a blank top left cell
+    $fileId = `fopen $pathfile "w"`;
+    fprint $fileId ",";
+    // write the header row
+    for ($i = 0; $i < size($objs); $i++)
+    {
+        if ($i != (size($objs)-1))
+        {
+            fprint $fileId ($objs[$i]+",");
+        }
+        else
+        {
+             fprint $fileId ($objs[$i]+"\n");
+        }
+    }
+    // write the data
+    vector $o1; vector $o2; float $val;
+    for ($i = 0; $i < size($objs); $i++)
+    {
+    fprint $fileId ($objs[$i]+",");
+        for ($j = 0; $j < size($objs); $j++)
+        { 
+            $o1 = `xform -ws -q -t $objs[$i]`;
+            $o2 = `xform -ws -q -t $objs[$j]`;
+            $val = mag($o1-$o2);
+            fprint $fileId (string($val));
+            if ($j != (size($objs) -1))
+            {
+                fprint $fileId ",";
+            }
+         }
+         if ($i != (size($objs)-1))
+         {
+             fprint $fileId "\n";
+         }          
+    }  
+    fclose $fileId;
+}

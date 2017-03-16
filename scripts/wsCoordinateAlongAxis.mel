@@ -1,0 +1,30 @@
+/* global proc vector wsCoordinateAlongAxis(string $obj, vector $c)
+    
+    Inputs: $obj = object to get coordinate system from
+            $c = ws vector to get coordinate of in obj coordinate space
+
+    calculate the worldspace coordinate of a point within $obj local coordinate system
+
+   for example: if $c = <<0,0,1>>, the output vector will be xyz coordinates of a point 1 unit
+   along the z direction of $obj
+   called by xcamAngle
+   
+   Dave Baier 5/9/2008
+   3/13/2014 cp_ParseRot updated name to mmTor - Baier
+*/
+
+global proc vector wsCoordinateAlongAxis(string $obj, vector $c)
+{
+    // get rotation matrix and coordinate of object
+    float $m[] = `xform -ws -q -m $obj`;
+    matrix $rm[3][3] = `mmTor($m)`;
+    vector $t = `xform -ws -q -t $obj`;
+    
+    // calculate coordinate of $c in the inertial space of $obj
+    $rm = transpose($rm);
+    vector $out = $c*$rm;
+    
+    // add the inertial translation to get worldspace position of $c
+    vector $out = $out + $t;
+    return $out;
+}

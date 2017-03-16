@@ -1,0 +1,11 @@
+global proc float meana(float $arr[])
+{
+    float $mean;
+    float $sum;
+    for ($a in $arr)
+    {
+        $sum = $sum+$a;
+    }
+    $mean = $sum/float(size($arr));
+    return $mean;
+}

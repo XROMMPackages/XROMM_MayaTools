@@ -1,0 +1,7 @@
+global proc vector mmTot(float $xfm[])
+// Returns a xyz translation vector from a 16 element array input
+{
+	vector $t = <<($xfm[12]),($xfm[13]),($xfm[14])>>;
+	
+	return $t;
+}

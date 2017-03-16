@@ -1,0 +1,22 @@
+/* global proc matrix adj(matrix $aMatrix, int $size)
+
+    Extracted from matrixPlayground.mel  v1.2  (12 Jan 2001) by Bryan Ewert.
+    Freeware available at https://www.creativecrash.com/
+  
+*/
+
+global proc matrix inv(matrix $aMatrix, int $size)
+{
+	matrix $iMatrix[4][4] = << 0, 0, 0, 0;  0, 0, 0, 0;  0, 0, 0, 0;  0, 0, 0, 0 >>;
+	
+	float $determinant = det( $aMatrix, $size );
+	
+	if ( $determinant != 0.0 )
+	{
+		float $scalarVal = (1 / det( $aMatrix, $size ));
+		matrix $adjMat[4][4] = adj($aMatrix, $size);
+		$iMatrix = ($scalarVal*$adjMat);
+	}
+	
+	return $iMatrix;
+}

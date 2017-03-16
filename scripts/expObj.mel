@@ -1,0 +1,54 @@
+global proc expObj(string $objs[], string $pointfiles[])
+{
+	/* exports xyz global coordinates of selected vertices 
+	to do = single export for vertices and connections don't make the user 
+	select vertices or faces*/
+
+	// get obj list
+	if (size($objs) == 0){$objs = `ls -sl`;}
+	if (size($pointfiles) == 0)
+	    {$pointfiles = getXrommPointfiles("Save as",0,"OBJ files (*.obj)",1);}
+	
+	float $curvtx[]; string $curface[]; string $curIdx[]; int $fileId;
+	
+	for ($i = 0; $i < size($objs); $i++)
+	{
+	    print $pointfiles[0];
+        $fileId = `fopen $pointfiles[0] "w"`;
+        //count the vertices and export
+        fprint $fileId "# exported from XROMM maya tools for use with skelProperties\n";
+        fprint $fileId "g Polygonal_Model_1\n";
+                        
+        int $count[] = `polyEvaluate -v $objs[0]`;
+        
+        fprint $fileId ("# Number of geometric vertices: "+ string($count[0])+"\n");
+    
+        for ($i = 0; $i<$count[0]; $i++)
+        {
+            $curvtx = `xform -q -ws -t ($objs[0]+".vtx["+$i+"]")`;
+            string $vtxStr = floatArrayToString($curvtx," ");
+            fprint $fileId ("v "+$vtxStr);
+            fprint $fileId "\n";
+        }
+    
+        int $count[] = `polyEvaluate -f $objs[0]`;
+        
+        fprint $fileId "# Number of texture vertex coordinates: 0\n";
+        fprint $fileId "g Polygonal_Model_1 Triangles_0\n";
+        fprint $fileId ("# Number of triangles: "+ string($count[0])+"\n");
+        
+        for ($i = 0; $i<$count[0]; $i++)
+        {
+            $curface = `polyInfo -fv ($objs[0]+".f["+$i+"]")`;
+            tokenizeList($curface[0],$curIdx);
+            $curIdx[2] = string(int($curIdx[2])+1);
+            $curIdx[3] = string(int($curIdx[3])+1);
+            $curIdx[4] = string(int($curIdx[4])+1);
+            fprint $fileId ("f "+$curIdx[2]+" "+$curIdx[3]+" "+$curIdx[4]);
+            fprint $fileId "\n";
+        }
+        fprint $fileId "# end of file";
+        fclose $fileId;
+        print ("\/\/export of "+$pointfiles[0]+" complete\n");	
+    }
+}

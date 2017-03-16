@@ -1,0 +1,13 @@
+/* global proc string createGiantLocator(string $name)
+
+   obsolete in XROMM_MayaTools_2_1_8
+
+   retained for backwardCompatability
+   Written by David Baier
+*/
+global proc string createGiantLocator(string $name)
+{
+    axesCreateUI;
+    string $output = "Newer version of Shelf tools is available. Updating your shelf will provide greater control over axes creation";
+    return $output;
+}

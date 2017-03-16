@@ -1,0 +1,33 @@
+/*
+    Configure Maya to make XROMM easier.
+    
+    **** RUN SCRIPT AND THEN OPEN NEW SCENE FOR ALL CHANGES TO TAKE EFFECT ****
+    
+    S. Gatesy 05/18/16
+
+*/
+
+global proc XROMMmayaConfig()
+{
+//change settings to Z-up world
+    setUpAxis "z";
+
+//set perspective cameras to tumble on object
+	tumbleCtx -e -objectTumble true tumbleContext;
+
+//hide ViewCube
+	viewManip -visible off; optionVar -iv viewCubeShowCube 0;
+
+//change to background color to to remove gradient
+	displayPref -displayGradient false;
+
+//set Playback to all cameras, continuous looping
+	playbackOptions -v "all";
+	playbackOptions -loop "continuous";
+
+//set Maya to native operating system dialog interface
+	optionVar -iv FileDialogStyle 1;
+	
+// if the icon bars are visible (collapseIconBarsInPanels = 0),  turn them off
+ if (!`optionVar -q collapseIconBarsInPanels`){toggleModelEditorBarsInAllPanels 1;};
+}

@@ -1,0 +1,79 @@
+/* global proc vertAvg2()
+
+   Separates polygon into unconnected components and calculates the centroid of each isolated object.  
+   Written by David Baier 6/2015
+*/
+global proc vertAvg2()
+{
+	if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;  
+
+	int $height = 150;
+	int $width = 320;
+
+	string $mainWindow = `window -title "Vertex Average" -menuBar true
+		-maximizeButton false -minimizeButton true -sizeable false
+		-resizeToFitChildren false vertAvgWindow`;
+		
+	frameLayout -label "Separate Mesh and Calculate Centroid" -height $height -width $width -mw 5 -mh 5;
+		columnLayout;
+		columnLayout;
+		text " ";
+		text "Select the Marker Mesh then Click.";
+		text " ";
+			
+		button	-label "Calculate Centroid" -w ($width-20) -command splitMarkers;
+		button	-label "Close" -w ($width-20) closeButton;
+		button -edit -command "deleteUI vertAvgWindow; selectMode -o" closeButton;
+
+	showWindow $mainWindow;
+	window -e -h $height -w $width vertAvgWindow;
+}
+global proc splitMarkers()
+{
+	if (size(`ls -sl`) == 0)
+	{confirmDialog -t "Error" -m "Nothing selected." -b "OK";}
+	else
+	{
+		string $selobj[] = `ls -sl`;
+		string $gn; string $c[];
+		for ($s in $selobj)
+		{
+			int $numPolys[] = `polyEvaluate -shell $s`;
+			if ($numPolys[0] > 1)
+				{
+					string $newPolys[] = `polySeparate -ch 0 -n $s $s`;
+					for ($n in $newPolys){$c[size($c)] = vAvg2($n);}
+					group -n ($s+"vAvg2Group") $c;
+					//group -n ($s+"MeshGroup") $newPolys;
+				}
+				else
+				{
+					$c[size($c)] = vAvg2($s);
+				}
+		}
+		select ($s+"vAvg2Group") ;
+		allViewFit(0);
+	}
+}
+			
+	
+global proc string vAvg2(string $obj)
+{
+	// get number of vertices
+	int $count[] = `polyEvaluate -v $obj`;
+	vector $sum = {0.0,0.0,0.0};
+	vector $curVtx;
+	
+	for ($i = 0; $i<$count[0]; $i++)
+	{
+		$curVtx = `xform -q -ws -t ($obj+".vtx["+$i+"]")`;
+		$sum = ($sum + $curVtx);
+	}
+	
+	vector $avg = $sum/$count[0];
+	
+	//create and place a locator
+	string $truename[] = `spaceLocator -n ($obj+"vAvg2")`;
+	xform -ws -t ($avg.x) ($avg.y) ($avg.z) $truename[0];
+	return $truename[0];
+}

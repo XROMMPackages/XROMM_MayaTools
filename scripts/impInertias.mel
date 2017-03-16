@@ -1,0 +1,55 @@
+/* global proc string[] impInertias(string $fileList[],float $size, string $style, int $singleObject)
+
+    Inputs: $fileList = list of .csv files. Each file is 1x16 array representing a maya-format
+            transformation matrix.
+            
+    Output: list of created objects
+    
+    This was created to work with skelProperties Matlab procedure  that calculates the 
+    inertial axes of mesh models and exports them as a single row maya-matrix format file
+    Written By David Baier
+*/
+global proc string[] impInertias(string $fileList[],float $size, string $style, int $singleObject)
+{
+	string $createdInertias[];
+	if (size($fileList) == 0)
+	    {$fileList = getXrommPointfiles("import", 4, "CSV files (*.csv)",1);}
+	if ($size <= 0){$size = 5;}
+    if ($style != "hemi" || $style != "full"){$style = "hemi";}
+    if ($singleObject != 0 || $singleObject != 1){$singleObject = 1;}
+	
+	// in case the user hit cancel
+	if (size($fileList) != 0)
+	{
+		for ($file in $fileList)
+		{
+			if (`filetest -s $file`)
+			{
+				string $inertiaName = basename($file,".csv");
+				$inertiaName = cleanStrForObjectName($inertiaName);
+				
+				$inertiaName = axesCreate($inertiaName, $size, $style, $singleObject);
+				$fileId = fopen($file, "r");
+				string $line = `fgetline $fileId`;
+				fclose $fileId;
+				
+				$line = substituteAllString($line,","," ");
+				eval("xform -ws -m "+$line+" "+$inertiaName);
+				
+				// add the original file name as an attribute, so the user can still track provenience 
+				string $origFileName = basename($file,"");
+				addAttr -ln "originalFile" -sn "of" -at "enum" -en ($origFileName+":"+$origFileName) $inertiaName;
+				setAttr -e-channelBox true ($inertiaName+".of");
+				
+				$createdInertias[size($createdInertias)] = $inertiaName;
+				print ("imported "+$file+"\n");
+			}
+			else
+			{
+				print ("Bad file name. Skipping: "+$file+"\n");
+			}	
+		}   
+    }
+    return $createdInertias;
+}
+

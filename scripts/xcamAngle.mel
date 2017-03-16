@@ -1,0 +1,31 @@
+/* global proc float xcamAngle() 
+
+    calculates the angle between the image intensifiers (not the reconstructed cameras)
+    Must have two cameras selected
+    
+    David Baier 5/9/2008
+    last updated - 5/9/2008
+*/
+global proc float xcamAngle()
+{
+    string $cams[] = `ls -sl`;
+    if (size($cams) != 2)
+    {
+        print "Exactly two cameras must be selected";
+    }
+    else
+    {
+        vector $c1 =`xform -ws -q -t $cams[0]`;
+        vector $c2 =`xform -ws -q -t $cams[1]`;
+        vector $p1 = wsCoordinateAlongAxis(($cams[0]),<<0,0,-1>>);
+        vector $p2 = wsCoordinateAlongAxis(($cams[1]),<<0,0,-1>>);
+        
+        vector $c1t = $c1-$p1;
+        vector $c2t = $c2-$p2;
+        
+        $ang = angle($c1t,$c2t);
+        $ang = rad_to_deg($ang);
+        
+        return $ang;
+    }
+}

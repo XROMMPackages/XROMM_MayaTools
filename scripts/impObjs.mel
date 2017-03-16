@@ -1,0 +1,70 @@
+/* impObjs(string $fileList[], string $scaleChoice)
+
+    Input: $fileList = full path and file names
+            $scaleChoice = "Yes" for scale mesh by 1/10, "No" for don't scale.
+            
+    If empty inputs are sent (as with impdata button) - GUIs will pop up for
+    user to choose files and/or to choose yes or no for scale by 1/10.
+    Scaling by 1/10 is the norm for XROMM because maya interprets obj files as centimeters and 
+    they import 10x too large (this appears to be regardless of units set in maya prefs). Mesh
+    models for XROMM are always in mm and need to be scaled.
+    
+    Imports .obj mesh files.
+    Written By David Baier
+*/
+global proc string[] impObjs(string $fileList[], string $scaleChoice)
+{ 
+	string $createdObjs[];
+	string $objname;
+	if (size($fileList) == 0)
+	    {$fileList = getXrommPointfiles("import .obj files",4,"OBJ files (*.obj)",1);}
+
+	// in case the user hit cancel
+	if (size($fileList) != 0)
+	{
+		if (size($scaleChoice) == 0)
+		{
+			$scaleChoice = `confirmDialog -title "Scale objs?" 
+				-message "Do you want to scale the .obj meshes by 1/10th?"
+				-button "Yes" -button "No" -defaultButton "Yes" -cancelButton "No" -dismissString "No"`;
+		}
+
+		int $seWarn = `scriptEditorInfo -q -suppressWarnings`;
+		if (!$seWarn) {scriptEditorInfo -e -suppressWarnings true;}
+		string $p; int $idx; string $psname;
+	
+		for ($file in $fileList)
+		{ 
+		   
+			if (`filetest -s $file`)
+			{
+				// create a name for the new object and make sure its valid
+				string $objname = basename($file,".obj");
+				$objname = cleanStrForObjectName($objname);
+				string $newObjs[] = `file -import -type "OBJ" -ra  0 -rnn -options "mo=0" -loadReferenceDepth "all" $file`;
+				string $justTforms[] = `ls -tr $newObjs`;
+				$objname = `rename  $justTforms[0] $objname`;
+				// scale by 1/10 if user said to. Maya imports all obj files as cm units even if maya is set to millimeters
+				if ($scaleChoice == "Yes")
+				{
+					scale 0.1 0.1 0.1 $objname;
+					makeIdentity -apply true -t 0 -r 0 -s 1 -n 0 -pn 1 $objname;	
+				}
+				// add the original file name as an attribute, so the user can still track provenience 
+				string $origFileName = basename($file,"");
+				addAttr -ln "originalFile" -sn "of" -at "enum" -en ($origFileName+":"+$origFileName) $objname;
+				setAttr -e-channelBox true ($objname+".of");
+				$createdObjs[size($createdObjs)] = $objname;
+				print ("imported "+$file+"\n");
+			}
+			else
+			{
+				print ("Bad file name. Skipping: "+$file+"\n");
+			}
+		}
+		allViewFit(1);
+		scriptEditorInfo -e -suppressWarnings $seWarn;
+    }
+    return $createdObjs;
+}
+

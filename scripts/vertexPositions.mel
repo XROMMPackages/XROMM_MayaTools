@@ -1,0 +1,25 @@
+/* global proc vector[] vertexPositions(string $mesh)
+
+    Input: $mesh = mesh name.
+    Output: $conns[] = vector array of the vertex xyz coordinates for each face of the mesh
+    
+    Written by David Baier 
+*/
+global proc vector[] vertexPositions(string $mesh)
+{
+	/* gets the vertices of a mesh*/
+	vector $pts[];
+	
+	// if mesh name is given use the first selected object
+	if (size($mesh)== 0) {string $objs[] = `ls -sl`;$mesh = $objs[0];}
+	
+	// number of vertices
+	int $numvtx[] = `polyEvaluate -v $mesh`;
+	
+	// loop through the vertices	
+	for ($i = 0; $i<$numvtx[0]; $i++)
+		{$pts[size($pts)] = `xform -q -ws -t ($mesh+".vtx["+$i+"]")`;}
+	
+	return $pts;
+}
+

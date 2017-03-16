@@ -1,0 +1,16 @@
+global proc string[] substrMatchFilesInDir(string $stringsToMatch, string $dir)
+{
+    string $matchingFiles;
+    string $fileList[] = `getFileList -folder ($dir+"/") -filespec "*.*"`;
+	
+	for ($f in $fileList)
+    {
+        for ($s in $stringsToMatch)
+        {
+            if (`gmatch $f $s` && !`gmatch $f "*Removed*.obj"`)
+            {
+                $matchingFiles[size($matchingFiles)] = ($dir+"/"+$f);
+            }
+        }
+    }
+}

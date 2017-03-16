@@ -1,0 +1,9 @@
+global proc matrix tmTorm(matrix $xfm)
+// Returns a 3x3 rotation matrix from a 4x4 transformation matrix input
+{
+	matrix $r[3][3] = <<($xfm[0][0]),($xfm[0][1]),($xfm[0][2]);
+				        ($xfm[1][0]),($xfm[1][1]),($xfm[1][1]);
+				        ($xfm[2][0]),($xfm[2][1]),($xfm[2][1])>>;
+	
+	return $r;
+}

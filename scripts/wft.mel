@@ -1,0 +1,13 @@
+/* global proc wft()
+    toggle between full and none on Wireframe on Shaded preference
+    stands for wireframe toggle
+    Written by David Baier 
+*/
+global proc wft()
+{
+    string $disptype = `displayPref -q -wsa`;
+    
+    if ($disptype == "full"){displayPref -wsa "none";}
+    else if ($disptype == "reduced"){displayPref -wsa "none";}
+    else if ($disptype == "none"){displayPref -wsa "full";}
+}

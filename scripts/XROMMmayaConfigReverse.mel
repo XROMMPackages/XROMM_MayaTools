@@ -1,0 +1,32 @@
+/*
+    Reverses XROMMmayaConfig
+    
+    **** RUN SCRIPT AND THEN OPEN NEW SCENE FOR ALL CHANGES TO TAKE EFFECT ****
+    
+    S. Gatesy 05/18/16
+
+*/
+global proc XROMMmayaConfigReverse()
+{
+//change settings to Z-up world
+	setUpAxis "y";
+
+//set perspective cameras to tumble on object
+	tumbleCtx -e -objectTumble false tumbleContext;
+
+//hide ViewCube
+	viewManip -visible on; optionVar -iv viewCubeShowCube 1;
+
+//change to background color to to remove gradient
+	displayPref -displayGradient true;
+
+//set Playback to all cameras, continuous looping
+	playbackOptions -v "active";
+	playbackOptions -loop "once";
+
+//set Maya to native operating system dialog interface
+	optionVar -iv FileDialogStyle 1;
+	
+// if the icon bars are visible (collapseIconBarsInPanels = 0),  turn them off
+ if (`optionVar -q collapseIconBarsInPanels`){toggleModelEditorBarsInAllPanels 0;};
+}

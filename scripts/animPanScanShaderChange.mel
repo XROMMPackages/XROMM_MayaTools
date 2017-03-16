@@ -1,0 +1,40 @@
+/* global proc animPanScanShaderChange()
+    change the shader affected by transparency with animPanScan panscan   
+    Written by David Baier
+    7/28/16 - removed "set" button. just doubleclick the shader name instead. D. Baier
+*/
+global proc animPanScanShaderChange()
+{
+	string $gvars[] = `env`;
+	if (!stringArrayContains("$gPanScanShader", $gvars))
+	{global string $gPanScanShader = "lambert1";}
+
+	if (`window -exists psdrChangeShaderWindow` == true) deleteUI psdrChangeShaderWindow; 
+	int $width = 300;
+	
+	string $mainWindow = `window -title "PanScan Shader Chooser" -menuBar true
+		-maximizeButton false -minimizeButton true -sizeable true
+		-resizeToFitChildren false -w $width psdrChangeShaderWindow`;
+	columnLayout;
+		text " ";
+		textScrollList -allowMultiSelection 0 
+		    -w ($width-40) -nr 15 -sc setPSDRShader -dcc setPSDRShader shaderList;
+		setParent..;
+	showWindow $mainWindow;
+	
+	string $shaders[] = `ls -mat`;
+	for($s in $shaders)
+		{textScrollList -edit -append $s shaderList;}
+	global string $gPanScanShader;
+	textScrollList -edit -si $gPanScanShader shaderList;
+	
+}
+
+global proc setPSDRShader()
+{
+	string $newshader[] = `textScrollList -q -si  shaderList`;
+	global string $gPanScanShader;
+	$gPanScanShader = $newshader[0];
+}
+
+

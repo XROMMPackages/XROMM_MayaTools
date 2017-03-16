@@ -1,0 +1,10 @@
+global proc matrix mmTotm(float $xfm[])
+// Returns a 4x4 transformation matrix from a 16 element array input
+{
+	matrix $tf[4][4] = <<($xfm[0]),($xfm[4]),($xfm[8]),($xfm[12]);
+				($xfm[1]),($xfm[5]),($xfm[9]),($xfm[13]);
+				($xfm[2]),($xfm[6]),($xfm[10]),($xfm[14]);
+				($xfm[3]),($xfm[7]),($xfm[11]),($xfm[15])>>;
+	
+	return $tf;
+}

@@ -1,0 +1,203 @@
+/* setpath 
+    GUI to allow user to add and remove paths to the script path
+    The gui opens/reads or creates the Maya.env file and then rewrites the 
+    With added or removed paths chosen by the user.
+    
+    requires fileread.mel
+    
+    You may not remove Maya default paths
+    
+    Currently only tested on Windows
+    Written by David Baier 7/31/2012 
+    7/29/2016 - updated to use getXrommPointfiles instead of fileDialog. D. Baier
+*/
+global proc setpath()
+
+{
+	// get all locations that maya is currently looking for scripts
+	string $curPaths[];
+	string $curPaths = `getenv "MAYA_SCRIPT_PATH"`;
+	
+	// get system info to choose appropriate spacer
+    string $spacer;
+    if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+    tokenize ($curPaths, $spacer, $curPaths);
+	// Make the window
+	if (`window -exists setpathWindow` == true) deleteUI setpathWindow;  
+
+	int $height = 600;
+	int $width = 600;
+  
+	string $mainWindow = `window -title "Set Path" -maximizeButton false -minimizeButton true
+		-sizeable true -resizeToFitChildren false setpathWindow`;
+		
+	frameLayout -label "Current MAYA SCRIPT PATHS" -height $height -width $width -mw 5 -mh 5;
+		columnLayout;
+			textScrollList -numberOfRows 30 -width ($width - 20)
+                -allowMultiSelection true -showIndexedItem 1 pathListScrollField;
+                for($p in $curPaths)
+                {textScrollList -e -append $p pathListScrollField;}
+            frameLayout -label "";
+                rowColumnLayout -nc 2 -cw 1 ($width/2 - 10) -cw 2 ($width/2 - 10);
+                    text " "; text " ";
+                    checkBox -label "include subfolders" -value 0 subfolderCheckBox; text " ";
+                    button -label "add path" -width ($width/4) -c newPathDir addpathButton;
+                    button -label "remove selected  path(s)" -width ($width/4) -c removePath removepathButton;
+                    text " ";
+                setParent ..; 
+            setParent ..;   
+            button	-label "Close" -w $width closeButton;
+            button -edit -command "deleteUI setpathWindow" closeButton;
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+
+global proc int newPathDir()
+{
+	// Get the users input for new directory(ies)
+	string $newPathArr[] = getXrommPointfiles("Choose new path", 2, "", 1);
+	string $selpath = $newPathArr[0];
+	string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+    string $curPaths[] = `textScrollList -q -allItems pathListScrollField`;
+    string $curPaths = stringArrayToString ($curPaths, $spacer);
+    
+    // get subfolders if needed
+    if (`checkBox -q -v subfolderCheckBox`)
+		{
+			string $insideFolder[] = `getFileList -folder ($selpath+"\\") -filespec "*."`;
+			for ($a in $insideFolder)
+			    {$newPathArr[(size($newPathArr))] = ($selpath+"\\" + $a);}
+		}
+    // elimate if already exists
+     $newPathArr = stringArrayRemove($curPaths, $newPathArr); 
+     
+    // create a string of new paths
+    string $newPathString = stringArrayToString ($newPathArr, $spacer);
+    
+    // read all lines of the environment file and store in a string array
+    string $envLoc = `about -environmentFile`;
+    string $origEnv[] = `fileread($envLoc)`;
+    string $newEnvArray[];
+    int $match = 0;
+    for ($line in $origEnv) 
+    {
+        // if the current line contains MAYA_SCRIPT_PATH 
+        if (`gmatch $line ("MAYA_SCRIPT_PATH*")`)
+        {
+            $line = (strip($line) + $spacer + $newPathString);
+            $match = 1;
+        }
+        $newEnvArray[size($newEnvArray)] = strip($line);
+    }
+    
+    // if there are no current MAYA_SCRIPT_PATH lines listed, create one
+    if ($match == 0)
+        {$newEnvArray[size($newEnvArray)] = ("MAYA_SCRIPT_PATH = " + $newPathString);}
+    
+    // write a new maya.env file - overwriting the original - perhaps this should show the
+    // user a preview and ask if its ok to overwrite
+    for($i=0;$i<size($newEnvArray)-1;$i++)
+        {$newEnvArray[$i]=($newEnvArray[$i]+"\n");}   
+    $fileId = `fopen $envLoc "w"`;
+    for ($line in $newEnvArray)
+    {
+        fprint $fileId ($line);
+    }
+    fclose $fileId;
+    
+    // This added the new path(s) to the File - but the actual environment variable will not update
+    // until maya is restarted. Now we'll add the path to the current session
+    putenv "MAYA_SCRIPT_PATH" ($curPaths + $spacer + $newPathString);
+    rehash;
+    
+    // Now append the display list
+    for($p in $newPathArr)
+                {textScrollList -e -append $p pathListScrollField;}
+    return 1;
+}
+
+global proc removePath()
+{
+	// get system-appropriate spacer
+    string $spacer;
+    if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+
+    // list of path to be removed from user input window
+    string $curPaths[] = `textScrollList -q -ai pathListScrollField`;
+    string $pathToBeRemoved[] = `textScrollList -q -si pathListScrollField`;
+    
+    // The only paths we want to clear are in the env file
+	string $envLoc = `about -environmentFile`;
+    string $origEnv[] = `fileread($envLoc)`;
+    string $curMSPs[]; string $origMSPs[];
+    for ($line in $origEnv) 
+    {
+         // if the current line contains MAYA_SCRIPT_PATH 
+        if (`gmatch $line ("MAYA_SCRIPT_PATH*")`)
+		{
+            $line = substituteAllString($line, "MAYA_SCRIPT_PATH", "");
+            $line = substituteAllString($line, "=", ""); $line = strip($line);
+            $curMSPs = stringToStringArray($line, $spacer);
+            appendStringArray($origMSPs,$curMSPs,size($curMSPs));
+        }
+    }
+            
+    for($p in $pathToBeRemoved)
+    {
+        if(stringArrayContains($p, $origMSPs))
+        {
+            print("removing " + $p + "\n");
+            $actuallyRemoved[size($actuallyRemoved)] = $p;
+        }
+        else
+        {
+            print($p + " cannot be removed \n");
+            $notRemoved[size($notRemoved)] = $p;
+        }
+    }
+	// get rid of path (no problem adding multiple paths here)
+	$newMSPArray = stringArrayRemove($actuallyRemoved, $origMSPs);
+    if(size($newMSPArray)>0)
+                {
+                $line = stringArrayToString($newMSPArray, $spacer);
+                $line = ("MAYA_SCRIPT_PATH = " + $line);
+                }
+            else
+                {$line = ("");}
+		}
+		// All unchanged lines are readded and adjusted line is added in order
+        $newEnvArray[size($newEnvArray)] = strip($line);
+    }   
+
+    if (!$lineExists)
+	{
+		print "Only user defined paths may be removed.";
+	}
+	else
+	{
+		// write a new maya.env file - overwriting the original - perhaps this should show the
+		// user a preview and ask if its ok to overwrite
+        for($i=0;$i<size($newEnvArray)-1;$i++)
+            {$newEnvArray[$i]=($newEnvArray[$i]+"\n");}
+		$fileId = `fopen $envLoc "w"`;
+        for ($ln in $newEnvArray)
+		{
+			fprint $fileId ($ln);
+		}
+		fclose $fileId;
+		
+		// This added the new path(s) to the File - but the actual environment variable will not update
+		// until maya is restarted. Now we'll remove the path to the current session
+		$curPaths = stringArrayRemove($actuallyRemoved, $curPaths);
+		string $curPaths = stringArrayToString($curPaths, $spacer);
+	
+		putenv "MAYA_SCRIPT_PATH" $curPaths;
+		// Now append the display list
+		rehash;
+	
+		// Now append the display list
+		textScrollList -e -removeAll pathListScrollField;
+		for($p in $curPaths)
+					{textScrollList -e -append $p pathListScrollField;}
+    }
+    
+}

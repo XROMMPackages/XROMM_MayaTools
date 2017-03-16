@@ -1,0 +1,77 @@
+/* global proc matrix adj(matrix $aMatrix, int $size)
+
+    Extracted from matrixPlayground.mel  v1.2  (12 Jan 2001) by Bryan Ewert.
+    Freeware available at https://www.creativecrash.com/  
+*/
+proc matrix matrixCollapseRowColumn( matrix $aMatrix, int $size, int $row, int $column )
+// Removes the specified $row and $column from $aMatrix;
+// e.g. collapses a 4×4 matrix to a 3×3 matrix.
+// Note: $row & $column are 1-index
+{
+	matrix $cMatrix[4][4] = << 0, 0, 0, 0;  0, 0, 0, 0;  0, 0, 0, 0;  0, 0, 0, 0 >>;
+	
+	for ( $i = 0, $m = 0; $i < $size; $i++, $m++ )
+	{
+		// Skip over collapsed row
+		if ( $m+1 == $row )
+			$m++;
+			
+		for ( $j = 0, $n = 0; $j < $size; $j++, $n++ )
+		{
+			// Skip over collapsed column
+			if ( $n+1 == $column )
+				$n++;
+
+			if ( $m < $size && $n < $size)				
+				$cMatrix[$i][$j] = $aMatrix[$m][$n];
+			else
+				$cMatrix[$i][$j] = 0.0;
+		}
+	}
+	
+	return $cMatrix;
+}
+
+global proc matrix adj(matrix $aMatrix, int $size)
+{
+	matrix $cMatrix[4][4] = << 0, 0, 0, 0;  0, 0, 0, 0;  0, 0, 0, 0;  0, 0, 0, 0 >>;
+	
+	int $detSize = ( $size - 1 );
+
+	if ( $size > 2 )
+	{
+		// Cofactor of top-left 3×3 matrix
+		$cMatrix[0][0] =  det( matrixCollapseRowColumn( $aMatrix, $size, 1, 1 ), $detSize );
+		$cMatrix[0][1] = -det( matrixCollapseRowColumn( $aMatrix, $size, 1, 2 ), $detSize );
+		$cMatrix[0][2] =  det( matrixCollapseRowColumn( $aMatrix, $size, 1, 3 ), $detSize );
+
+		$cMatrix[1][0] = -det( matrixCollapseRowColumn( $aMatrix, $size, 2, 1 ), $detSize );
+		$cMatrix[1][1] =  det( matrixCollapseRowColumn( $aMatrix, $size, 2, 2 ), $detSize );
+		$cMatrix[1][2] = -det( matrixCollapseRowColumn( $aMatrix, $size, 2, 3 ), $detSize );
+
+		$cMatrix[2][0] =  det( matrixCollapseRowColumn( $aMatrix, $size, 3, 1 ), $detSize );
+		$cMatrix[2][1] = -det( matrixCollapseRowColumn( $aMatrix, $size, 3, 2 ), $detSize );
+		$cMatrix[2][2] =  det( matrixCollapseRowColumn( $aMatrix, $size, 3, 3 ), $detSize );
+	}
+
+	if ( $size > 3 )
+	{
+		// Cofactor of 4th column
+		$cMatrix[0][3] = -det( matrixCollapseRowColumn( $aMatrix, $size, 1, 4 ), $detSize );
+
+		$cMatrix[1][3] =  det( matrixCollapseRowColumn( $aMatrix, $size, 2, 4 ), $detSize );
+
+		$cMatrix[2][3] = -det( matrixCollapseRowColumn( $aMatrix, $size, 3, 4 ), $detSize );
+
+		// Cofactor of 4th row
+		$cMatrix[3][0] = -det( matrixCollapseRowColumn( $aMatrix, $size, 4, 1 ), $detSize );
+		$cMatrix[3][1] =  det( matrixCollapseRowColumn( $aMatrix, $size, 4, 2 ), $detSize );
+		$cMatrix[3][2] = -det( matrixCollapseRowColumn( $aMatrix, $size, 4, 3 ), $detSize );
+		$cMatrix[3][3] =  det( matrixCollapseRowColumn( $aMatrix, $size, 4, 4 ), $detSize );
+	}
+	
+	// Adjoint is TRANSPOSE of matrix containing cofactors
+	$cMatrix = transp( $cMatrix, $size );
+	
+	return $cMatrix;
+}

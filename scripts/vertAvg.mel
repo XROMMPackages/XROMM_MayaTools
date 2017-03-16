@@ -1,0 +1,99 @@
+/* global proc vertAvg()
+
+    Creates a locator at the average worldspace xyz coordinates of the selected vertices 
+
+    (1)right click on the object 
+    (2)choose "vertices" from the marking menu 
+    (3) select vertices
+    (4)click on vertAvg on the CTXtools Shelf or type vertAvg in the command line
+    
+     Written by David Baier 06/13/2007
+     Last updated 5/7/08
+*/
+global proc vertAvg()
+{
+	if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;  
+
+	int $height = 250;
+	int $width = 320;
+
+	string $mainWindow = `window -title "Vertex Average" -menuBar true
+		-maximizeButton false -minimizeButton true -sizeable true
+		-resizeToFitChildren false vertAvgWindow`;
+		
+	frameLayout -label "Marker Name Input" -height $height -width $width -mw 5 -mh 5;	
+		columnLayout;
+		columnLayout;
+			text " ";
+			text " 1) Right click/hold on the marker object and select vertices.";
+			text " 2) Drag to select desired vertices.";
+			text " 3) Click the calculate centroid button.";
+			text " ";
+	
+			text "Marker Name";
+			textField -width ($width-20) -text  "myMarkerName" markerNameField;
+			
+			button	-label "Calculate Centroid" -w ($width-20) -command vAvg;
+			button	-label "Close" -w ($width-20) closeButton;
+			button -edit -command "deleteUI vertAvgWindow; selectMode -o" closeButton;
+
+	showWindow $mainWindow;
+}
+
+global proc vAvg()
+{
+	
+	if (size(`ls -sl`) == 0)
+	{
+		confirmDialog -t "Error" -m "No Vertices selected." -b "OK";
+	}
+	else
+	{
+		string $mn = `textField -q -text markerNameField`;
+		string $mn = strip($mn);
+		
+		// get number of selected
+		int $count[] = `polyEvaluate -vc`;
+		
+		//create single element array for all the translation values in worldspace
+		string $objs[] = `ls -hl`;
+		string $selectedVerts[];
+		float $vals[];
+		for ($obj in $objs)
+		{
+			string $tmpList[] = `ls -sl ($obj+".vtx[*]")`;
+			appendStringArray($selectedVerts,$tmpList,size($tmpList));
+			$tmp = `xform -q -ws -t $tmpList`;
+			for ($tm in $tmp)
+				{$vals[size($vals)] = $tm;}
+		}
+			$b = `size $vals`;
+	
+		//initialize variables
+		int $i = 0;
+		float $xsum = 0;
+		float $ysum = 0;
+		float $zsum = 0;
+	
+		//loop through all xyz values creating a sum for each column
+		do
+		{
+			$xsum = $xsum + $vals[$i];
+			$i = $i + 1;
+			$ysum = $ysum + $vals[$i];
+			$i = $i + 1;
+			$zsum = $zsum + $vals[$i];
+			$i = $i + 1;
+		}
+		while ($i < $b);
+	
+		//get the average for each 
+		float $xavg = $xsum/$count[0];
+		float $yavg = $ysum/$count[0];
+		float $zavg = $zsum/$count[0];
+	
+		//create and place a locator
+		string $truename[] = `spaceLocator -n $mn`;
+		xform -ws -t $xavg $yavg $zavg $truename[0];
+	}
+}

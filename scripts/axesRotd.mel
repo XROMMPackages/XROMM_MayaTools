@@ -1,0 +1,22 @@
+/*  global proc axesRotd(string $objs, string $axis, float $deg)
+    Input:  $objs = the objects that will be rotated
+            $axis = the axis around which the flip occurs
+            $deg = degree of rotation
+    
+    Will rotate axes about its current local coordinate system by $deg
+            
+    Written by David Baier 7/26/2016
+*/ 
+global proc axesRotd(string $obj, string $axis, float $deg)
+{
+     string $tmp[] = `spaceLocator`;
+     parent $tmp $obj;
+     setAttr ($tmp[0]+".t") 0 0 0;  setAttr ($tmp[0]+".r") 0 0 0;
+     
+     setAttr ($tmp[0]+".r"+$axis) $deg;
+     float $a[] = `xform -ws -q -m $tmp`;
+     delete $tmp;
+     string $vals = floatArrayToString($a," ");
+     eval("xform -ws -m "+$vals +" "+$obj);
+}
+ 

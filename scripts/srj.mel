@@ -1,0 +1,47 @@
+/* global proc string srj(string $jn)
+
+    Input: $jn = name of the joint
+    
+    srj stands for scientific rotoscoping joint.
+    creates a two joint chain the top joint is for positioning
+    the child joint is for animating
+    Written by David Baier
+*/
+global proc string srj(string $jn)
+{
+    string $output;
+    if (size($jn) == 0)
+    {
+        string $result = `promptDialog -title "Joint Name" -message "Enter Name:"
+        -button "OK" -button "Cancel" -defaultButton "OK" -cancelButton "Cancel"
+        -dismissString "Cancel"`;
+        
+         if ($result == "OK")
+             {$jn = `promptDialog -query -text`;}
+    }
+        
+    if (size($jn) != 0)
+    {   
+        select -cl;
+        //joint position name
+        string $jpos = ($jn + "_Pos");
+        
+        //1st joint
+        $jpos = `joint -p 0 0 0 -n $jpos`;
+        joint -e -oj none $jpos;
+        
+        //2nd joint automatically parents to 1st
+        // but we want a unique name (autorenumbering won't work since it is a child node)
+        string $jntmp = $jn;
+        int $i = 1; while (`objExists $jntmp`){$jntmp = ($jn+$i); $i++;}
+        $jn = $jntmp;
+        $jn = `joint -p 0 0 0 -n $jn`;
+        joint -e -oj none $jn;
+        setAttr ($jn + ".displayHandle") 1;
+    }
+    else
+    {
+        print "srj cancelled.\n";
+    }
+    return $output;
+}

@@ -1,0 +1,40 @@
+/*  global proc string cleanStrForObjectName(string $input)
+
+    Inputs:
+        $input = string 
+    Output:
+        $output = legal string for object name
+        
+   Checks string for illegal characters in maya object naming.
+   Dashes are replaced with underscores.
+   Spaces are replaced with underscores.
+   If there are numbers at the beginning of the string, an "x" character is placed in front.
+   All other illegal characters are removed.
+   If we still somehow have an illegal name, output string is "obj".
+     
+   Written by David Baier
+   Last modified 7/27/2016
+*/
+global proc string cleanStrForObjectName(string $input)
+{
+	string $output;
+	$output = substituteAllString($input,"-","_");
+	$output = substituteAllString($input," ","_");
+	
+	if (!isValidObjectName($input))
+	{
+		//just get rid of all special characters
+		string $xs[] = {".","!","@","#","$","%","&","*","(",")","=","+",".",",","~","`","{","}","[","]","|","\\","<",">","/","?"};
+		for ($x in $xs){$output = substituteAllString($output, $x, "");}
+		
+		// can't start with a number so well add an x in front
+		string $frontNums = `match "^[0-9]+" $output`;
+		if (size($frontNums) != 0){$output = ("x"+$output);}
+		$output = strip($output);
+	}
+	
+	// if still invalid object name
+	if (!isValidObjectName($output)){ $output = "obj";}
+	
+	return $output;
+}

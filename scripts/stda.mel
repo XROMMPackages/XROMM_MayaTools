@@ -1,0 +1,15 @@
+global proc float stda(float $arr[])
+{
+    float $std;
+    float $mean = meana($arr);
+    
+    float $sumSq;
+    for ($a in $arr)
+    {
+        $sumSq = $sumSq+(pow(($a-$mean),2));
+    }
+    $meanSumSq = $sumSq/float(size($arr));
+    
+    $std = sqrt($meanSumSq);
+    return $std;   
+}

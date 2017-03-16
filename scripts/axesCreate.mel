@@ -1,0 +1,72 @@
+/* global proc string axesCreate(string $name, float $size, string $style, int $singleObject)
+
+    Input:  $name = name for the axis. 
+            $size = length of each axis. 
+            $style = "hemi" for vectors only in positive direction.
+                     "full" for vectors in both positive and negative directions.
+            $singleObject = if 1 - all axes are merged into a single object
+                            if 0 - all elements are kept separate and grouped
+	
+	Output: name of the created object or top node of the group if not single object.
+	
+	Creates an object representing a right handed coordinate system.
+	Written by David Baier 7/26/2016
+	
+*/
+global proc string axesCreate(string $name, float $size, string $style, int $singleObject)
+{ 
+    string $output;
+    axesShaderMake;
+    float $cylLen = $size*0.9; 
+    float $coneLen = $size*0.1;
+    float $cylRad = $size*0.01;
+    float $coneRad = $size*0.02;
+    
+    // axes cylinders
+    string $xAxisName[] = `polyCylinder -axis 1 0 0 -h $cylLen -r $cylRad -n ($name+"X")`;
+        sets -e -forceElement xShaderSG;
+        if ($style == "hemi") {xform -piv (-1*($cylLen)/2) 0 0 $xAxisName[0]; move -a -x (($cylLen)/2);}
+        else {xform -piv (($coneLen)/2) 0 0 $xAxisName[0]; move -a -x (-1*($coneLen)/2);}
+        
+    string $yAxisName[] = `polyCylinder -axis 0 1 0 -h $cylLen -r $cylRad -n ($name+"Y")`;
+        sets -e -forceElement yShaderSG;
+        if ($style == "hemi") {xform -piv 0 (-1*($cylLen)/2) 0 $yAxisName[0]; move -a -y (($cylLen)/2);}
+        else {xform -piv 0 (($coneLen)/2) 0 $yAxisName[0]; move -a -y (-1*($coneLen)/2);}
+    
+    string $zAxisName[] = `polyCylinder -axis 0 0 1 -h $cylLen -r $cylRad -n ($name+"Z")`;
+        sets -e -forceElement zShaderSG;
+        if ($style == "hemi") {xform -piv 0 0 (-1*($cylLen)/2) $zAxisName[0]; move -a -z (($cylLen)/2);}
+        else {xform -piv 0 0 (($coneLen)/2) $zAxisName[0]; move -a -z (-1*($coneLen)/2);}
+        
+    // axes cones
+    string $xConeName[] = `polyCone -n ($name+"Xarrow") -r $coneRad -h $coneLen -ax 1 0 0`;
+        sets -e -forceElement xShaderSG;
+        if ($style == "hemi") {xform -piv (-1*($coneLen)/2) 0 0 $xConeName[0]; move -a -x (($coneLen/2)+$cylLen);}
+        else {xform -piv (-1*($coneLen)/2) 0 0 $xConeName[0]; move -a -x ($cylLen/2);}
+            
+    string $yConeName[] = `polyCone -n ($name+"Yarrow") -r $coneRad -h $coneLen  -ax 0 1 0`;
+        sets -e -forceElement yShaderSG;
+        if ($style == "hemi") {xform -piv 0 (-1*($coneLen)/2) 0 $yConeName[0]; move -a -y (($coneLen/2)+$cylLen);}
+        else {xform -piv 0 (-1*($coneLen)/2) 0 $yConeName[0]; move -a -y ($cylLen/2);}
+       
+    string $zConeName[] = `polyCone -n ($name+"Zarrow") -r $coneRad -h $coneLen  -ax 0 0 1`;
+        sets -e -forceElement zShaderSG;
+        if ($style == "hemi") {xform -piv 0 0 (-1*($coneLen)/2) $zConeName[0]; move -a -z (($coneLen/2)+$cylLen);}
+        else {xform -piv 0 0 (-1*($coneLen)/2) $zConeName[0]; move -a -z ($cylLen/2);}
+    
+    if ($singleObject == 1)
+        {
+            string $united[] = `polyUnite -n ($name) -ch 0 $xAxisName[0] $xConeName[0] $yAxisName[0] $yConeName[0] $zAxisName[0] $zConeName[0]`;
+            $output = $united[0];
+        }
+    else
+        {
+            parent $xConeName[0] $xAxisName[0];
+            parent $yConeName[0] $yAxisName[0];
+            parent $zConeName[0] $zAxisName[0];
+            $output = `group -em -n ($name)`;
+            parent $xAxisName[0]  $yAxisName[0]  $zAxisName[0] $output;
+            select $output;
+        }
+    return $output;
+}

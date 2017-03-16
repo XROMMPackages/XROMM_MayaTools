@@ -1,0 +1,11 @@
+global proc plotpts(float $arr[])
+{
+    $curpt = `spaceLocator -n "pltpt"`;
+    float $t = 1;
+    for ($a in $arr)
+    {
+        setAttr ($curpt[0]+".tx") $a;
+        setKeyframe -at "translateX" -t $t $curpt[0];
+        $t = $t+1;
+    }
+}

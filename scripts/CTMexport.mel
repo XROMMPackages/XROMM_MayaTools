@@ -1,0 +1,257 @@
+/*global proc CTMexport()
+    GUI to export xyz coordinates for Marker centroids.
+    Written by David Baier
+*/
+global proc CTMexport()
+{
+	if (`window -exists CTMexportWindow` == true) deleteUI CTMexportWindow;  
+
+	int $height = 320;
+	int $width = 500;
+
+	string $mainWindow = `window -title "Marker Export" -menuBar true -maximizeButton false -minimizeButton true
+		-sizeable true -resizeToFitChildren false CTMexportWindow`;
+		
+	columnLayout;
+		rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.4) -cw 2 ($width*0.2) -cw 3 ($width*0.4);
+			columnLayout;
+				text "All Locators (double-click to rename)";
+				textScrollList
+					-allowMultiSelection 1 -w ($width*0.4) -sc allLocatorListSelectCmd
+					-dcc "renameLocatorCmd(\"allLocatorList\")" -nr 15 allLocatorList;
+			setParent..;
+			columnLayout;
+				text " ";
+				text " ";
+				text " ";
+				button -label "Move Right" -al "center" -w ($width*0.19) -c moveRightButtonCmd moveRightButton;
+				button -label "Move Left" -al "center" -w ($width*0.19) -c moveLeftButtonCmd moveLeftButton;
+			setParent..;
+			columnLayout;
+				text "Export Locators";
+				textScrollList
+					-allowMultiSelection 1 -w ($width*0.4) -sc selLocatorListSelectCmd 
+					-dcc "renameLocatorCmd(\"selectedLocatorList\")" -nr 15 selectedLocatorList;
+			setParent..;		
+		setParent..;
+		text " ";
+	    //textFieldButtonGrp -label "Rename Centroid" -text "Type the new name" -buttonLabel "Rename" 
+		//-buttonCmd renameCentroidCmd renameFieldGroup;
+	button	-label "Export to .csv file" -w ($width-20) -command runCTMexport ctmExportButton;
+
+	button	-label "Close" -w ($width-20) closeButton;
+	button -edit -command "deleteUI CTMexportWindow" closeButton;
+
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+	
+	string $objs[] = sort(`ls  -et "locator"`);
+	$objs = `listRelatives -parent $objs`;
+	for($obj in $objs)
+		{textScrollList -edit -append $obj allLocatorList;}
+	updateOnSelCmd;
+	scriptJob -p $mainWindow -e "SelectionChanged" updateOnSelCmd;	
+}
+
+global proc allLocatorListSelectCmd()
+{
+    // selects object(s) selected in the left list
+	string $name[] = `textScrollList -q -si allLocatorList`;
+	select $name;
+	//textFieldButtonGrp -e -text $name[0] renameFieldGroup;
+}
+
+global proc selLocatorListSelectCmd()
+{
+    // selects object(s) selected in the left list
+	string $name[] = `textScrollList -q -si selectedLocatorList`;
+	select $name;
+	//textFieldButtonGrp -e -text $name[0] renameFieldGroup;
+}
+
+global proc updateOnSelCmd()
+{
+    // script job attached to CTMexportWindow
+    // object selected in scene, will be selected in the lists
+	string $sel[] = `ls -sl`;
+	string $allList[] = `textScrollList -q -ai allLocatorList`;
+	string $selList[] = `textScrollList -q -ai selectedLocatorList`;
+	if (size($sel)>0)
+	{
+		textScrollList -e -da allLocatorList;
+		for ($s in $sel)
+		{
+			if (stringArrayContains($s, $allList))
+				{textScrollList -e -si $s allLocatorList;}
+			if (stringArrayContains($s, $selList))
+				{textScrollList -e -si $s selectedLocatorList;}
+		}
+	}
+	// now remove any that no longer exist
+	for ($a in $allList)
+	{ if (!`objExists $a`)
+	    {textScrollList -edit -removeItem $a allLocatorList;}
+	}
+	
+	for ($s in $selList)
+	{ if (!`objExists $s`)
+	    {textScrollList -edit -removeItem $s selectedLocatorList;}
+	}
+}
+
+global proc moveRightButtonCmd()
+{
+    // move selected from left list to right list
+	string $name[] = `textScrollList -q -si allLocatorList`;
+	for ($n in $name)
+		{textScrollList -edit -append $n selectedLocatorList;
+		textScrollList -edit -removeItem $n allLocatorList;
+		textScrollList -e -si $n selectedLocatorList;}
+}
+
+global proc moveLeftButtonCmd()
+{
+    // move selected from right list to left list
+	string $name[] = `textScrollList -q -si selectedLocatorList`;
+	for ($n in $name)
+		{textScrollList -edit -append $n allLocatorList;
+		textScrollList -edit -removeItem $n selectedLocatorList;
+		textScrollList -e -si $n allLocatorList;}
+}
+
+global proc renameLocatorCmd(string $listCtrl)
+{
+	// selected object in All Locators
+	string $curName[] = `textScrollList -q -si $listCtrl`;
+	
+	string $result = `promptDialog -title "Rename" -text $curName
+        -button "OK" -button "Cancel" -defaultButton "OK" -cancelButton "Cancel"
+        -dismissString "Cancel"`;
+        
+    if ($result == "OK")
+    {
+        // rename the locator
+        string $newName = `promptDialog -query -text`;
+        $newName = cleanStrForObjectName($newName);
+		string $actualNewname = `rename $curName[0] $newName`;
+	
+		// update the list
+        int $idx[] = `textScrollList -q -sii $listCtrl`;
+        textScrollList -e -rii $idx[0] $listCtrl;
+        textScrollList -e -ap $idx[0] $actualNewname $listCtrl;
+	
+		// if vAv2 was used, rename the mesh that goes with it
+		string $meshName = `substitute "vAvg2" $curName[0] ""`;
+		if (`objExists $meshName`){rename $meshName ($actualNewname+"Mesh");}
+		// if the mesh was already renamed by this script, we can get that name and rename it again
+		string $alreadyRenamedMesh = `substitute "vAvg2" $curName[0] "Mesh"`;
+		if (`objExists $alreadyRenamedMesh`){rename $alreadyRenamedMesh ($actualNewname+"Mesh");}
+	}
+}
+/*
+global proc renameCentroidCmd()
+{
+	// selected object in All Locators
+	string $curName[] = `textScrollList -q -si allLocatorList`;
+	// has to only be one item selected
+	if (size($curName)!=1) 
+	{confirmDialog 	-title "Selection error" 
+	    -message "You must have ONE object selected for renaming" 
+	    -button "OK" -defaultButton "OK";
+	}
+	else
+	{
+		// list of everything in All list (including selected)
+		string $curAllList[] = `textScrollList -q -ai allLocatorList`;
+		// list of everything in All List (except selected)
+		string $newAllList[] = stringArrayRemove($curName,$curAllList);
+		// get user input name and clean it up
+		string $newName = `textFieldButtonGrp -q -text renameFieldGroup`;
+		$newName = cleanStrForObjectName($newName);
+		
+		// capture the rename
+		string $actualNewname = `rename $curName[0] $newName`;
+		//if the user not already renamed, we can get the vAvg2 name for the mesh and rename it
+		string $meshName = `substitute "vAvg2" $curName[0] ""`;
+		if (`objExists $meshName`){rename $meshName ($actualNewname+"Mesh");}
+		// if the mesh was already renamed by this script, we can get that name and rename it again
+		string $alreadyRenamedMesh = `substitute "vAvg2" $curName[0] "Mesh"`;
+		if (`objExists $alreadyRenamedMesh`){rename $alreadyRenamedMesh ($actualNewname+"Mesh");}
+		
+		// add the new name to the list
+		$newAllList[size($newAllList)] = $actualNewname;
+		$newAllList = `sort($newAllList)`;
+		
+		textScrollList -edit -removeAll allLocatorList;
+		for($n in $newAllList)
+			{textScrollList -edit -append $n allLocatorList;}
+		textScrollList -e -si $actualNewname allLocatorList;
+		textFieldButtonGrp -e -text "Type the new name" renameFieldGroup;
+	}
+}
+*/
+
+global proc runCTMexport()
+{
+    //list selected markers
+	string $markers[] = `textScrollList -q -ai selectedLocatorList`;
+	
+	// only run if there are markers actually selected
+	if (size($markers)>0)
+    {
+        string $pointfile[] = getXrommPointfiles("Export File Name", 0, "CSV files (*.csv)",1);
+        
+        // only run if it wasn't cancelled
+        if (size($pointfile) > 0)
+        {
+            $pointfile[0] = `substitute ".csv" $pointfile[0] ""`;
+            string $newfile = $pointfile[0] +".csv";
+            $fileId = `fopen $newfile "w"`;
+            fprint $fileId "";  
+            fclose $fileId;
+            
+            
+            //$markers = sort($markers);
+            $fileId = `fopen $newfile "a"`;
+            
+            for ($i = 0; $i < (size($markers)-1); $i++)
+            {
+                fprint $fileId ($markers[$i] + "_x,");
+                fprint $fileId ($markers[$i] + "_y,");
+                fprint $fileId ($markers[$i] + "_z,");
+            }
+            
+            fprint $fileId ($markers[$i] + "_x,");
+            fprint $fileId ($markers[$i] + "_y,");
+            fprint $fileId ($markers[$i] + "_z");
+            
+        
+            fprint $fileId "\n";
+            
+            int $i = 0;
+        
+            for ($i = 0; $i < (size($markers)-1); $i++)
+            {
+                vector $xyz = `xform -q -ws -t ($markers[$i])`;
+                fprint $fileId (($xyz.x) + ",");
+                fprint $fileId (($xyz.y) + ",");
+                fprint $fileId (($xyz.z) + ",");
+            }
+        
+            vector $xyz = `xform -q -ws -t ($markers[$i])`;
+            fprint $fileId (($xyz.x) + ",");
+            fprint $fileId (($xyz.y) + ",");
+            fprint $fileId ($xyz.z);
+            
+            fclose $fileId;
+        }
+        else
+        {
+            print "Export cancelled";   
+        }
+    }
+	else
+	{
+	    print "Right list is empty; nothing to export";
+	}
+}

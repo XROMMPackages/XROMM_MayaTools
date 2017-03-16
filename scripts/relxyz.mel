@@ -1,0 +1,20 @@
+/* global proc float[] relxyz(string $parent, string $child)
+    
+    Inputs: $parent = name of the proximal element
+            $child = name of the distal element
+    Output: 1 x 16 maya-format tranformation matrix
+    
+    Returns maya matrix of a $child object in the $parent coordinate system
+*/
+global proc vector relxyz(string $parent, string $child)
+{
+    vector $relxyz;
+    float $parentMM[] = `xform -ws -q -m $parent`;
+    float $childMM[] = `xform -ws -q -m $child`;
+    matrix $parentTM[4][4] = mmTotm($parentMM);
+    matrix $childTM[4][4] = mmTotm($childMM);
+    
+	matrix $tf[4][4] = inv($parentTM, 4)*$childTM;
+	$relxyz = <<$tf[0][3],$tf[1][3],$tf[2][3]>>;
+	return $relxyz;
+}

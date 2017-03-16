@@ -1,0 +1,33 @@
+/* global proc string[] axesShaderMake()
+    makes red green blue xShader,YShader, and Zshader
+    Written by David Baier
+*/
+global proc string[] axesShaderMake()
+{
+    string $output[] = {"xShader","yShader","zShader"};
+    //create shaders if they don't already exist
+    if(!`objExists "xShader"`)
+    {
+        shadingNode -asShader blinn -n "xShader";
+        sets -renderable true -noSurfaceShader true -empty -name xShaderSG;
+        connectAttr -f xShader.outColor xShaderSG.surfaceShader;
+        setAttr "xShader.color" -type double3 1 0 0;
+    }
+    
+    if(!`objExists "yShader"`)
+    {
+        shadingNode -asShader blinn -n "yShader";
+        sets -renderable true -noSurfaceShader true -empty -name yShaderSG;
+        connectAttr -f yShader.outColor yShaderSG.surfaceShader;
+        setAttr "yShader.color" -type double3 0 1 0;
+    }
+    
+    if(!`objExists "zShader"`)
+    {
+        shadingNode -asShader blinn -n "zShader";
+        sets -renderable true -noSurfaceShader true -empty -name zShaderSG;
+        connectAttr -f zShader.outColor zShaderSG.surfaceShader;            
+        setAttr "zShader.color" -type double3 0 0 1;
+    }
+    return $output;
+}

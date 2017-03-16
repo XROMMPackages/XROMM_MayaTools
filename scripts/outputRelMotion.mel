@@ -1,0 +1,154 @@
+/*  global proc outputRelMotion()
+    calculates the transforms of the distal object relative to the proximal object coordinate space and
+    outputs the relative motion data as keyframes on a locator
+    
+ 	based on JointAxes script by Dave Baier
+	last updated by Steve Gatesy 1/30/14	
+*/
+global proc outputRelMotion()
+{
+    int $height = 220;
+	int $width = 500;
+	
+	if (`window -exists jointAxesWindow` == true) deleteUI jointAxesWindow;  
+
+	string $mainWindow = `window -title "Output relative motion"-menuBar true
+	    -maximizeButton false -minimizeButton true -sizeable true -resizeToFitChildren false
+		jointAxesWindow`;
+		
+	frameLayout -label "Output relative motion" -height $height -width $width -mw 5 -mh 5;
+	    columnLayout;
+	        menu -label "File";
+	        menuItem -label "Reset" -command cRec resetButton;
+	        menuItem -label "Close" -command "deleteUI jointAxesWindow" closeButton;
+	    columnLayout;
+	        text "Step 1: Select the proximal and distal objects";
+	        textFieldButtonGrp -label "Proximal Object" -text "Select proximal element and click Insert Selection" 
+	            -buttonLabel "Insert Selection" -buttonCommand proxSelectB proxFieldGroup;
+	        textFieldButtonGrp -label "Distal Object" -text "Select distal element and click Insert Selection" 
+	            -buttonLabel "Insert Selection" -buttonCommand distSelectB distFieldGroup;
+	        text "output node";
+	        textField -width $width -text  "m" outputNameField;
+	setParent..;
+	    text " ";
+	    button	-label "Output relative data" -enable 1 -w ($width) -command getAxesData;
+	    button	-label "Close" -w ($width) closeButton;
+	    button -edit -command "deleteUI jointAxesWindow" closeButton;
+
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+}
+
+
+global proc proxSelectB()
+{
+	string $objs[] = `ls -sl`;
+	textFieldButtonGrp -e -text $objs[0] proxFieldGroup;
+}
+
+
+global proc distSelectB()
+{
+	string $objs[] = `ls -sl`;
+	textFieldButtonGrp -e -text $objs[0] distFieldGroup;
+}
+
+
+global proc enableCheckB()
+{
+	string $prox = `textFieldButtonGrp -q -text proxFieldGroup`;
+	string $dist = `textFieldButtonGrp -q -text distFieldGroup`;
+	string $axes = `textField -q -text outputNameField`;
+	
+	if (`objExists $prox` && `objExists $dist`)
+	{
+		if (!`objExists $axes`)
+		{
+			button -edit -enable 1 createAxesBButton;
+			button -edit -enable 0 setAxesBButton;
+		}
+		else
+		{
+			button -edit -enable 0 createAxesBButton;
+			button -edit -enable 1 setAxesBButton;
+		}
+	}
+}
+
+global proc getAxesData()
+{
+	
+	string $axesP = `textFieldButtonGrp -q -text proxFieldGroup`;
+	string $axesD = `textFieldButtonGrp -q -text distFieldGroup`;
+    string $axes = `textField -q -text outputNameField`;
+	string $transformList[] = `ls -tr`;
+	int $globalKeys = 0;
+	
+	// first try to get animation frames from the objects heirarchy
+	int $frame = `findKeyframe -hi both -which first $axesD` ;
+	int $lastframe = `findKeyframe -hi both -which last $axesD`;
+	
+	// if that doesn't work, see if there is any animation in the scene
+	if ($frame-$lastframe == 0)
+		{
+			$frame = `findKeyframe -hi both -which first $transformList` ;
+			$lastframe = `findKeyframe -hi both -which last $transformList`;
+			$globalKeys = 1;
+		}
+		
+	// Nothing happens if no frames
+	if ($frame-$lastframe == 0)
+		{print "No animation in scene";}
+	int $previousframe = $lastframe+1;
+	
+	if ($frame <= 0){$frame = 1;}
+
+	currentTime -update 0 -edit $frame;
+	
+	string $output = $axes + "data";
+	spaceLocator -n $output;
+	string $actualName[] = `ls -sl`;
+	$output = $actualName[0];
+	
+	 progressWindow -title "Calculating Joint Axes" -min $frame -max $lastframe  -progress $frame
+		 -status ("Processing frame: "+$frame) -isInterruptable true;
+	
+		//loop through time
+		while ($frame <= $lastframe)
+		{
+			
+				//get the worldspace xform of the current object
+				$oldMatrix = `xform -ws -q -m $axesD`;
+				matrix $axesDurChild[4][4] = mmTotm(`xform -ws -q -m $axesD`);
+				matrix $axesDurParent[4][4] = mmTotm(`xform -ws -q -m $axesP`);
+				matrix $outchild[4][4] = relativeTm($axesDurParent, $axesDurChild);
+		
+			   // apply the new rotation matrix to the oldMatrix
+				$newMatrix = tmTomm($outchild);
+				
+				xform -m    ($newMatrix[0]) ($newMatrix[1]) ($newMatrix[2]) ($newMatrix[3])
+							($newMatrix[4]) ($newMatrix[5]) ($newMatrix[6]) ($newMatrix[7])
+							($newMatrix[8]) ($newMatrix[9]) ($newMatrix[10]) ($newMatrix[11])
+							($newMatrix[12]) ($newMatrix[13]) ($newMatrix[14]) ($newMatrix[15]) $output;
+							
+				// ideally we should have a continuous angle check here
+				setKeyframe -at "rotate" $output;
+				setKeyframe -at "translate" $output;
+				
+				// Check if the dialog has been cancelled
+				if ( `progressWindow -query -isCancelled` ) break;
+					
+				if ($globalKeys == 0)
+				{$frame = `findKeyframe -hi both -which next $axesD`;}
+				else
+				{$frame = `findKeyframe -hi both -which next $transformList`;}	
+				
+				if (($frame-$previousframe) == 0){break;}
+				$previousframe = $frame;
+				
+				progressWindow -edit -progress $frame -status ("Processing frame: "+$frame);
+				
+				currentTime -update 0 -edit $frame;
+		}
+		progressWindow -endProgress;
+}

@@ -1,0 +1,13 @@
+/* global proc float[] relativeMm(string $parent, string $child)
+    
+    Inputs: $parent = name of the proximal element
+            $child = name of the distal element
+    Output: 1 x 16 maya-format tranformation matrix
+    
+    Returns  4x4 matrix of a $child object in the $parent coordinate system
+*/
+global proc matrix relativeTm(matrix $parent, matrix $child)
+{
+	matrix $tf[4][4] = inv($parent, 4)*$child;
+	return $tf;
+}

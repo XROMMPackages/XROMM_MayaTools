@@ -1,0 +1,15 @@
+global proc int isKeyed(string $obj, float $frame)
+{
+	int $isKeyed = 0;
+
+	//float $frame = `currentTime -q`;
+	string $parents[] = `listRelatives -ap $obj`;
+	float $keysOnObject[] = `keyframe -q -tc $parents $obj`;
+	
+	for ($k in $keysOnObject)
+	{
+		if ($k == $frame){$isKeyed = 1;}
+	}
+	
+	return $isKeyed;
+}

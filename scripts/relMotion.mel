@@ -1,0 +1,79 @@
+global proc relMotion(string $proxObjs[], string $distObjs[], string $jcs[])
+{
+	// all three string arrays must be of the same size
+	if (size($proxObjs) != size($distObjs)|| size($proxObjs) != size($jcs))
+	{
+		print "String arrays must have the same number of items. Aborting.";
+	}
+	else
+	{
+		// create locators for all data nodes unless they already exist
+		string $locs[]; string $actualName[];
+		for ($j in $jcs)
+		{
+			if (!`objExists $j`)
+			{
+				string $actualName[] = `spaceLocator -n ($j)`;
+				$locs[size($locs)] = $actualName[0];
+			}
+			else
+			{
+				$locs[size($locs)] = $j;
+			}
+		}
+		
+		// get animation frames from the objects heirarchy
+		int $frame = `findKeyframe -hi both -which first $distObjs`;
+		int $lastframe = `findKeyframe -hi both -which last $distObjs`;
+		int $previousframe = $lastframe+1;
+		currentTime -update 0 -edit $frame;
+		
+		progressWindow -title "Calculating Joint Axes" -min $frame -max $lastframe  -progress $frame
+				 -status ("Processing frame: "+$frame) -isInterruptable true;
+		
+		//loop through time
+		while ($frame <= $lastframe)
+		{
+			for ($i = 0; $i<size($proxObjs); $i++)
+			{
+				if (isKeyed($distObjs[$i],$frame))
+				{
+					string $axesP = $proxObjs[$i];
+					string $axesD = $distObjs[$i];
+					string $output = $locs[$i];
+	
+					//get the worldspace xform of the current object
+					$oldMatrix = `xform -ws -q -m $axesD`;
+					matrix $axesDurChild[4][4] = mmTotm(`xform -ws -q -m $axesD`);
+					matrix $axesDurParent[4][4] = mmTotm(`xform -ws -q -m $axesP`);
+					matrix $outchild[4][4] = relativeTm($axesDurParent, $axesDurChild);
+		
+					// apply the new rotation matrix to the oldMatrix
+					$newMatrix = tmTomm($outchild);
+				
+					xform -m    ($newMatrix[0]) ($newMatrix[1]) ($newMatrix[2]) ($newMatrix[3])
+								($newMatrix[4]) ($newMatrix[5]) ($newMatrix[6]) ($newMatrix[7])
+								($newMatrix[8]) ($newMatrix[9]) ($newMatrix[10]) ($newMatrix[11])
+								($newMatrix[12]) ($newMatrix[13]) ($newMatrix[14]) ($newMatrix[15]) $output;
+							
+					// ideally we should have a continuous angle check here
+					setKeyframe -at "rotate" $output;
+					setKeyframe -at "translate" $output;
+				}
+			}	
+			// Check if the dialog has been cancelled
+			if ( `progressWindow -query -isCancelled` ) break;
+			
+			$frame = `findKeyframe -hi both -which next $distObjs`;
+			
+			if (($frame-$previousframe) == 0){break;}
+			
+			$previousframe = $frame;
+			
+			progressWindow -edit -progress $frame -status ("Processing frame: "+$frame);
+			
+			currentTime -update 0 -edit $frame;
+		}					
+	}
+	progressWindow -endProgress;
+}

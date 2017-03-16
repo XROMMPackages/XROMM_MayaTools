@@ -1,0 +1,9 @@
+global proc matrix mmTor(float $xfm[])
+// Returns a 3x3 transformation matrix from a 16 element array input
+{
+	matrix $r[3][3] = <<($xfm[0]),($xfm[4]),($xfm[8]);
+				($xfm[1]),($xfm[5]),($xfm[9]);
+				($xfm[2]),($xfm[6]),($xfm[10])>>;
+	
+	return $r;
+}
