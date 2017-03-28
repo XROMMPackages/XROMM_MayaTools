@@ -103,7 +103,7 @@ global proc getAxesData()
 	
 	if ($frame <= 0){$frame = 1;}
 
-	currentTime -update 0 -edit $frame;
+	currentTime -update 1 -edit $frame;
 	
 	string $output = $axes + "data";
 	spaceLocator -n $output;
@@ -148,7 +148,7 @@ global proc getAxesData()
 				
 				progressWindow -edit -progress $frame -status ("Processing frame: "+$frame);
 				
-				currentTime -update 0 -edit $frame;
+				currentTime -update 1 -edit $frame;
 		}
 		progressWindow -endProgress;
 }

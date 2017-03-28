@@ -26,7 +26,7 @@ global proc relMotion(string $proxObjs[], string $distObjs[], string $jcs[])
 		int $frame = `findKeyframe -hi both -which first $distObjs`;
 		int $lastframe = `findKeyframe -hi both -which last $distObjs`;
 		int $previousframe = $lastframe+1;
-		currentTime -update 0 -edit $frame;
+		currentTime -update 1 -edit $frame;
 		
 		progressWindow -title "Calculating Joint Axes" -min $frame -max $lastframe  -progress $frame
 				 -status ("Processing frame: "+$frame) -isInterruptable true;
@@ -72,7 +72,7 @@ global proc relMotion(string $proxObjs[], string $distObjs[], string $jcs[])
 			
 			progressWindow -edit -progress $frame -status ("Processing frame: "+$frame);
 			
-			currentTime -update 0 -edit $frame;
+			currentTime -update 1 -edit $frame;
 		}					
 	}
 	progressWindow -endProgress;
