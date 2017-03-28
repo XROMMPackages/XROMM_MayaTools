@@ -18,20 +18,26 @@ global proc CTMexport()
 				text "All Locators (double-click to rename)";
 				textScrollList
 					-allowMultiSelection 1 -w ($width*0.4) -sc allLocatorListSelectCmd
-					-dcc "renameLocatorCmd(\"allLocatorList\")" -nr 15 allLocatorList;
+					-dcc "renameLocatorCmd(\"allLocatorList\")" 
+					-dragCallback allLocatorDrag -dropCallback allLocatorDrop -nr 15 allLocatorList;
 			setParent..;
 			columnLayout;
 				text " ";
 				text " ";
 				text " ";
-				button -label "Move Right" -al "center" -w ($width*0.19) -c moveRightButtonCmd moveRightButton;
-				button -label "Move Left" -al "center" -w ($width*0.19) -c moveLeftButtonCmd moveLeftButton;
+				button -label "sortA-Z Left" -al "center" -w ($width*0.19) -c sortLeftButtonCmd sortLeftButton;
+				button -label "sortA-Z Right" -al "center" -w ($width*0.19) -c sortRightButtonCmd sortRightButton;
+				text " ";
+				text -al "center" -w ($width*0.19) "Middle" ;
+				text -al "center" -w ($width*0.19) "Mouse" ;
+				text -al "center" -w ($width*0.19) "<--Drag--> " ;
 			setParent..;
 			columnLayout;
 				text "Export Locators";
 				textScrollList
 					-allowMultiSelection 1 -w ($width*0.4) -sc selLocatorListSelectCmd 
-					-dcc "renameLocatorCmd(\"selectedLocatorList\")" -nr 15 selectedLocatorList;
+					-dcc "renameLocatorCmd(\"selectedLocatorList\")" 
+					-dragCallback selLocatorDrag -dropCallback selLocatorDrop -nr 15 selectedLocatorList;
 			setParent..;		
 		setParent..;
 		text " ";
@@ -99,25 +105,64 @@ global proc updateOnSelCmd()
 	}
 }
 
-global proc moveRightButtonCmd()
+global proc sortLeftButtonCmd()
 {
-    // move selected from left list to right list
-	string $name[] = `textScrollList -q -si allLocatorList`;
-	for ($n in $name)
-		{textScrollList -edit -append $n selectedLocatorList;
-		textScrollList -edit -removeItem $n allLocatorList;
-		textScrollList -e -si $n selectedLocatorList;}
+    string $curAllList[] = `textScrollList -q -ai allLocatorList`;
+    $curAllList = sort($curAllList);
+    textScrollList -edit -removeAll allLocatorList;
+	for($c in $curAllList)
+			{textScrollList -edit -append $c allLocatorList;}
+    
 }
 
-global proc moveLeftButtonCmd()
+global proc sortRightButtonCmd()
 {
-    // move selected from right list to left list
-	string $name[] = `textScrollList -q -si selectedLocatorList`;
-	for ($n in $name)
-		{textScrollList -edit -append $n allLocatorList;
-		textScrollList -edit -removeItem $n selectedLocatorList;
-		textScrollList -e -si $n allLocatorList;}
+   string $curAllList[] = `textScrollList -q -ai selectedLocatorList`;
+    $curAllList = sort($curAllList);
+    textScrollList -edit -removeAll selectedLocatorList;
+	for($c in $curAllList)
+			{textScrollList -edit -append $c selectedLocatorList;}
 }
+
+global proc string[] allLocatorDrag(string $dragControl, int $x, int $y, int $mods)
+{
+    return {$dragControl};
+}
+
+global proc allLocatorDrop(string $drag, string $drop, string $msgs[],int $x, int $y, int $type)
+{
+    if ((`gmatch  $drop "*allLocatorList"`) && (`gmatch  $drag "*selectedLocatorList"`))
+    {
+        string $name[] = `textScrollList -q -si $drag`;
+        for ($n in $name)
+            {textScrollList -edit -append $n $drop;
+            textScrollList -edit -removeItem $n $drag;
+            textScrollList -e -si $n $drop;}		
+	}
+	print ($drag+"\n"+$drop);
+}
+
+global proc string[] selLocatorDrag(string $dragControl, int $x, int $y, int $mods)
+{
+    return {$dragControl};
+}
+
+global proc selLocatorDrop(string $drag, string $drop, string $msgs[],int $x, int $y, int $type)
+{
+ 
+    if ((`gmatch  $drop "*selectedLocatorList"`) && (`gmatch  $drag "*allLocatorList"`))
+    {
+         string $name[] = `textScrollList -q -si $drag`;
+         for ($n in $name)
+            {textScrollList -edit -append $n $drop;
+            textScrollList -edit -removeItem $n $drag;
+            textScrollList -e -si $n $drop;}
+	}
+	print ($drag+"\n"+$drop);  
+}
+
+
+
 
 global proc renameLocatorCmd(string $listCtrl)
 {
