@@ -1,4 +1,4 @@
-global proc shelf_XROMM_tools_2_1_9 () {
+global proc shelf_XROMM_tools() {
     global string $gBuffStr;
     global string $gBuffStr0;
     global string $gBuffStr1;

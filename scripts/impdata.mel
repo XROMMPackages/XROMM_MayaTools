@@ -53,7 +53,7 @@ global proc impdata()
 					radioButton 	-label  "Rigid Body Matrix" -cc itypeChangeCmd irbmatrix;
 					radioButton 	-label  "Selected Attributes" -cc itypeChangeCmd irbselattr;
 					button -l impObjs -w ($width/4) -en 1 -c "impObjs({},\"\")" impObjsButton;
-					button -l impInertias -w ($width/4) -en 1 -c "impInertias({})" impInertiasButton;
+					button -l impInertias -w ($width/4) -en 1 -c "impInertias({},10,\"full\",1)" impInertiasButton;
 					text " ";
 					radioButtonGrp 	-numberOfRadioButtons 2 -vr -label "type" -cat 1 "left" 0 
 						-cw 1 40 -cw 2 ($width/3 - 40) -enable 1
@@ -786,10 +786,13 @@ global proc impSA(string $impdata[], string $atts[])
 		
 		// if not a time series, we'll rename the objects so that we can duplicate
 		// them with appropriate sequence numbers in the loop below
-		if (!`checkBox -q -v timeSeriesCheck`)
+		if ((!`checkBox -q -v timeSeriesCheck`) &&  (`radioButtonGrp -q -sl objTypeRadioGrp`!=4))
 		{ 
-			for ($i = 0;$i<size($objs);$i++)
-			{group -n ($objs[$i]+"Group") $objs[$i];}
+			if (size($subsetdata)>1)
+		    {
+                for ($i = 0;$i<size($objs);$i++)
+                {group -n ($objs[$i]+"Group") $objs[$i];}
+			}
 		}
 		
 		for ($imp in $subsetdata)
@@ -877,7 +880,7 @@ global proc impXform(string $impdata[], string $flags[], string $atts[])
 			{$absrel = "-r";}
 		
 		// if not a time series, group objects if greater than 1 line
-		if (!`checkBox -q -v timeSeriesCheck`)
+		if ((!`checkBox -q -v timeSeriesCheck`) &&  (`radioButtonGrp -q -sl objTypeRadioGrp`!=4))
 		{ 
 			if (size($subsetdata)>1)
 			{for ($i = 0;$i<size($objs);$i++)
