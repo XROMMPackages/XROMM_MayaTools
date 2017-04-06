@@ -21,13 +21,14 @@ global proc vertAvg2()
 		text "Select the Marker Mesh then Click.";
 		text " ";
 			
-		button	-label "Calculate Centroid" -w ($width-20) -command splitMarkers;
+		button	-label "Calculate Vertex Average Centroid" -w ($width-20) -command splitMarkers;
 		button	-label "Close" -w ($width-20) closeButton;
 		button -edit -command "deleteUI vertAvgWindow; selectMode -o" closeButton;
 
 	showWindow $mainWindow;
 	window -e -h $height -w $width vertAvgWindow;
 }
+
 global proc splitMarkers()
 {
 	if (size(`ls -sl`) == 0)
@@ -55,8 +56,7 @@ global proc splitMarkers()
 		allViewFit(0);
 	}
 }
-			
-	
+				
 global proc string vAvg2(string $obj)
 {
 	// get number of vertices

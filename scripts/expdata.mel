@@ -91,7 +91,7 @@ global proc expdata()
 					radioButtonGrp -numberOfRadioButtons 2 -vr -cc updateFramesCommand -vis 0
 								   -labelArray2 "Yes" "No"
 								   interpolateRadio;
-					radioButtonGrp -edit -sl 1 interpolateRadio;
+					radioButtonGrp -edit -sl 2 interpolateRadio;
 					
 				setParent ..;
 			setParent ..;

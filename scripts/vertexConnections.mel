@@ -13,7 +13,7 @@ global proc vector[] vertexConnections(string $mesh)
 	if (size($mesh)== 0) {string $objs[] = `ls -sl`;$mesh = $objs[0];}
 	
 	// number of faces
-	int $numfaces[] = `polyEvaluate -f $obj`;
+	int $numfaces[] = `polyEvaluate -f $mesh`;
 	
 	// loop through the faces	
 	string $curface[]; string $curIdx[];
