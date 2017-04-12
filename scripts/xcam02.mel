@@ -22,7 +22,6 @@ global proc xcam02(int $numCams)
 	string $defCheckCtrl = "imSeqCheck";
 	string $defaultCamCtrl = "camNameGroup";
 	string $defaultCam = "cam0";
-	int $cfactor = 0;
 	
 	string $mainWindow = `window -title "Xcam - Create Camera from .mayaCam file" -maximizeButton false
 		-minimizeButton true -sizeable true -resizeToFitChildren false xCamWindow2`;
@@ -48,8 +47,7 @@ global proc xcam02(int $numCams)
                         -buttonCommand ("ximageFileCommand(\""+$defImCt+$i+"\")") ($defImCt+($i));
                     
                         checkBox -label "image sequence" -value 1 -enable 1 ($defCheckCtrl+($i));
-                        while(`objExists ($defaultCam+($i+$cfactor))`){$cfactor = $cfactor+1;}
-                        textFieldGrp -label "Camera Name"  -en 1 -text ($defaultCam+($i+$cfactor)) 
+                        textFieldGrp -label "Camera Name"  -en 1 -text ($defaultCam+($i)) 
                         -cl2 "center" "left" ($defaultCamCtrl+($i));
                         text " ";
                     setParent..;
@@ -93,7 +91,6 @@ global proc updateCamNumCommand()
 	string $defCheckCtrl = "imSeqCheck";
 	string $defaultCamCtrl = "camNameGroup";
 	string $defaultCam = "cam0";
-	int $cfactor = 1 + $numCurCams;
 	
 	if ($numCams > $numCurCams)
 	{
@@ -109,8 +106,8 @@ global proc updateCamNumCommand()
                 -buttonCommand ("ximageFileCommand(\""+$defImCt+$i+"\")")  ($defImCt+($i));
             
                 checkBox -label "image sequence" -value 1 -enable 1  ($defCheckCtrl+($i));
-                while(`objExists ($defaultCam+($i))`){$cfactor = $cfactor+1;}
-                textFieldGrp -label "Camera Name"  -en 1 -text ($defaultCam+($i+$cfactor)) 
+                
+                textFieldGrp -label "Camera Name"  -en 1 -text ($defaultCam+($i)) 
                 -cl2 "center" "left" ($defaultCamCtrl+($i));
                 text " ";
             setParent..;

@@ -13,6 +13,7 @@
 global proc xcam01()
 {
     xcam02(2);
+}
     /*
     // GUI
 	if (`window -exists xCamWindow` == true) deleteUI xCamWindow;  
@@ -393,7 +394,8 @@ global proc xmaCamPos(string $cn,string $pn, string $pnI, string $imp[], string 
      
      float $initPlaneDist = (mag($t)*1.3);
      setAttr ($pn+".translateZ") (-$initPlaneDist);
+ }
      */
-}
+
 
     
