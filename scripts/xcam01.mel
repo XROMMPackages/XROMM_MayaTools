@@ -12,6 +12,8 @@
 */ 
 global proc xcam01()
 {
+    xcam02(2);
+    /*
     // GUI
 	if (`window -exists xCamWindow` == true) deleteUI xCamWindow;  
 
@@ -131,6 +133,7 @@ proc int checkInputs(string $cn, string $pointfile)
 }
 proc setXcamPanels()
 {
+/*
     /* currently not used but might be nice to build eventually
     //find xcams
     string $allcams[] = `listCameras`;
@@ -165,7 +168,7 @@ proc setXcamPanels()
 				"$panelName = `modelPanel -unParent -l \"Xcam View Two\" -mbv $menusOkayInPanels`; $panelName"
 				"modelPanel -edit -l \"Xcam View Two\" $panelName;";
     }*/
-     
+   /*  
 }
 
 global proc makeXcam()
@@ -390,6 +393,7 @@ global proc xmaCamPos(string $cn,string $pn, string $pnI, string $imp[], string 
      
      float $initPlaneDist = (mag($t)*1.3);
      setAttr ($pn+".translateZ") (-$initPlaneDist);
+     */
 }
 
     

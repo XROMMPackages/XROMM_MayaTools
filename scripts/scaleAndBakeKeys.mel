@@ -1,0 +1,12 @@
+global proc scaleAndBakeKeys(string $objs[], float $newstart, float $newend)
+{
+    
+	// for selected objects
+	scaleKey -scaleSpecifiedKeys 1 -time ":" -float ":" 
+	         -newStartTime $newstart -newStartFloat $newstart 
+	         -newEndTime $newend -newEndFloat $newend 
+	         -hierarchy none -controlPoints 0 -shape 1 $objs;
+	         
+	bakeResults -sampleBy 1 -time (string($newstart)+":"+string($newend)) 
+	            -preserveOutsideKeys 0 -sparseAnimCurveBake 0 $objs;
+}

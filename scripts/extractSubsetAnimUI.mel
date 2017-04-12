@@ -1,0 +1,60 @@
+global proc extractSubsetAnimUI()
+{
+    if (`window -exists extractSubsetAnimUIwindow` == true) deleteUI extractSubsetAnimUIwindow;  
+
+	int $height = 220;
+	int $width = 500;
+  
+	string $mainWindow = `window -title "Extract Amimation Subset" -maximizeButton false
+		-minimizeButton true -sizeable true -resizeToFitChildren false extractSubsetAnimUIwindow`;
+		
+	frameLayout -label "Extract Animation subset from selected" -height $height -width $width -mw 5 -mh 5;
+	    columnLayout;
+	        intFieldGrp -numberOfFields 2
+	                    -label "start frame" -extraLabel "end frame" startEndintFieldGrp;
+	        text " ";
+			checkBox -label "Scale keys" -value 0 -cc scaleCheckCommand scaleCheck;
+			intFieldGrp -numberOfFields 2 -enable 0
+	                    -label "new start frame" -extraLabel "new end frame"
+	                    -value1 1 -value2 100 newstartEndintFieldGrp;
+	        text " ";	
+            button	-label "Extract" -enable 1 -w ($width) -command processSubsetUICommand processSubsetButton;
+            button	-label "Close" -w ($width) closeButton;
+            button -edit -command "deleteUI jointAxesWindow" closeButton;
+
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;   
+	
+	// update start and ends from selected
+}
+
+global proc scaleCheckCommand()
+{
+    if(`checkBox -q -v scaleCheck`)
+		{intFieldGrp -e -en 1 newstartEndintFieldGrp;
+		 button	-e -label "Extract and Scale" processSubsetButton;}
+	else
+		{intFieldGrp -e -en 0 newstartEndintFieldGrp;
+		 button	-e -label "Extract" processSubsetButton;}
+}
+
+global proc processSubsetUICommand()
+{
+    float $start = `intFieldGrp -q -value1 startEndintFieldGrp`;
+    float $end = `intFieldGrp -q -value2 startEndintFieldGrp`;
+    string $objs[] = `ls -sl`;
+    
+    extractSubsetAnim($objs, $start, $end);
+    
+    if (`checkBox -q -v scaleCheck`)
+    {
+         float $newstart = `intFieldGrp -q -value1 newstartEndintFieldGrp`;
+         float $newend = `intFieldGrp -q -value2 newstartEndintFieldGrp`;
+         scaleAndBakeKeys($objs,  $newstart,  $newend);
+    }
+}
+         
+         
+    
+        
+

@@ -1,0 +1,107 @@
+global proc string CoM(string $obj)
+
+/* Creates a locator at the Center of Mass of input object 
+
+    if an empty string is passed as the input argument, the selected object is used.
+	
+	Based on matlab script CoM_iv written by Anwar M. Upal 
+	following are the notes from the matlab script
+		Based on VTK method GetVolume in
+		vtkMassProperties.  Reference: D. Eberly, J. Lancaster, A. Alyassin, "On
+		gray scale image measurements, II. Surface area and volume", CVGIP:
+		Graphical Models and Image Processing, vol. 53, no.6, pp.550-562, 1991.
+		
+		Uses Divergence Theorem to convert volume integration to an area
+		integral over the boundary of the region formed by the triangular
+		mesh.  The function integrated to get centroid is (x^2,y^2,z^2)/2. 
+	Note: you only need to select the object if not choosing a subset of faces
+    
+     David Baier 09/19/2008
+     Last updated 09/19/2008
+*/
+
+{
+    if (size($obj) == 0){$obj = `ls -sl -o`;}
+	
+    string $objv = $obj+".vtx";
+    string $objf = $obj+".f";
+    
+    //set variables
+    string $curIdx[];
+    vector $p1; vector $p2; vector $p3;
+    vector $i; vector $j; vector $k;
+    vector $u;
+    vector $ii; vector $jj; vector $kk;
+    float $a; float $b; float $c; float $s; float $area;
+    vector $xyzavg; vector $t_vol;
+    vector $centroid = <<0.0, 0.0, 0.0>>;
+    vector $func_sum = <<0.0, 0.0, 0.0>>;
+    
+    // get a list of the selected faces and their vertex indices
+    string $selFaces[] = `polyInfo -fv $obj`;
+    for ($selFace in $selFaces)
+    {
+        // following Matlab CoM_iv.m
+        // get index of current vertices
+        string $currentFace = $selFace;
+        tokenizeList($currentFace,$curIdx);
+        
+        // get xyz coords for current vertices
+        $p1 = `xform -ws -q -t ($objv+"["+$curIdx[2]+"]")`;
+        $p2 = `xform -ws -q -t ($objv+"["+$curIdx[3]+"]")`;
+        $p3 = `xform -ws -q -t ($objv+"["+$curIdx[4]+"]")`;
+        
+        // get ijk vectors
+        $i = << $p2.x-$p1.x, $p3.x-$p1.x, $p3.x-$p2.x>>; 
+        $j = << $p2.y-$p1.y, $p3.y-$p1.y, $p3.y-$p2.y>>; 
+        $k = << $p2.z-$p1.z, $p3.z-$p1.z, $p3.z-$p2.z>>; 
+                    
+        // cross product to get normal vector
+        $u = << $j.x*$k.y - $k.x *$j.y, $k.x*$i.y - $i.x *$k.y, $i.x*$j.y - $j.x *$i.y>>;
+        
+        // find vector of unit length 1
+        $u = unit($u);
+        
+        $ii = <<$i.x*$i.x,$i.y*$i.y,$i.z*$i.z>>;
+        $jj = <<$j.x*$j.x,$j.y*$j.y,$j.z*$j.z>>;
+        $kk = <<$k.x*$k.x,$k.y*$k.y,$k.z*$k.z>>;
+        
+        // area of the current triangle
+        $a = sqrt($ii.y+$jj.y+$kk.y);
+        $b = sqrt($ii.x+$jj.x+$kk.x);
+        $c = sqrt($ii.z+$jj.z+$kk.z);
+        $s = 0.5*($a+$b+$c);
+        $area = sqrt(abs($s*($s-$a)*($s-$b)*($s-$c)));
+        
+        // elements
+        $xyzavg = ($p1+$p2+$p3)/3;
+        
+        // volume of current triangle
+        $t_vol = << $area*$u.x*$xyzavg.x,
+                    $area*$u.y*$xyzavg.y,
+                    $area*$u.z*$xyzavg.z>>;
+                    
+        // sum of function for centroid calculation			
+        $func_sum = $func_sum + << 	$t_vol.x*$xyzavg.x,
+                                    $t_vol.y*$xyzavg.y,
+                                    $t_vol.z*$xyzavg.z>>;
+    }										
+        
+    $func_sum = $func_sum/2;
+    float $Volume = `CoMvolume($obj)`;
+    
+    if ($Volume != 0)
+    {
+        $centroid = ($func_sum/$Volume);
+    }
+    else
+    {
+        print ($obj+" CoM failed. Make sure the mesh is closed");
+    }
+
+    //create and place a locator
+    string $truename[] = `spaceLocator -n ($obj+"CoM")`;
+    xform -ws -t ($centroid.x) ($centroid.y) ($centroid.z) $truename[0];
+
+	return $truename[0];
+}
