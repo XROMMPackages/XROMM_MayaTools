@@ -38,7 +38,7 @@ global proc string[] impObjsInertias(string $fileList[], string $oscale, string 
 				    {$curObj = impObjs({$file},$oscale); 
 				    $createdObjs[size($createdObjs)] = $curObj[0];}
 				if (`gmatch $file "*.csv"`)
-				    {$curObj = impInertias({$file},$inertiaSize,"hemi",1);
+				    {$curObj = impInertias({$file},$inertiaSize,"hemi",0);
 				    $createdObjs[size($createdObjs)] = $curObj[0];}		
 				
 			}

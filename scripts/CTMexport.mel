@@ -57,6 +57,7 @@ global proc CTMexport()
 		{textScrollList -edit -append $obj allLocatorList;}
 	updateOnSelCmd;
 	scriptJob -p $mainWindow -e "SelectionChanged" updateOnSelCmd;	
+	scriptJob -p $mainWindow -e "NameChanged" updateOnSelCmd;	
 }
 
 global proc allLocatorListSelectCmd()
@@ -269,11 +270,7 @@ global proc runCTMexport()
             fprint $fileId ($markers[$i] + "_x,");
             fprint $fileId ($markers[$i] + "_y,");
             fprint $fileId ($markers[$i] + "_z");
-            
-        
             fprint $fileId "\n";
-            
-            int $i = 0;
         
             for ($i = 0; $i < (size($markers)-1); $i++)
             {

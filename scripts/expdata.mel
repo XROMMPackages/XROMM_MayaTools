@@ -79,13 +79,19 @@ global proc expdata()
 					-ann "Frames with no data are listed as Nan (not a number). If data starts at frame 50, the file will fill the first 49 rows with Nan values" nanSpacingCheck;
 					text -label "       with NANs" nanSpacingCheck2;
 					text " ";
+					radioButtonGrp 	-numberOfRadioButtons 2 -vr
+										-labelArray2 "single file" "multiple files"
+										fileNumRadio;
+                    radioButtonGrp 	-edit -sl 1 fileNumRadio;										
+					text " ";
 					checkBox -label "Advanced Options" -value 0 -cc advancedOptionsCheckCommand advancedOptionsCheck;
 					text " ";	
 					text -label "Start and end frames from:" -vis 0 kfoTxt;
 					radioButtonGrp -numberOfRadioButtons 4 -vr -en 1 -cc updateFramesCommand -vis 0
-								   -labelArray4 "Selected objects only" "Hierarchy of selected objects" "All objects in scene" "Timeslider"  
+								   -labelArray4 "Selected objects only" "Hierarchy of selected objects" "Parents of selected objects" "Timeslider"  
 									kfoRadio;
 					radioButtonGrp -edit -sl 1 kfoRadio;
+					// kfo will need more options - ideally a button for parent and a final option to choose what object has the keys
 					text " ";
 					text -label "Spline Interpolate unkeyed frames?:" -vis 0 interpolateTxt;
 					radioButtonGrp -numberOfRadioButtons 2 -vr -cc updateFramesCommand -vis 0
@@ -98,7 +104,7 @@ global proc expdata()
 			text " ";
 		setParent..;
     text " ";
-	button	-label "Export" -w $width -command ("exportType(\"\")") impButton;
+	button	-label "Export" -w $width -command ("exportType({})") impButton;
 	button	-label "Close" -w $width closeButton;
 	button -edit -command "deleteUI expDataWindow" closeButton;
 
@@ -107,74 +113,96 @@ global proc expdata()
 	
 	floatField -edit -value $firstframe startFr;
 	floatField -edit -value $lastframe expEndFr;
+	scriptJob -p $mainWindow -e "SelectionChanged" updateFramesCommand;
 }
 
 
 /************************************************************
 ******************* BUTTON CLICK PROCS **********************
 *************************************************************/
-global proc exportType(string $pointfile)
+global proc exportType(string $pointfiles[])
 {
-	// get file
-	if (size($pointfile) == 0)
-	{
-	    string $pointfiles[] = getXrommPointfiles("Save as",0,"CSV files (*.csv)",1);
-	    $pointfile = $pointfiles[0];
+    string $objs[] = `ls -sl`;
+	// get file or directory
+	if (size($pointfiles) == 0)
+	{  
+	    if (`radioButtonGrp -q -sl fileNumRadio` == 1)
+	        {$pointfiles = getXrommPointfiles("Save as",0,"CSV files (*.csv)",1);}
+	    else
+	        {
+	            string $savedir[] = getXrommPointfiles("Select directory",2,"CSV files (*.csv)",1);
+	            for ($o in $objs)
+	            {
+	                $o = substituteAllString($o, ":", "");
+	                $pointfiles[size($pointfiles)] = ($savedir[0]+"/"+$o+".csv");
+	            }
+	        }
 	}
 	
-	string $fileNcheck = (dirname($pointfile));
-	
-	if (`filetest -d $fileNcheck`)
-	{
-		$pointfile = `substituteAllString $pointfile ".csv" ""`;
-		$pointfile = $pointfile +".csv";
-		
-		if (`autoKeyframe -q -state` == 1){autoKeyframe -state 0;}
-        		
-		// global option
-		if (`radioButtonGrp -q -sl coordTypeRadio` == 1)
-		{
-			if (`radioButton -q -sl rbtrans1`)
-				{expXform($pointfile, {"-t"}, {"tx","ty","tz"});}
-			else if(`radioButton -q -sl rbrot2`)
-                {expXform($pointfile, {"-ro"}, {"rx","ry","rz"});}
-            else if(`radioButton -q -sl rbtransrot3`)
-                {expXform($pointfile, {"-t","-ro"}, {"tx","ty","tz","rx","ry","rz"});}
-            else if(`radioButton -q -sl rbmatrixt4`)
-				{expXform($pointfile, {"-m"}, {"rxx","rxy","rxz","rx0","ryx","ryy","ryz","ry0","rzx","rzy","rzz","rz0","tx","ty","tz","t1"});}
-            else if(`radioButton -q -sl rbselattr5`)
-            	{expGetAttr($pointfile,(`channelBox -q -sma "mainChannelBox"`));}
-            else if(`radioButton -q -sl rbdist6`)
-            	{expdist2($pointfile);}
-            else
-			{confirmDialog 	-title "Need More Info" -message "You must select a data type" 
-				-button "OK" -defaultButton "OK";} 
-		}
-		// local option
-		else if (`radioButtonGrp -q -sl coordTypeRadio` == 2)
-		{
-			if (`radioButton -q -sl rbtrans1`)
-				{expGetAttr($pointfile, {"tx","ty","tz"});}
-			else if(`radioButton -q -sl rbrot2`)
-				{expGetAttr($pointfile, {"rx","ry","rz"});}
-			else if(`radioButton -q -sl rbtransrot3`)
-				{expGetAttr($pointfile, {"tx","ty","tz","rx","ry","rz"});}
-			 else if(`radioButton -q -sl rbmatrixt4`)
-				{expXform($pointfile, {"-m"}, {"rxx","rxy","rxz","rx0","ryx","ryy","ryz","ry0","rzx","rzy","rzz","rz0","tx","ty","tz","t1"});}
-			else if(`radioButton -q -sl rbselattr5`)
-            	{expGetAttr($pointfile,(`channelBox -q -sma "mainChannelBox"`));}
-            else if(`radioButton -q -sl rbdist6`)
-            	{expdist2($pointfile);}
-            else
-			{confirmDialog 	-title "Need More Info" -message "You must select a data type" 
-				-button "OK" -defaultButton "OK";} 
-		}
-	}
-	else
-	{
-		confirmDialog 	-title "Error" -message "Export Cancelled" 
-				-button "OK" -defaultButton "OK";
-	}
+    // counter for multiple file export - unused if single file   
+    int $counter = 0;  
+	    
+    // loop through files
+    for ($pointfile in $pointfiles)
+    {
+        string $fileNcheck = (dirname($pointfile));
+        
+        if (`filetest -d $fileNcheck`)
+        {
+            $pointfile = `substituteAllString $pointfile ".csv" ""`;
+            $pointfile = $pointfile +".csv";
+            
+            if (`autoKeyframe -q -state` == 1){autoKeyframe -state 0;}
+            
+            // if multiple files
+            if (`radioButtonGrp -q -sl fileNumRadio` == 2)
+                 {select -r $objs[$counter]; $counter++; updateFramesCommand;}
+                    
+            // global option
+            if (`radioButtonGrp -q -sl coordTypeRadio` == 1)
+            {
+                if (`radioButton -q -sl rbtrans1`)
+                    {expXform($pointfile, {"-t"}, {"tx","ty","tz"});}
+                else if(`radioButton -q -sl rbrot2`)
+                    {expXform($pointfile, {"-ro"}, {"rx","ry","rz"});}
+                else if(`radioButton -q -sl rbtransrot3`)
+                    {expXform($pointfile, {"-t","-ro"}, {"tx","ty","tz","rx","ry","rz"});}
+                else if(`radioButton -q -sl rbmatrixt4`)
+                    {expXform($pointfile, {"-m"}, {"rxx","rxy","rxz","rx0","ryx","ryy","ryz","ry0","rzx","rzy","rzz","rz0","tx","ty","tz","t1"});}
+                else if(`radioButton -q -sl rbselattr5`)
+                    {expGetAttr($pointfile,(`channelBox -q -sma "mainChannelBox"`));}
+                else if(`radioButton -q -sl rbdist6`)
+                    {expdist2($pointfile);}
+                else
+                {confirmDialog 	-title "Need More Info" -message "You must select a data type" 
+                    -button "OK" -defaultButton "OK";} 
+            }
+            // local option
+            else if (`radioButtonGrp -q -sl coordTypeRadio` == 2)
+            {
+                if (`radioButton -q -sl rbtrans1`)
+                    {expGetAttr($pointfile, {"tx","ty","tz"});}
+                else if(`radioButton -q -sl rbrot2`)
+                    {expGetAttr($pointfile, {"rx","ry","rz"});}
+                else if(`radioButton -q -sl rbtransrot3`)
+                    {expGetAttr($pointfile, {"tx","ty","tz","rx","ry","rz"});}
+                 else if(`radioButton -q -sl rbmatrixt4`)
+                    {expXform($pointfile, {"-m"}, {"rxx","rxy","rxz","rx0","ryx","ryy","ryz","ry0","rzx","rzy","rzz","rz0","tx","ty","tz","t1"});}
+                else if(`radioButton -q -sl rbselattr5`)
+                    {expGetAttr($pointfile,(`channelBox -q -sma "mainChannelBox"`));}
+                else if(`radioButton -q -sl rbdist6`)
+                    {expdist2($pointfile);}
+                else
+                {confirmDialog 	-title "Need More Info" -message "You must select a data type" 
+                    -button "OK" -defaultButton "OK";} 
+            }
+        }
+        else
+        {
+            confirmDialog 	-title "Error" -message "Export Cancelled" 
+                    -button "OK" -defaultButton "OK";
+        }
+    }
 }
 
 global proc selAttCommand()
@@ -241,7 +269,14 @@ global proc updateFramesCommand()
 		$firstframe = `findKeyframe -hi both -which first`;
 		$lastframe = `findKeyframe -hi both -which last`;
 	}
-	// all objects in scene
+	
+	else if (`radioButtonGrp -q -sl kfoRadio` == 3)
+	{
+	    string $parents[] = `listRelatives -ap`;
+		$firstframe = `findKeyframe -hi none -which first $parents`;
+		$lastframe = `findKeyframe -hi none -which last $parents`;
+	}
+	/* all objects in scene
 	else if (`radioButtonGrp -q -sl kfoRadio` == 3)
 	{
 		string $allTransforms[] = `ls -type "transform"`;
@@ -249,7 +284,7 @@ global proc updateFramesCommand()
 		string $shortTformList[] = stringArrayRemove($allCameras, $allTransforms);
 		$firstframe = `findKeyframe -hi both -which first $shortTformList`;
 		$lastframe = `findKeyframe -hi both -which last $shortTformList`;
-	}
+	}*/
 	else if (`radioButtonGrp -q -sl kfoRadio` == 4)
 	{
 		// use timeslider
@@ -369,7 +404,7 @@ proc float [] floatArrayRemoveDuplicates(float $list[])
     return $list;
 }*/
 
-proc string headerList(string $objs[], string $atts[])
+global proc string headerList(string $objs[], string $atts[])
 {
 	string $sVals[];
 	for ($i = 0; $i < (size($objs)); $i++)
@@ -381,9 +416,10 @@ proc string headerList(string $objs[], string $atts[])
     return $headerList;
 }
 
-proc int isKeyed(string $obj, string $att, float $frame)
+global proc int isKeyedExp(string $obj, string $att, float $frame)
 {
 	int $iskeyed;
+	
 	string $objatt = ($obj + "." + $att);
 	float $k[];		
 	// selected objects only
@@ -397,10 +433,13 @@ proc int isKeyed(string $obj, string $att, float $frame)
 	// hierarchy
 	else if (`radioButtonGrp -q -sl kfoRadio` == 2)
 	{
+	    string $objs[] = `listRelatives -ap $obj`; string $objsatt[];
+	    for ($i = 0; $i < size($objs); $i++){$objsatt[$i] = ($objs[$i]+"."+$att);}
+	    
 		if ($att == "m")
-			{$k = `keyframe -hi "both" -t $frame -q -tc $obj`;}
+			{$k = `keyframe -hi "both" -t $frame -q -tc $objs`;}
 		else
-			{$k = `keyframe -hi "both" -t $frame -q -tc $objatt`;}
+			{$k = `keyframe -hi "both" -t $frame -q -tc $objsatt`;}
 	}
 	// all objects in scene
 	else if (`radioButtonGrp -q -sl kfoRadio` == 3)
@@ -418,7 +457,7 @@ proc int isKeyed(string $obj, string $att, float $frame)
 	return $iskeyed;
 }
 
-proc string[] getEXPflagatts(string $curflag)
+global proc string[] getEXPflagatts(string $curflag)
 {
 	string $outstring[];
 	if ($curflag == "-t")
@@ -431,7 +470,7 @@ proc string[] getEXPflagatts(string $curflag)
 	return $outstring;
 }
 
-proc string[] wireFrameSwitch()
+global proc string[] wireFrameSwitch()
 {
 	string $cPanels[] = `getPanel -vis`;
 	string $origDisp[];
@@ -444,7 +483,7 @@ proc string[] wireFrameSwitch()
 	return $origDisp;
 }
 
-proc wireFrameReturnOrig(string $origDisp[])
+global proc wireFrameReturnOrig(string $origDisp[])
 {
 	string $cPanels[] = `getPanel -vis`;
 	for ($i = 0;$i<size($cPanels);$i++)
@@ -500,13 +539,45 @@ global proc expXform(string $pointfile, string $flags[], string $atts[])
 				clear($nan);
 			}
 	}
+	
+	// get frame list
+	int $frameList[]; float $curfr;
+	if(`checkBox -q -v nanSpacingCheck`)
+	{
+		for ($i = $frame; $i<=$lastframe; $i++)
+			{$frameList[size($frameList)] = $i;}
+	}
+	else
+	{
+	    if(`radioButtonGrp -q -sl kfoRadio` == 1)
+	        {int $curfr = `findKeyframe -which "first" $objs`;}
+	    else if (`radioButtonGrp -q -sl kfoRadio` == 2)
+	        {int $curfr = `findKeyframe -which "first" -hi "both" $objs`;}
+	    else if (`radioButtonGrp -q -sl kfoRadio` == 3)
+	        {string $allobs = `ls -tr`; int $curfr = `findKeyframe -which "first" $allobs`;}
+		currentTime -update 0 -edit $curfr;
+		$frameList[0] = $curfr;
+		while( $curfr < $lastframe)
+			{
+			    if(`radioButtonGrp -q -sl kfoRadio` == 1)
+			        {$curfr = `findKeyframe -which "next" $objs`;}
+			    else if (`radioButtonGrp -q -sl kfoRadio` == 2)
+			        {int $curfr = `findKeyframe -which "next" -hi "both" $objs`;}
+			    else if (`radioButtonGrp -q -sl kfoRadio` == 3)
+			        {string $allobs = `ls -tr`; int $curfr = `findKeyframe -which "next" $allobs`;}
+				currentTime -update 0 -edit $curfr;
+				$frameList[size($frameList)] = $curfr;
+			}
+	}
+		
 
 	progressWindow -title "Exporting Data" -min ($frame) -max ($lastframe+1)
 			 -progress ($frame) -status ("Processing frame: " + ($frame)) -isInterruptable true;	
 
-	for ($i = $frame; $i<= $lastframe; $i++)
+	for ($i in $frameList)
 	{
-		currentTime -update 0 -edit $i;
+
+		currentTime -update 1 -edit $i;
 		
 		if (`checkBox -q -v rheaderCheck`)
 			{fprint $fileId ($i + ",");}
@@ -528,7 +599,7 @@ global proc expXform(string $pointfile, string $flags[], string $atts[])
 					string $curatts[] = getEXPflagatts($flag);
 					for ($j = 0; $j<size($vals); $j++)
 					{
-						$iskeyed = isKeyed($obj,$curatts[$j], $i);
+						$iskeyed = isKeyedExp($obj,$curatts[$j], $i);
 						if (!$iskeyed)
 							{$sVals[size($sVals)] = "NaN";}
 						else
@@ -557,7 +628,7 @@ global proc expGetAttr(string $pointfile, string $atts[])
 {
 	//list selected objs
 	string $objs[] = `ls -selection`;
-	float $val; string $sVals[]; int $isKeyed;
+	float $val; string $sVals[]; int $isKeyedExp;
 	
 	// open file for writing
 	$fileId = `fopen $pointfile "w"`;
@@ -591,8 +662,29 @@ global proc expGetAttr(string $pointfile, string $atts[])
 				clear($nan);
 			}
 	}
+	
+	
+		// get frame list
+	int $frameList[];
+	if(`checkBox -q -v nanSpacingCheck`)
+	{
+		for ($i = $frame; $i<=$lastframe; $i++)
+			{$frameList[size($frameList)] = $i;}
+	}
+	else
+	{
+		int $curfr = `findKeyframe -which "first" $objs`;
+		currentTime -update 0 -edit $curfr;
+		$frameList[0] = $curfr;
+		while( $curfr < $lastframe)
+			{
+				$curfr = `findKeyframe -which "next" $objs`;
+				currentTime -update 0 -edit $curfr;
+				$frameList[size($frameList)] = $curfr;
+			}
+	}
 
-	for ($i = $frame; $i<= $lastframe; $i++)
+	for ($i in $frameList)
 	{  
 		// print frame number in first column if needed
 		if (`checkBox -q -v rheaderCheck`)
@@ -606,7 +698,7 @@ global proc expGetAttr(string $pointfile, string $atts[])
 				// if only key frames - do this
 				if (`radioButtonGrp -q -sl interpolateRadio` == 2)
 				{
-					$iskeyed = isKeyed($objs[$j],$atts[$k], $i);
+					$iskeyed = isKeyedExp($objs[$j],$atts[$k], $i);
 					if (!$iskeyed)
 						{$sVals[size($sVals)] = "NaN";}
 					else

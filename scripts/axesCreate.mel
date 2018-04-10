@@ -66,6 +66,16 @@ global proc string axesCreate(string $name, float $size, string $style, int $sin
             parent $zConeName[0] $zAxisName[0];
             $output = `group -em -n ($name)`;
             parent $xAxisName[0]  $yAxisName[0]  $zAxisName[0] $output;
+            
+            // add thickness control 1/3/2018
+            addAttr -ln "axThickness"  -at double  -dv 1 $output;
+            setAttr -e-keyable true ($output+".axThickness");
+            connectAttr -f ($output+".axThickness") ($xAxisName[0]+".scaleY");
+            connectAttr -f ($output+".axThickness") ($xAxisName[0]+".scaleZ");
+            connectAttr -f ($output+".axThickness") ($yAxisName[0]+".scaleX");
+            connectAttr -f ($output+".axThickness") ($yAxisName[0]+".scaleZ");
+            connectAttr -f ($output+".axThickness") ($zAxisName[0]+".scaleY");
+            connectAttr -f ($output+".axThickness") ($zAxisName[0]+".scaleX");
             select $output;
         }
     return $output;

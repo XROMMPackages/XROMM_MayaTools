@@ -895,9 +895,9 @@ global proc impXform(string $impdata[], string $flags[], string $atts[])
 		{
 			// get the frame num and/or row of data
 			$frame = $frames[$frIdx];
-			if (`checkBox -q -v timeSeriesCheck`) {currentTime -update 0 -edit $frame;}
+			if (`checkBox -q -v timeSeriesCheck`) {currentTime -update 1 -edit $frame;}
 			tokenizeList($imp,$data);
-		
+		                                          
 			// for each object
 			for ($i = 1;$i <= size($objs);$i++)
 			{

@@ -15,8 +15,8 @@ global proc string[] impInertias(string $fileList[],float $size, string $style, 
 	if (size($fileList) == 0)
 	    {$fileList = getXrommPointfiles("import", 4, "CSV files (*.csv)",1);}
 	if ($size <= 0){$size = 5;}
-    if ($style != "hemi" || $style != "full"){$style = "hemi";}
-    if ($singleObject != 0 || $singleObject != 1){$singleObject = 1;}
+    if ($style != "hemi" && $style != "full"){$style = "hemi";}
+    if ($singleObject != 0 && $singleObject != 1){$singleObject = 1;}
 	
 	// in case the user hit cancel
 	if (size($fileList) != 0)
