@@ -8,6 +8,17 @@ XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XRO
 ***
 # Installation of MEL scripts and XROMM Shelf #
 CLOSE MAYA BEFORE INSTALLATION
+
+## Windows10 ##
+Move shelf_XROMM_tools.mel to the following directory: 
+
+* My_Documents\maya\mayaVersion(e.g. 2017)\prefs\shelves
+
+Move the .mel files from the XROMM scripts folder into the following directory: 
+
+* My_Documents\maya\scripts
+
+as above, move the scripts, not the folder
  
 ## Windows XP ##
 Move shelf_XROMM_tools.mel to the following directory: 
