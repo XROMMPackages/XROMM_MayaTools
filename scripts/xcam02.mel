@@ -133,7 +133,7 @@ global proc xsetFileCommand(string $textField)
 global proc ximageFileCommand(string $textField)
 {
 	// get file
-	string $pointfiles[] = 	getXrommPointfiles("image", 1, "Image files (*.jpg; *.tiff; *.tif; *.avi)",1);
+	string $pointfiles[] = 	getXrommPointfiles("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1);
 	$pointfile = $pointfiles[0];	
 	textFieldButtonGrp -e -text $pointfile $textField;
 }

@@ -8,6 +8,6 @@
 global proc string createGiantLocator(string $name)
 {
     axesCreateUI;
-    string $output = "Newer version of Shelf tools is available. Updating your shelf will provide greater control over axes creation";
-    return $output;
+    textFieldGrp -e -text $name coordNameUI;
+    return "axesCreateUI";
 }

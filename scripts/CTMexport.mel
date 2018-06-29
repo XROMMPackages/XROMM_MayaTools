@@ -31,6 +31,11 @@ global proc CTMexport()
 				text -al "center" -w ($width*0.19) "Middle" ;
 				text -al "center" -w ($width*0.19) "Mouse" ;
 				text -al "center" -w ($width*0.19) "<--Drag--> " ;
+				text " ";
+				text -al "center" -w ($width*0.19) "or";
+				text " ";
+				button -label "move right" -al "center" -w ($width*0.19) -c moveRightButtonCmd moveRightButton;
+				button -label "move left" -al "center" -w ($width*0.19) -c moveLeftButtonCmd moveLeftButton;
 			setParent..;
 			columnLayout;
 				text "Export Locators";
@@ -162,7 +167,25 @@ global proc selLocatorDrop(string $drag, string $drop, string $msgs[],int $x, in
 	print ($drag+"\n"+$drop);  
 }
 
+global proc moveRightButtonCmd()
+{
+    // move selected from left list to right list
+	string $name[] = `textScrollList -q -si allLocatorList`;
+	for ($n in $name)
+		{textScrollList -edit -append $n selectedLocatorList;
+		textScrollList -edit -removeItem $n allLocatorList;
+		textScrollList -e -si $n selectedLocatorList;}
+}
 
+global proc moveLeftButtonCmd()
+{
+    // move selected from right list to left list
+	string $name[] = `textScrollList -q -si selectedLocatorList`;
+	for ($n in $name)
+		{textScrollList -edit -append $n allLocatorList;
+		textScrollList -edit -removeItem $n selectedLocatorList;
+		textScrollList -e -si $n allLocatorList;}
+}
 
 
 global proc renameLocatorCmd(string $listCtrl)
@@ -190,7 +213,7 @@ global proc renameLocatorCmd(string $listCtrl)
 		string $meshName = `substitute "vAvg2" $curName[0] ""`;
 		if (`objExists $meshName`){rename $meshName ($actualNewname+"Mesh");}
 		// if the mesh was already renamed by this script, we can get that name and rename it again
-		string $alreadyRenamedMesh = `substitute "vAvg2" $curName[0] "Mesh"`;
+		string $alreadyRenamedMesh = ($curName[0]+"Mesh");
 		if (`objExists $alreadyRenamedMesh`){rename $alreadyRenamedMesh ($actualNewname+"Mesh");}
 	}
 }

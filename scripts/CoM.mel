@@ -1,4 +1,4 @@
-global proc string CoM(string $obj)
+global proc vector CoM(string $obj)
 
 /* Creates a locator at the Center of Mass of input object 
 
@@ -103,5 +103,5 @@ global proc string CoM(string $obj)
     string $truename[] = `spaceLocator -n ($obj+"CoM")`;
     xform -ws -t ($centroid.x) ($centroid.y) ($centroid.z) $truename[0];
 
-	return $truename[0];
+	return $centroid;
 }

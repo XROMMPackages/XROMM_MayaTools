@@ -52,7 +52,7 @@ global proc changeXimageFileCommand(int $i, string $fileNode)
 {
     string $defMCamCtrl = "changeXimagePath";
     string $defCheckCtrl = "imSeqCheck";
-    string $newPath[] = getXrommPointfiles("image", 1, "Image files (*.jpg; *.tiff; *.tif; *.avi)",1);	
+    string $newPath[] = getXrommPointfiles("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1);	
 	textFieldButtonGrp -e -text $newPath[0] ($defMCamCtrl+$i);
 	setAttr -type "string" ($fileNode+".fileTextureName")  $newPath[0];
 	setAttr ($fileNode+".useFrameExtension") `checkBox -q -value ($defCheckCtrl+$i)`;

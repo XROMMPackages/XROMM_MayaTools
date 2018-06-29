@@ -253,7 +253,7 @@ global proc setJCS()
 	clear $objList;
 	$objList = {$x, $y, $z};
 	clear $atts;
-	string $atts[] = {".tx",".ty",".tz",".sx",".sy",".sz"};
+	$atts[] = {".tx",".ty",".tz",".sx",".sy",".sz"};
 	for ($o in $objList)
 		{for ($at in $atts){setAttr -lock true ($o+$at);}}
 	setAttr -lock true ($y+".rx");
