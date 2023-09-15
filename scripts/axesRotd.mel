@@ -9,14 +9,31 @@
 */ 
 global proc axesRotd(string $obj, string $axis, float $deg)
 {
-     string $tmp[] = `spaceLocator`;
-     parent $tmp $obj;
-     setAttr ($tmp[0]+".t") 0 0 0;  setAttr ($tmp[0]+".r") 0 0 0;
-     
-     setAttr ($tmp[0]+".r"+$axis) $deg;
-     float $a[] = `xform -ws -q -m $tmp`;
-     delete $tmp;
-     string $vals = floatArrayToString($a," ");
-     eval("xform -ws -m "+$vals +" "+$obj);
+	if (`size $obj` == 0)
+		{string $objs[] = `ls -sl -tr`; $obj = $objs[0];}
+	
+    if (`size $obj` > 0)
+    {
+    	// create temporary locator
+		string $tmp[] = `spaceLocator`;
+		
+		// parent and zero the locator to the obj
+		parent $tmp $obj;
+		setAttr ($tmp[0]+".t") 0 0 0;  setAttr ($tmp[0]+".r") 0 0 0;
+		
+		// apply the rotation to the temporary object  
+		setAttr ($tmp[0]+".r"+$axis) $deg;
+		
+		// get the worldspace xform of the newly rotated temporary object
+		float $a[] = `xform -ws -q -m $tmp`;
+		delete $tmp;
+		
+		// apply the worldspace matrix to obj
+		string $vals = floatArrayToString($a," ");
+		eval("xform -ws -m "+$vals +" "+$obj);
+		select $obj;
+    }
+    else
+    	{print "no object selected\n";}
 }
  

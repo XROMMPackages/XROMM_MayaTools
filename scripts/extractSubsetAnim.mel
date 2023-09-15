@@ -4,10 +4,10 @@ global proc extractSubsetAnim(string $objs[], float $start, float $end)
     
     // clear keys around to prevent spline effects on the ends of the curv
     float $lastKey = `findKeyframe -which "last" $objs`;   
-    cutKey -clear -time ("0:"+string($start-1)) -option keys 
-           -hierarchy none -controlPoints 0 -shape 1 $objs;           
+    cutKey -clear -time ("0:"+string($start-1)) -option "keys" 
+           -hierarchy "none" -controlPoints 0 -shape 1 $objs;           
     cutKey -clear -time (string($end+1)+":"+string($lastKey))
-           -option keys -hierarchy none -controlPoints 0 -shape 1 $objs;
+           -option "keys" -hierarchy "none" -controlPoints 0 -shape 1 $objs;
            
     
 }

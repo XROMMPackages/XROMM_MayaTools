@@ -1,10 +1,8 @@
 global proc float CoMvolume(string $o)
 
-/* Creates a locator at the Volume of selected faces 
-
-    (1)right click on the object 
-    (2)choose "faces" from the marking menu 
-    (3) select faces
+/* 
+	Inputs: $o = name of a closed polygonal mesh with triangular faces
+	Outputs the volume of the object
  	
 	Based on matlab script volume_iv written by Anwar M. Upal 
 	following are the notes from the matlab script

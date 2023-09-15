@@ -168,6 +168,8 @@ proc file2shader(string $shaderName, string $shadergroup)
 proc int checkInputs(string $cn, string $pointfile)
 {
     int $output;
+    
+    // file name and path have character limits - need to add a check here
      //check if camera name is already used
 	if( `objExists $cn` || !`isValidObjectName $cn` || !`file -q -exists $pointfile`)
 	{ 
@@ -176,19 +178,19 @@ proc int checkInputs(string $cn, string $pointfile)
 		{
 			$errTitle = "Conflicting Camera Name";
 			$errMessage = "Object by that camera name already exists";				
-			setFocus camNameGroup;
+			setFocus $cn;
 		}
 		if (!`isValidObjectName $cn`)
 		{
 			$errTitle = "Invalid Camera Name";
 			$errMessage = "Chosen camera name is not a valid object name in maya";				
-			setFocus camNameGroup;
+			setFocus $cn;
 		}
 		if (!`file -q -exists $pointfile`)
 		{
 			$errTitle = "File doesn't exist";
 			$errMessage = "The file path or filename were not found";				
-			setFocus xsetPath;
+			setFocus $pointfile;
 		}
 		confirmDialog -title $errTitle -message $errMessage -button "OK" 
 			-defaultButton "OK" -cancelButton "OK" -dismissString "OK";
@@ -413,8 +415,11 @@ global proc xmaCamPos(string $cn,string $pn, string $pnI, string $imp[], string 
 	 move -r (($u0+0.5)-($imX/2)) ((($imY/2)-($v0+0.5))) 0 ($pn+".scalePivot") ($pn+".rotatePivot");
 	 move -r (-1*(($u0+0.5)-($imX/2))) (-1*(($imY/2)-($v0+0.5))) 0 $pn;
 	 makeIdentity -apply true -t 1 -r 0 -s 0 -n 0 -pn 1 $pn;
-	 setAttr ($pn+".translateZ") (-$flx);
-	 setAttr ($pn+".scaleY") ($flx/$fly);
+	 //setAttr ($pn+".translateZ") (-$flx);
+	 //setAttr ($pn+".scaleY") ($flx/$fly);
+	 setAttr ($pn+".translateZ") (1);
+	 setAttr ($pn+".scaleY") (1/$fly);
+	 setAttr ($pn+".scaleX") (1/$flx);
    
 	 group -name ($cn+"Group") $cn $pn $cnLoc;
      parent $pn $cnLoc;
@@ -431,8 +436,10 @@ global proc xmaCamPos(string $cn,string $pn, string $pnI, string $imp[], string 
 	 xform -ws -m (-$m[0]) (-$m[1]) (-$m[2]) $m[3] $m[4] $m[5] $m[6] $m[7] $m[8] $m[9] $m[10] $m[11] $m[12] $m[13] $m[14] $m[15] $cnLoc;
   
 	 //compensate for separate x and y focal lengths
+//	 expression -s ($pn + ".sx = -"+$pn+".tz/"+$pn+".flx;\n" +
+//      $pn + ".sy = -"+$pn+".tz/"+$pn+".flx*("+$pn+".flx/"+$pn+".fly);") -n ($cn+"PlaneDistanceExpression");
 	 expression -s ($pn + ".sx = -"+$pn+".tz/"+$pn+".flx;\n" +
-        $pn + ".sy = -"+$pn+".tz/"+$pn+".flx*("+$pn+".flx/"+$pn+".fly);") -n ($cn+"PlaneDistanceExpression");
+      	 $pn + ".sy = -"+$pn+".tz/"+$pn+".fly;") -n ($cn+"PlaneDistanceExpression");
      
      float $initPlaneDist = (mag($t)*1.3);
      setAttr ($pn+".translateZ") (-$initPlaneDist);

@@ -6,32 +6,35 @@ global proc expObj(string $objs[], string $pointfiles[])
 
 	// get obj list
 	if (size($objs) == 0){$objs = `ls -sl`;}
+	
+	// get directory
 	if (size($pointfiles) == 0)
-	    {$pointfiles = getXrommPointfiles("Save as",0,"OBJ files (*.obj)",1);}
+		{$pointfiles = getXrommPointfiles("Choose directory",3,"OBJ files (*.obj)",1);}
 	
-	float $curvtx[]; string $curface[]; string $curIdx[]; int $fileId;
+	string $curfile; float $curvtx[]; string $curface[]; string $curIdx[]; int $fileId; string $vtxStr; int $count[];
 	
-	for ($i = 0; $i < size($objs); $i++)
+	for ($obj in $objs)
 	{
-	    print $pointfiles[0];
-        $fileId = `fopen $pointfiles[0] "w"`;
-        //count the vertices and export
+		$curfile = ($pointfiles[0]+"/"+$obj+".obj");
+		print ("exporting "+$curfile+"\n");
+		$fileId = `fopen $curfile "w"`;
+		//count the vertices and export
         fprint $fileId "# exported from XROMM maya tools for use with skelProperties\n";
         fprint $fileId "g Polygonal_Model_1\n";
                         
-        int $count[] = `polyEvaluate -v $objs[0]`;
+        $count = `polyEvaluate -v $obj`;
         
         fprint $fileId ("# Number of geometric vertices: "+ string($count[0])+"\n");
     
         for ($i = 0; $i<$count[0]; $i++)
         {
-            $curvtx = `xform -q -ws -t ($objs[0]+".vtx["+$i+"]")`;
-            string $vtxStr = floatArrayToString($curvtx," ");
+            $curvtx = `xform -q -ws -t ($obj+".vtx["+$i+"]")`;
+            $vtxStr = floatArrayToString($curvtx," ");
             fprint $fileId ("v "+$vtxStr);
             fprint $fileId "\n";
         }
-    
-        int $count[] = `polyEvaluate -f $objs[0]`;
+        
+        $count = `polyEvaluate -f $obj`;
         
         fprint $fileId "# Number of texture vertex coordinates: 0\n";
         fprint $fileId "g Polygonal_Model_1 Triangles_0\n";
@@ -39,7 +42,7 @@ global proc expObj(string $objs[], string $pointfiles[])
         
         for ($i = 0; $i<$count[0]; $i++)
         {
-            $curface = `polyInfo -fv ($objs[0]+".f["+$i+"]")`;
+            $curface = `polyInfo -fv ($obj+".f["+$i+"]")`;
             tokenizeList($curface[0],$curIdx);
             $curIdx[2] = string(int($curIdx[2])+1);
             $curIdx[3] = string(int($curIdx[3])+1);
@@ -49,6 +52,6 @@ global proc expObj(string $objs[], string $pointfiles[])
         }
         fprint $fileId "# end of file";
         fclose $fileId;
-        print ("\/\/export of "+$pointfiles[0]+" complete\n");	
+        print ("\/\/export of "+$curfile+" complete\n");
     }
 }

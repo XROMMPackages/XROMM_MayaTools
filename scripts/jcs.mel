@@ -1,22 +1,15 @@
 /*global proc jcs()
 
-    GUI for creating a Joint Coordinate system
-   
-    Similar to jAx or jointAxes scripts but the depiction of the axes is more accurate in that
-    the Z axis stays fixed to the proximal bone and is not affected by y or x and the X axis stays fixed
-    to the distal bone while the Y axis floats between Z and X 
-    
-    Sample output hierachy for a jcs named myJCS
-    ProximalBone
-        myJCSGrp
-    
+    GUI for visualizing a Joint Coordinate system from two anatomical coordinate systems
+
     Written by David Baier
+    last modified: 3/28/2020
 */
 global proc jcs()
 {
 	if (`window -exists jcsWindow` == true) deleteUI jcsWindow;  
 
-	int $height = 450;
+	int $height = 200;
 	int $width = 500;
 
 	string $mainWindow = `window -title "Joint Coordinate System" -menuBar true -maximizeButton false
@@ -39,27 +32,9 @@ global proc jcs()
 				-buttonLabel "Insert Selection" 
 				-buttonCommand jcsdistSelect jcsdistFieldGroup;
 			
-			button	-label "Create/reset Axes" -enable 1 -w ($width - 40) -command makeJCSPivot jcsCreatePivot;
-			setParent ..;
-		setParent ..;
-	frameLayout -label "Place and Orient"  -width $width -mw 5 -mh 5;
-		columnLayout;
-			text "Place and orient the bones in the  0 0 0 translation 0 0 0 rotation pose";
-			text "Place and orient the axes";
-			text " ";
-			text "Distal bone snap ";
-			radioButtonGrp 	-numberOfRadioButtons 2 -vr -cat 1 "left" 0 
-							-labelArray2 "snap" "unsnap"
-							-sl 2 -en 0 -cc jcsPivotUpdate
-							jcsPivotParentToggleRadioButton;
-			setParent ..;
-		setParent ..;
-	frameLayout -label "Complete Setup"
-		 -width $width -mw 5 -mh 5;
-		columnLayout;
-			button	-label "Complete" -enable 0 -w ($width - 40) -command setJCS setAxesBButton;
-			button	-label "Close" -w ($width - 40) closeButton;
-			button -edit -command "deleteUI jcsWindow" closeButton;
+			button	-label "Create Axes" -enable 1 -w ($width) -command makeJCSPivot jcsCreatePivot;
+			button	-label "Close" -w ($width) jcscloseButton;
+			button -edit -command "deleteUI jcsWindow" jcscloseButton;
 			setParent ..;
 		setParent ..;
 	showWindow $mainWindow;
@@ -104,183 +79,46 @@ global proc makeJCSPivot()
 	string $distObj = `textFieldButtonGrp -q -text jcsdistFieldGroup`;
 	if (!`objExists $distObj`){error -n "distal object does not exist";}
 	
-	// create objects if needed
-	string $proxName = ($axesName+"_prox");
-	string $distName = ($axesName+"_dist");
-	string $axGrpName = ($axesName+"_grp");
-	int $isThisNew = 0;
-
-	if (!`objExists $axGrpName`)
-		{jcsMake($axGrpName);
-		$isThisNew = 1;}
-	if (!`objExists $axesName`)
-		{group -em -n $axesName;}
-	if (!`objExists $proxName`)
-		{group -em -n $proxName;}
-	if (!`objExists $distName`)
-		{group -em -n $distName;}
+	// create an object that is a child of the proximal axes but is point and 
+	// orient constrained to the distal object called axesNamedata
+	string $jcsData = `group -em -n($axesName+"data")`;
 	
-	// now lets make sure that axGrp has children and was made by jcsMake
-	if (!`attributeExists "myc" $axGrpName`)
-		{error -sl 0 "Invalid Axis Object";}
-	string $axGrpChildren[] = `getAttr ($axGrpName+".myc")`;	
+	// make axes
+	string $jcsAxes[] = `jcsMake($axesName+"_grp")`;
+	string $grp = $jcsAxes[0];
+	string $x = $jcsAxes[1];
+	string $y = $jcsAxes[2];
+	string $z = $jcsAxes[3];
 	
-	string $x = $axGrpChildren[0];
-	string $y = $axGrpChildren[1];
-	string $z = $axGrpChildren[2];
+	// parent them to proximal
+	parent $jcsData $proxObj;
+	//setAttr ($jcsData+".t") 0 0 0;
+	//setAttr ($grp+".t") 0 0 0;
 	
-	//lets make sure nothing constrained prior to parenting
-	string $jointGroup[] = {$axesName,$proxName,$distName,$axGrpName,$x,$y,$z};
-	string $clist[] = `listRelatives -ad -type "constraint" $jointGroup`;
-	for ($c in $clist) {delete $c;}
+	// point constrain data node
+	pointConstraint $distObj $jcsData;
+	orientConstraint $distObj $jcsData;
 	
-	//if there are other objects in the joint heirarchy, they need to go to world space
-	string $allRelatives[] = `listRelatives -ad -type "transform" $jointGroup`;
-	for ($a in $allRelatives)
-	    {if (!stringArrayContains($a,$jointGroup)){parent -w $a;}}
+	// connect x to xyz, y to yz and z to z rotations
+	pointConstraint $distObj $grp;
+	orientConstraint -offset 0 0 0 -weight 1 $proxObj $z;
+	orientConstraint -offset 0 0 0 -weight 1 $proxObj $distObj $y;
+	orientConstraint -offset 0 0 0 -weight 1 $distObj $x;
+	//orientConstraint -offset 0 0 0 -weight 1 -skip x $distObj $y;
+   // orientConstraint -offset 0 0 0 -weight 1 -skip x -skip y $distObj $z;
 	
 	// ensure nodes are unlock unlocked prior to parenting
-	string $atts[] = {".tx",".ty",".tz",".rx",".ry",".rz",".sx",".sy",".sz"};
-	for ($j in $jointGroup)
-		{for ($at in $atts){setAttr -lock false ($j+$at);}}
+//	string $atts[] = {".tx",".ty",".tz",".rx",".ry",".rz",".sx",".sy",".sz"};
+//	for ($j in $jointGroup)
+//		{for ($at in $atts){setAttr -lock false ($j+$at);}}
 	
-	// parent jcs and distal to proximal and set to zero
-	// the control object is moved to world - all others parented below
-	string $topGroup[] = {$axesName,$proxName,$distName,$axGrpName};
-	for ($t in $topGroup)
-	{
-		if (size(firstParentOf($t))!=0)
-			{parent-w $t;}
-	}
-		{parent $axGrpName $proxName $distName $axesName;}
 
-	// place the axes group at the average of the proximal and distal object 
-	// bounding boxes but we only want to do this if its a new axis
-	if ($isThisNew)
-	{
-	    for ($j in $jointGroup)	
-            {setAttr ($j+".translate") 0 0 0;
-            setAttr ($j+".rotate") 0 0 0;}
-        float $centp[] = `getAttr ($proxObj+".center")`;
-        float $centd[] = `getAttr ($distObj+".center")`;
-        vector $avg = {($centp[0]+$centd[0]),($centp[1]+$centd[1]),($centp[2]+$centd[2])};
-        $avg = $avg/2;
-        setAttr ($axesName+".translate") ($avg.x) ($avg.y) ($avg.z);
-    }
-	
-	// now lets lock everything that we don't want to move while axes are positioned
-	for ($j in $jointGroup)
-		{for ($at in $atts)
-			if ($j != $axesName)
-				{setAttr -lock true ($j+$at);}
-		}
-	
-	// create a selection handle for the group
-	setAttr ($axesName+".selectHandleX") 1;
-	setAttr ($axesName+".selectHandleY") 1;
-	setAttr ($axesName+".selectHandleZ") 1;
-	setAttr ($axesName+".displayHandle") 1;
-	select $axesName;
-			
-	// enable the complete button
-	radioButtonGrp -e -sl 2 jcsPivotParentToggleRadioButton;
-	radioButtonGrp 	-e -en 1 jcsPivotParentToggleRadioButton;
-	button -e -enable 1 setAxesBButton;
-}
-
-global proc setJCS()
-{
-	// get the values from jcs window
-	string $axesName = `textFieldButtonGrp -q -text jcsaxesFieldGroup`;
-	if (!`objExists $axesName`){error -sl 0 "Axis does not exist";}
-	string $proxObj = `textFieldButtonGrp -q -text jcsproxFieldGroup`;
-	if (!`objExists $proxObj`){error -sl 0 "proximal object does not exist";}
-	string $distObj = `textFieldButtonGrp -q -text jcsdistFieldGroup`;
-	if (!`objExists $distObj`){error -sl 0 "distal object does not exist";}
-	string $axGrpName = ($axesName+"_grp");
-	
-	// make sure it was made with jcs
-	if (!`attributeExists "myc" $axGrpName`)
-		{error -sl 0 "Invalid Axis Object";}
-	string $axGrpChildren[] = `getAttr ($axGrpName+".myc")`;
-	string $x = $axGrpChildren[0];
-    string $y = $axGrpChildren[1];
-    string $z = $axGrpChildren[2];
-	
-	// create objects if needed
-	string $proxName = ($axesName+"_prox");
-	string $distName = ($axesName+"_dist");
-	if (!`objExists $proxName`)
-		{group -em -n $proxName;makeJCSPivot();}
-	if (!`objExists $distName`)
-		{group -em -n $distName;makeJCSPivot();}
-	
-	// lets make sure the distal object isn't attached 
-	if (`radioButtonGrp -q -sl jcsPivotParentToggleRadioButton` == 1)
-		{radioButtonGrp -e -sl 2 jcsPivotParentToggleRadioButton;} 
-	// lets make sure the axes group is parented under the world to start
-	parent -w $axGrpName;
-	
-	//unlock
-	string $objList[] = {$axesName, $proxName, $distName, $axGrpName, $x, $y, $z};
-	string $atts[] = {".tx",".ty",".tz",".rx",".ry",".rz",".sx",".sy",".sz"};
-	for ($o in $objList)
-		{for ($at in $atts){setAttr -lock false ($o+$at);}}
-	
-	//set up parenting relationships
-	parent $proxName $proxObj;
-	parent $distName $distObj;
-	parent $axesName $proxName;
-	parent $axGrpName $proxName;
-	
-	//set orient and point constraints
-	pointConstraint -offset 0 0 0 -weight 1 $distName $axesName;
-	orientConstraint -offset 0 0 0 -weight 1 $distName $axesName;
-	pointConstraint -offset 0 0 0 -weight 1 $axesName $x;
-	pointConstraint -offset 0 0 0 -weight 1 $axesName $y;
-	pointConstraint -offset 0 0 0 -weight 1 $axesName $z;
-	orientConstraint -offset 0 0 0 -weight 1 $axesName $x;
-	orientConstraint -offset 0 0 0 -weight 1 -skip x $axesName $y;
-    orientConstraint -offset 0 0 0 -weight 1 -skip x -skip y $axesName $z;
-	
-	//lock attributes not used
-	clear $objList;
-	$objList = {$proxName, $distName, $axGrpName};
-	for ($o in $objList)
-		{for ($at in $atts){setAttr -lock true ($o+$at);}}
-
-	
-	clear $objList;
-	$objList = {$x, $y, $z};
-	clear $atts;
-	$atts[] = {".tx",".ty",".tz",".sx",".sy",".sz"};
-	for ($o in $objList)
-		{for ($at in $atts){setAttr -lock true ($o+$at);}}
-	setAttr -lock true ($y+".rx");
-	setAttr -lock true ($z+".rx");
-	setAttr -lock true ($z+".ry");
-}		
-
-global proc jcsPivotUpdate()
-{
-	int $snapToggle = `radioButtonGrp -q -sl jcsPivotParentToggleRadioButton`;
-	string $axes = `textFieldButtonGrp -q -text jcsaxesFieldGroup`; $axes = strip($axes);
-	string $distBone = `textFieldButtonGrp -q -text jcsdistFieldGroup`; $distBone = strip($distBone);
-	string $firstParent = firstParentOf($distBone);
-		
-	// if snapping
-	if ($snapToggle == 1 && !isSameObject($axes,$firstParent))
-	    {parent $distBone $axes;}
-	// unsnapping
-	else if ($snapToggle == 2 && isSameObject($axes,$firstParent))
-	    {parent -w $distBone;}
-	select $axes;
 }
 
 /**************************************************************************************
 *****************  scripts for making the axes  ***************************************
 **************************************************************************************/
-global proc jcsMake(string $name)
+global proc string[] jcsMake(string $name)
 /*
 A Group node with X,Y,Z axes underneath
 */
@@ -292,21 +130,17 @@ A Group node with X,Y,Z axes underneath
 	string $x = jcsAxisMake($name,"x");
 	string $y = jcsAxisMake($name,"y");
 	string $z = jcsAxisMake($name,"z");
-   
-	//make the axes references so they can't be selected in camera views
-	/*setAttr ($x+".overrideEnabled") 1;
-	setAttr ($x+".overrideDisplayType") 2;
-	setAttr ($y+".overrideEnabled") 1;
-	setAttr ($y+".overrideDisplayType") 2;
-	setAttr ($z+".overrideEnabled") 1;
-	setAttr ($z+".overrideDisplayType") 2;*/
 	
 	// group them
-    group -n $name $x $y $z;
+	string $outname = `group -n $name $x $y $z`;
+	string $output[];
+    $output[0] = $outname;
+    $output[1] = $x;
+    $output[2] = $y;
+    $output[3] = $z;
     
-    // store the names of the children individual axes on the axes group
-    addAttr -ln "myChildren" -sn "myc" -dt "stringArray" $name;
-    setAttr ($name+".myc") -type stringArray 3 $x $y $z;
+    return $output;
+    
 }
 
 global proc string jcsAxisMake(string $name, string $axis)
@@ -381,3 +215,4 @@ global proc jcsShaderMake()
         setAttr "zShader.color" -type double3 0 0 1;
     }
 }
+

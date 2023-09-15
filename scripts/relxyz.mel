@@ -4,7 +4,7 @@
             $child = name of the distal element
     Output: 1 x 16 maya-format tranformation matrix
     
-    Returns maya matrix of a $child object in the $parent coordinate system
+    Returns translations of a $child object in the $parent coordinate system
 */
 global proc vector relxyz(string $parent, string $child)
 {

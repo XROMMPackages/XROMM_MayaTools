@@ -3,7 +3,18 @@
     outputs the relative motion data as keyframes on a locator
     
  	based on JointAxes script by Dave Baier
-	last updated by Steve Gatesy 1/30/14	
+	last updated by Steve Gatesy 1/30/14
+	7/30/2021 Baier - begin changing for visiblity check. The issue is that animation is usually not stored on the 
+	nodes that are being output (axes parented under animated bones). So even with visiblity keyed on 
+	animated object, there is no way for this to be checked.
+	8/20/2021 added checkbox to not calculate if not visibile.
+	
+	8/14/2023 Baier updates
+	Will now calculate a single frame if there are no keyframes in the scene (allows for quick calculation of two objects relative
+	to each other and creates an object with a single keyframe at frame 1
+	
+	Created attributes to show what two objects were used to create the new node.
+			
 */
 global proc outputRelMotion()
 {
@@ -29,6 +40,7 @@ global proc outputRelMotion()
 	            -buttonLabel "Insert Selection" -buttonCommand distSelectB distFieldGroup;
 	        text "output node";
 	        textField -width $width -text  "m" outputNameField;
+	        checkBox -label "Calculate only if .Visibility is True" -v 0 orelVisCheck;
 	setParent..;
 	    text " ";
 	    button	-label "Output relative data" -enable 1 -w ($width) -command getAxesData;
@@ -77,6 +89,9 @@ global proc enableCheckB()
 
 global proc getAxesData()
 {
+	// if autokeyframe is on, turn it off and store the value to return
+    int $turnAutoBackOn = `autoKeyframe -q -state`;
+    if (`autoKeyframe -q -state` == 1){autoKeyframe -state 0;}
 	
 	string $axesP = `textFieldButtonGrp -q -text proxFieldGroup`;
 	string $axesD = `textFieldButtonGrp -q -text distFieldGroup`;
@@ -85,8 +100,34 @@ global proc getAxesData()
 	int $globalKeys = 0;
 	
 	// first try to get animation frames from the objects heirarchy
-	int $frame = `findKeyframe -hi both -which first $axesD` ;
-	int $lastframe = `findKeyframe -hi both -which last $axesD`;
+	int $frame = `findKeyframe -hi both -which first $axesD $axesP` ;
+	int $lastframe = `findKeyframe -hi both -which last $axesD $axesP`;
+	
+	// if that doesn't work, see if there are connected attributes with keyframes
+	if ($frame-$lastframe == 0)
+	{
+		// get list of parents
+		string $hierlistD[]; getParentHier($axesD,$hierlistD);
+		string $hierlistP[]; getParentHier($axesP,$hierlistP);
+		string $hierlist[] = stringArrayCatenate($hierlistD,$hierlistP);
+		$hierlist[size($hierlist)] = $axesD; $hierlist[size($hierlist)] = $axesP;
+		
+		//are there connections
+		string $conns[] = `listConnections -s 1 -d 0 $axesD $axesP`;
+		//if there are connections
+		if (size($conns) > 0)
+		{
+			// list the connections to them (likely point and aim constraints - now we'll where they are coming from
+			string $conns2[] = `listConnections -s 1 -d 0 $conns`;
+			$conns2 = stringArrayRemoveDuplicates($conns2);
+			for ($c2 in $conns2)
+			{
+				float $tmpfr = `findKeyframe -hi both -which first $c2`;
+				float $tmplfr = `findKeyframe -hi both -which last $c2`;
+				if ($tmpfr-$tmplfr != 0){$frame = $tmpfr; $lastframe = $tmplfr;}
+			}
+		}
+	}
 	
 	// if that doesn't work, see if there is any animation in the scene
 	if ($frame-$lastframe == 0)
@@ -97,26 +138,50 @@ global proc getAxesData()
 		}
 		
 	// Nothing happens if no frames
-	if ($frame-$lastframe == 0)
-		{print "No animation in scene";}
+	//if ($frame-$lastframe == 0)
+	//	{print "No animation in scene";}
 	int $previousframe = $lastframe+1;
 	
 	if ($frame <= 0){$frame = 1;}
 
 	currentTime -update 1 -edit $frame;
 	
-	string $output = $axes + "data";
-	spaceLocator -n $output;
-	string $actualName[] = `ls -sl`;
-	$output = $actualName[0];
+	// create an output name based on user input name. if user chose an object
+	// that already exists, it will be created with a new unique name e.g. axes 
+	// becomes axes1. So we have to query the name after the node is created.
+	string $actualName[] = `spaceLocator -n ($axes + "data")`;
+	string $output = $actualName[0];
 	
-	 progressWindow -title "Calculating Joint Axes" -min $frame -max $lastframe  -progress $frame
+	// add attributes so we know what objects were used to calculate rel motion
+	// in order to make this visible in the channel box - it has to be type enum 
+	// rather than string
+	// string can't have : or it truncates. Problematic with referening and name spaces
+	string $axesPlabel = substituteAllString ($axesP,":","");
+	string $axesDlabel = substituteAllString ($axesD,":","");
+	addAttr -ln "proxobj" -sn "proxo" -at "enum" -en ($axesPlabel+":"+$axesPlabel) $output;
+	setAttr -e -channelBox true ($output+".proxo");
+	addAttr -ln "distobj" -sn "disto" -at "enum" -en ($axesDlabel+":"+$axesDlabel) $output;
+	setAttr -e -channelBox true ($output+".disto");
+	
+	
+	//does the user want to sue visibility check
+	int $visCheck = `checkBox -q -v orelVisCheck`;
+	int $PVis = 1; int $DVis = 1;
+	
+	progressWindow -title "Calculating Joint Axes" -min $frame -max ($lastframe+1)  -progress $frame
 		 -status ("Processing frame: "+$frame) -isInterruptable true;
 	
 		//loop through time
 		while ($frame <= $lastframe)
 		{
-			
+			//check visibility to decide whether to calculate or not using nodeIsVisble procedure
+			if ($visCheck)
+			{
+				$PVis = `nodeIsVisible2($axesP)`;
+				$DVis = `nodeIsVisible2($axesD)`;
+			}
+			if (($PVis == 1) && ($DVis== 1)) 
+			{	
 				//get the worldspace xform of the current object
 				$oldMatrix = `xform -ws -q -m $axesD`;
 				matrix $axesDurChild[4][4] = mmTotm(`xform -ws -q -m $axesD`);
@@ -134,21 +199,23 @@ global proc getAxesData()
 				// ideally we should have a continuous angle check here
 				setKeyframe -at "rotate" $output;
 				setKeyframe -at "translate" $output;
+			}
+			
+			// Check if the dialog has been cancelled
+			if ( `progressWindow -query -isCancelled` ) break;
 				
-				// Check if the dialog has been cancelled
-				if ( `progressWindow -query -isCancelled` ) break;
-					
-				if ($globalKeys == 0)
-				{$frame = `findKeyframe -hi both -which next $axesD`;}
-				else
-				{$frame = `findKeyframe -hi both -which next $transformList`;}	
-				
-				if (($frame-$previousframe) == 0){break;}
-				$previousframe = $frame;
-				
-				progressWindow -edit -progress $frame -status ("Processing frame: "+$frame);
-				
-				currentTime -update 1 -edit $frame;
+			if ($globalKeys == 0)
+			{$frame = `findKeyframe -hi both -which next $axesD $axesP`;}
+			else
+			{$frame = `findKeyframe -hi both -which next $transformList`;}	
+			
+			if (($frame-$previousframe) == 0){break;}
+			$previousframe = $frame;
+			
+			progressWindow -edit -progress $frame -status ("Processing frame: "+$frame);
+			
+			currentTime -update 1 -edit $frame;
 		}
 		progressWindow -endProgress;
+		if ($turnAutoBackOn){autoKeyframe -state 1;}
 }

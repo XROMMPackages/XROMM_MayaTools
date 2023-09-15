@@ -1,6 +1,7 @@
-global proc vector CoM(string $obj)
+global proc string CoM(string $obj)
 
-/* Creates a locator at the Center of Mass of input object 
+/* Creates a locator at the Center of Mass of input object
+	NOTE!!! MUST BE A CLOSED MESH !!!
 
     if an empty string is passed as the input argument, the selected object is used.
 	
@@ -103,5 +104,5 @@ global proc vector CoM(string $obj)
     string $truename[] = `spaceLocator -n ($obj+"CoM")`;
     xform -ws -t ($centroid.x) ($centroid.y) ($centroid.z) $truename[0];
 
-	return $centroid;
+	return $truename[0];
 }

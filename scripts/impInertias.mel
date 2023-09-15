@@ -9,7 +9,7 @@
     inertial axes of mesh models and exports them as a single row maya-matrix format file
     Written By David Baier
 */
-global proc string[] impInertias(string $fileList[],float $size, string $style, int $singleObject)
+global proc string[] impInertias(string $fileList[],float $size, string $style, int $singleObject, string $scaleChoice)
 {
 	string $createdInertias[];
 	if (size($fileList) == 0)
@@ -21,6 +21,13 @@ global proc string[] impInertias(string $fileList[],float $size, string $style, 
 	// in case the user hit cancel
 	if (size($fileList) != 0)
 	{
+	    if (size($scaleChoice) == 0)
+		{
+			$scaleChoice = `confirmDialog -title "Scale objs?" 
+				-message "Do you want to scale the axes  by 1/10th?"
+				-button "Yes" -button "No" -defaultButton "Yes" -cancelButton "No" -dismissString "No"`;
+			//if ($scaleChoice == "Yes"){$size = 3;}
+		}
 		for ($file in $fileList)
 		{
 			if (`filetest -s $file`)
@@ -35,6 +42,13 @@ global proc string[] impInertias(string $fileList[],float $size, string $style, 
 				
 				$line = substituteAllString($line,","," ");
 				eval("xform -ws -m "+$line+" "+$inertiaName);
+				
+				if ($scaleChoice == "Yes")
+				{
+					vector $t = `getAttr ($inertiaName+".t")`;
+					setAttr ($inertiaName+".t") ($t.x/10) ($t.y/10) ($t.z/10);
+					makeIdentity -apply true -t 0 -r 0 -s 1 -n 0 -pn 1 $inertiaName;	
+				}
 				
 				// add the original file name as an attribute, so the user can still track provenience 
 				string $origFileName = basename($file,"");

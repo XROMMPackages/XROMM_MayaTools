@@ -1,7 +1,9 @@
 /* global proc impdata()
     imports a variety of data types for XROMM applications
 	Written by David Baier 04/19/2007
-	last updated 5/30/2016 - D. Baier
+	last updated 3/29/2020 - D. Baier
+	
+	added see keys only 3/29/2020
 	
 	possible way to key visibility and set special key color for non-keyed frames
 	selectKey -add -k -t 45 vert1_visibility ; (vert1_visibility is I thinkg the name of the animation curve - 
@@ -53,7 +55,7 @@ global proc impdata()
 					radioButton 	-label  "Rigid Body Matrix" -cc itypeChangeCmd irbmatrix;
 					radioButton 	-label  "Selected Attributes" -cc itypeChangeCmd irbselattr;
 					button -l impObjs -w ($width/4) -en 1 -c "impObjs({},\"\")" impObjsButton;
-					button -l impInertias -w ($width/4) -en 1 -c "impInertias({},10,\"full\",1)" impInertiasButton;
+					button -l impInertias -w ($width/4) -en 1 -c "impInertias({},10,\"full\",1,\"\")" impInertiasButton;
 					text " ";
 					radioButtonGrp 	-numberOfRadioButtons 2 -vr -label "type" -cat 1 "left" 0 
 						-cw 1 40 -cw 2 ($width/3 - 40) -enable 1
@@ -89,6 +91,9 @@ global proc impdata()
 					checkBox -label "Use subset" -v 0 -cc "rSubsetCC"  rSubsetCheck;
 					textField -en 0 -width ($width/3 - 20) -text "" rSubsetIdxText;
 					text " ";
+					checkBox -label "Hide object if no data" -ann "Keys visibility. Objects are invisible during unkeyed frames"
+						-v 0 -en 1 seeKeyCheck;
+					text " ";
 				setParent ..;
 			setParent ..;
 		frameLayout -label "Object Options" -borderVisible 1;
@@ -108,7 +113,7 @@ global proc impdata()
 				textField -width ($width/3 - 20) -text "obj" newObjTxtField;
 				text " ";
 				text -label "New object scale (mm)" newObjScaleTxt;
-				floatField 	-w 50 -value 1.0 -minValue 0 -maxValue 10 
+				floatField 	-w 50 -value 1.0 -minValue 0 -maxValue 1000 
 							-precision 1 -step .01 -enable 1 objSize;
 			setParent ..;
 		setParent ..;
@@ -218,7 +223,11 @@ global proc processOptions()
 	// if applying to selected objects, get them
 	string $selObjs[];
 	if (`radioButtonGrp -q -sl objTypeRadioGrp`==4)
-	    {$selObjs = `ls -sl -tr`;}
+	    {$selObjs = `ls -sl`;}
+	// if using selected attributes, get these
+	string $selAttr[];
+	if(`radioButton -q -sl irbselattr`)
+		{$selAttr = `channelBox -q -sma "mainChannelBox"`;}
 	
 	for ($pointfile in $pointfiles)
 	{
@@ -228,14 +237,15 @@ global proc processOptions()
 	    int $curfileIdx[] = `textScrollList -q -sii fileList`; 
 	    // update row and column numbers
 	    setSelRowCol();
+	        
 	    // if selected objects with multiple files, we only want to select the ones for the current file
 	    if (`radioButtonGrp -q -sl objTypeRadioGrp`==4)
 	    {
 	        select -cl;
-	        float $numObjPerFile = (size($selObjs)/size($pointfiles));	
-	             for ($j = $numObjPerFile; $j > 0; $j--)
+	        float $numObjPerFile = (size($selObjs)/size($pointfiles));
+	            for ($j = $numObjPerFile; $j > 0; $j--)
                 {
-                    select -tgl $selObjs[int(($curfileIdx[0]*$numObjPerFile)-$j)];    
+                    select -tgl $selObjs[int(($curfileIdx[0]*$numObjPerFile)-$j)];  
                 }
 	    }
 	    if (`filetest -s $pointfile`)
@@ -259,7 +269,7 @@ global proc processOptions()
                else if(`radioButton -q -sl irbmatrix`)
                     {impXform($impdata, {"-m"}, {"rxx","rxy","rxz","rx0","ryx","ryy","ryz","ry0","rzx","rzy","rzz","rz0","tx","ty","tz","t1"});}
                 else if(`radioButton -q -sl irbselattr`)
-                    {impSA($impdata,(`channelBox -q -sma "mainChannelBox"`));}
+                    {impSA($impdata,$selAttr);}
                 else
                 {confirmDialog 	-title "Need More Info" -message "You must select a data type" 
                     -button "OK" -defaultButton "OK";} 
@@ -276,7 +286,7 @@ global proc processOptions()
                  else if(`radioButton -q -sl irbmatrix`)
                     {impXform($impdata, {"-m"}, {"rxx","rxy","rxz","rx0","ryx","ryy","ryz","ry0","rzx","rzy","rzz","rz0","tx","ty","tz","t1"});}
                 else if(`radioButton -q -sl irbselattr`)
-                    {impSA($impdata,(`channelBox -q -sma "mainChannelBox"`));}
+                    {impSA($impdata,$selAttr);}
                 else
                 {confirmDialog 	-title "Need More Info" -message "You must select a data type" 
                     -button "OK" -defaultButton "OK";} 
@@ -318,7 +328,8 @@ global proc timeSeriesCC()
 		if (`autoKeyframe -q -state` == 1){
 			autoKeyframe -state 0;}}
 	else
-		{radioButtonGrp -edit -enable 0 typeRadioGrp;}
+		{radioButtonGrp -edit -enable 0 typeRadioGrp;
+		checkBox -e -v 0 -en 0 seeKeyCheck;}
 }
 
 global proc cSubsetCC()
@@ -626,7 +637,7 @@ global proc string[] getObjList(string $impdata[], string $subsetdata[])
 	// if applying transforms to selected objects
 	if ($type==4)
     {
-        $objs = `ls -sl -tr`;		    
+        $objs = `ls -sl`;		    
         if (size($objs) != $numobjs){clear $objs;}
     }
 	// if creating new objects
@@ -660,12 +671,16 @@ global proc string[] getObjList(string $impdata[], string $subsetdata[])
 		
 		float $size = (`floatField -q -value objSize`/10);
 		// create the object(s)
-		string $tmpEval[]; string $actObjs[];
+		string $tmpEval[]; string $tmpEvalstr; string $actObjs[];
 		for ($o in $objs)
 		{
 			if ($type==1)
-				{$tmpEval = `eval("spaceLocator -n " + $o)`; 
-				$actObjs[size($actObjs)] = $tmpEval[0];}
+				{
+				$tmpEval = `eval("spaceLocator -n " + $o)`; 
+				$actObjs[size($actObjs)] = $tmpEval[0];
+				//$tmpEvalstr = `eval("group -em -n " + $o)`; 
+				//$actObjs[size($actObjs)] = $tmpEvalstr;
+				}
 			else if ($type==2)
 				{$tmpEval[0] = `eval("axesCreate( \""+$o+"\","+$size+",\"full\",1)")`; 
 				$actObjs[size($actObjs)] = $tmpEval[0];}
@@ -773,8 +788,19 @@ global proc impSA(string $impdata[], string $atts[])
     string $objs[] = getObjList($impdata, $subsetdata);
 	float $frames[] = `getFrames($impdata)`;
 	
-	// at this point the number of columns in impdata must equal the numobjs * numatts
-	// and the number of rows must equal the size of frames
+	// If seeKeys is checked, set all keys from 0 to one frame after the endframe to zero vis
+	// It will be rekeyed to visible below if data exists 
+	if (`checkBox -q -v seeKeyCheck`)
+		{for ($n = 0; $n < ($frames[size($frames)-1]+2);$n++)
+			for ($o in $objs)
+			{
+				setAttr ($o+".visibility") 0;
+				setKeyframe -t $n -at "visibility"  $o;
+			}
+		}
+
+	// num columns in impdata must equal the numobjs * numatts
+	// and the num rows must equal the size of frames
 	if ((size($objs)*size($atts)) != (size(stringToStringArray($subsetdata[0],","))) || size($subsetdata) != size($frames))
 	{confirmDialog -t "File size mismatch" 
 		-m "The file size does not match the selected parameters, check column and row headers and try again"
@@ -805,9 +831,11 @@ global proc impSA(string $impdata[], string $atts[])
 				if (`checkBox -q -v timeSeriesCheck`)
 					{$curobj = $obj;}
 				else
-					{string $dupObjs[] = `duplicate $obj`;
-					$curobj = $dupObjs[0];}
-					
+					if (`radioButtonGrp -q -sl objTypeRadioGrp`!=4)
+					{
+						{string $dupObjs[] = `duplicate $obj`;
+						$curobj = $dupObjs[0];}	
+					}
 				for ($att in $atts)
 				{
 					$val = $data[$col];
@@ -819,9 +847,12 @@ global proc impSA(string $impdata[], string $atts[])
 							// so if setting is on relative should send error
 							setAttr ($obj + "." + $att) (float($val));
 							setKeyframe -t $frame -at $att  $obj;
+							if (`checkBox -q -v seeKeyCheck`)
+							{setAttr ($curobj+".visibility") 1;
+							setKeyframe -t $frame -at "visibility"  $curobj;}
 						}
 						else	
-						{
+						{	
 							setAttr ($curobj + "." + $att) (float($val));
 						}		
 					}
@@ -830,12 +861,13 @@ global proc impSA(string $impdata[], string $atts[])
 			}
 			$frIdx = $frIdx+1;
 		}
-		if (!`checkBox -q -v timeSeriesCheck`)
+		// adjusted 20230707 used to only check time series and not selected obj
+		if ((!`checkBox -q -v timeSeriesCheck`) &&  (`radioButtonGrp -q -sl objTypeRadioGrp`!=4))
 		{
 			for ($i = 0;$i<size($objs);$i++)
 				{delete $objs[$i];}
 		}
-		else
+		if (`checkBox -q -v timeSeriesCheck`)
 		{
 			//adjust the time slider
 			playbackOptions -max ($frames[size($frames)-1]);
@@ -853,6 +885,22 @@ global proc impXform(string $impdata[], string $flags[], string $atts[])
 	string $subsetdata[] = `getSubsetData($impdata)`;
     string $objs[] = getObjList($impdata, $subsetdata);
 	float $frames[] = `getFrames($impdata)`;
+	
+	// tmp node to store vals
+	//string $tmploc[0] =`spaceLocator -p 0 0 0 -n "tmpImpDataLocator"`;
+	//string $tmp = $tmploc[0];
+	//string $curobjParent[]; float $attval;
+	
+	// If seeKeys is checked, set all keys from 0 to one frame after the endframe to zero vis
+	// It will be rekeyed to visible below if data exists 
+	if (`checkBox -q -v seeKeyCheck`)
+		{for ($n = 0; $n < ($frames[size($frames)-1]+2);$n++)
+			for ($o in $objs)
+			{
+				setAttr ($o+".visibility") 0;
+				setKeyframe -t $n -at "visibility"  $o;
+			}
+		}
 	
 	// num columns in impdata must equal the numobjs * numatts
 	// and the num rows must equal the size of frames
@@ -887,15 +935,11 @@ global proc impXform(string $impdata[], string $flags[], string $atts[])
 				{group -n ($objs[$i]+"Group") $objs[$i];}
 			}
 		}
-		
-		progressWindow -title "Importing Data" -min ($frames[0]) -max ($frames[0]+size($frames))
-			 -progress ($frames[0]) -status ("Processing frame: " + ($frames[0])) -isInterruptable true;
 			 
 		for ($imp in $subsetdata)
-		{
+		{		
 			// get the frame num and/or row of data
 			$frame = $frames[$frIdx];
-			if (`checkBox -q -v timeSeriesCheck`) {currentTime -update 1 -edit $frame;}
 			tokenizeList($imp,$data);
 		                                          
 			// for each object
@@ -912,13 +956,16 @@ global proc impXform(string $impdata[], string $flags[], string $atts[])
 					}
 					else
 						{$curobj = $objs[$i-1];}
-						
+					
+				// parent our temp locator under the same parent as obj
+				//$curobjParent = `listRelatives -p $curobj`;
+				//if (`size($curobjParent)` == 1){parent $tmp $curobjParent;}
 				
 				// get data for current object
 				for ($j = $numatts ;$j > 0;$j--)
 					{$val[size($val)] = $data[($i*$numatts)-$j];}			
 				
-					// for each flag
+				// for each flag
 				for ($k = 1; $k < (size($flags)+1); $k++)
 				{
 					// get size of the current attribute array
@@ -932,13 +979,21 @@ global proc impXform(string $impdata[], string $flags[], string $atts[])
 					{$subVals[size($subVals)] = $val[($k*$n)-$m];}
 				
 					if ($subVals[0] != "NaN")
-					{
+					{		
 						$valstr = stringArrayToString($subVals," ");
 						eval("xform " + $xcord + " " + $absrel + " " + $curflag + " " + $valstr + " " + $curobj + ";");
 						
 						if (`checkBox -q -v timeSeriesCheck`)
 						{
-							for ($att in $curflagatts){setKeyframe -t $frame -at $att $curobj;}
+							for ($att in $curflagatts)
+							{
+								$attval = `getAttr ($curobj + "." + $att)`;
+								setAttr ($curobj + "." + $att) ($attval);
+								setKeyframe -t $frame -at $att $curobj;
+							}
+							if (`checkBox -q -v seeKeyCheck`)
+							{setAttr ($curobj+".visibility") 1;
+							setKeyframe -t $frame -at "visibility"  $curobj;}
 						}
 					}
 					clear $subVals;
@@ -946,25 +1001,20 @@ global proc impXform(string $impdata[], string $flags[], string $atts[])
 			clear $val;	
 			}
 		$frIdx = $frIdx+1;
-		if ( `progressWindow -query -isCancelled` ) 
-		{break;}
-		progressWindow -edit -progress $frames[$frIdx] -status ("Processing frame: " + $frames[$frIdx]);
-		}
-		
-		progressWindow -endProgress;
-		if (!`checkBox -q -v timeSeriesCheck`)
-		{
-			if (size($subsetdata)>1)
+	
+			if ((!`checkBox -q -v timeSeriesCheck`) &&  (`radioButtonGrp -q -sl objTypeRadioGrp`!=4))
 			{
-				for ($i = 0;$i<size($objs);$i++)
-					{delete $objs[$i];}
+				if (size($subsetdata)>1)
+				{
+					for ($i = 0;$i<size($objs);$i++)
+						{delete $objs[$i];}
+				}
 			}
-		}
-		else
-		{
-			//adjust the time slider
-			playbackOptions -max ($frames[size($frames)-1]);
+			if (`checkBox -q -v timeSeriesCheck`)
+			{
+				//adjust the time slider
+				playbackOptions -max ($frames[size($frames)-1]);
+			}
 		}
 	}
 }
-

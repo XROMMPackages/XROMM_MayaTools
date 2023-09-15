@@ -1,5 +1,6 @@
 /* global proc string[] axesShaderMake()
-    makes red green blue xShader,YShader, and Zshader
+    makes red green blue xShader,YShader, and Zshader 
+    called by axesCreate.mel
     Written by David Baier
 */
 global proc string[] axesShaderMake()

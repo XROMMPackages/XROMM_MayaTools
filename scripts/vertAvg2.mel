@@ -35,30 +35,50 @@ global proc splitMarkers()
 	{confirmDialog -t "Error" -m "Nothing selected." -b "OK";}
 	else
 	{
+		// duplicate to keep original object
 		string $selobj[] = `ls -sl`;
-		string $gn; string $c[];
+		string $origobj[] = `duplicate -n ($selobj[0]+"Orig")`;
+		for ($o in $origobj){setAttr ".visibility" 0 $o;}
+		
+		// set padding number, for now default of 1 since rarely more than 100 objects
+		int $pad = 1;
+		
+		string $gn; string $c[]; string $newPolys[];
 		for ($s in $selobj)
 		{
 			int $numPolys[] = `polyEvaluate -shell $s`;
+			// only run if we have polygonal multiple continuous objects
 			if ($numPolys[0] > 1)
-				{
-					string $newPolys[] = `polySeparate -ch 0 -n $s $s`;
-					for ($n in $newPolys){$c[size($c)] = vAvg2($n);}
-					group -n ($s+"vAvg2Group") $c;
-					//group -n ($s+"MeshGroup") $newPolys;
-				}
-				else
-				{
-					$c[size($c)] = vAvg2($s);
-				}
+			{
+				$newPolys = `polySeparate -ch 0 -n $s $s`;
+				
+				// rename so with padding in marker numbers
+				$newPolys = paddingToMayaAutoNum($newPolys, $pad);
+				
+				//get centroid
+				for ($n in $newPolys){$c[size($c)] = vAvg2($n,$pad);}
+				group -n ($s+"vAvg2Group") $c;
+				//reorder to match original processing
+				parent $s $origobj[0];
+				parent -w $s;
+				parent ($s+"vAvg2Group") $s;
+				parent -w ($s+"vAvg2Group");
+			}
+			// if only one object there will only be one centroid so no need for separating
+			else
+			{
+				$c[size($c)] = vAvg2($s,$pad);
+			}
 		}
 		select ($s+"vAvg2Group") ;
 		allViewFit(0);
 	}
 }
 				
-global proc string vAvg2(string $obj)
+global proc string vAvg2(string $obj,int $pad)
 {
+	$pad++; string $endStr; int $strsize; string $basename;
+	
 	// get number of vertices
 	int $count[] = `polyEvaluate -v $obj`;
 	vector $sum = {0.0,0.0,0.0};
@@ -73,7 +93,10 @@ global proc string vAvg2(string $obj)
 	vector $avg = $sum/$count[0];
 	
 	//create and place a locator
-	string $truename[] = `spaceLocator -n ($obj+"vAvg2")`;
+	$endstr = endString ($obj,$pad);
+	$strsize = `size($obj)`;
+	$basename = `substring $obj 1 ($strsize-$pad)`;
+	string $truename[] = `spaceLocator -n ($basename+"Centroid"+$endstr)`;
 	xform -ws -t ($avg.x) ($avg.y) ($avg.z) $truename[0];
 	return $truename[0];
 }

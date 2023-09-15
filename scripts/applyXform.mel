@@ -12,14 +12,23 @@
 	Last updated: 07/18/2016
 	
 */
-global proc applyXform(float $m[], string $objs[])
+global proc applyXform(float $m[], string $space, string $objs[])
 {
     // if objs is empty use the selected item   
 	if (size($objs) == 0){string $objs[] = `ls -selection`;}
 	// only if we still have something selected
 	if (size($objs) > 0)
 	{ 
-        for ($o in $objs)
-        {xform -ws -m ($m[0]) ($m[1]) ($m[2]) ($m[3]) ($m[4]) ($m[5]) ($m[6]) ($m[7]) ($m[8]) ($m[9]) ($m[10]) ($m[11]) ($m[12]) ($m[13]) ($m[14]) ($m[15]) $o;}
+		if ($space == "ws")
+		{
+			for ($o in $objs)
+			{xform -ws -m ($m[0]) ($m[1]) ($m[2]) ($m[3]) ($m[4]) ($m[5]) ($m[6]) ($m[7]) ($m[8]) ($m[9]) ($m[10]) ($m[11]) ($m[12]) ($m[13]) ($m[14]) ($m[15]) $o;}
+        }
+        else
+        {
+			for ($o in $objs)
+			{xform -os -m ($m[0]) ($m[1]) ($m[2]) ($m[3]) ($m[4]) ($m[5]) ($m[6]) ($m[7]) ($m[8]) ($m[9]) ($m[10]) ($m[11]) ($m[12]) ($m[13]) ($m[14]) ($m[15]) $o;}
+        }
+        	
     }
 }
