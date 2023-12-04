@@ -1,0 +1,79 @@
+global proc pointConnectSegmentKeyframe2()
+
+/*
+select two points before running script
+connects pairs of points with an EP curve line segment
+curve is point constrained to pt1, aim constrained to pt2,
+	and scaled by expression to inter-point distance
+scaleY is keyed each frame to show length
+
+Steve Gatesy
+last updated 6/3/19
+*/
+
+{
+//identify chosen points, checking that only two selected
+//create specific names for points and curve objects
+	string $chosen[] = `ls -sl`;
+	int $number = size($chosen);
+	if ($number==2) 
+	{
+	string $firstName = $chosen[0];
+	string $secondName = $chosen[1];
+	string $curveName = ("seg_"+$firstName+"_"+$secondName);
+
+	//create 1 cm segment in Y and name based on points
+		curve -d 1 -p 0 0 0 -p 0 1 0 -k 0 -k 1;	
+		rename $curveName;
+
+	//point constrain curve to first point
+		pointConstraint $firstName $curveName;
+
+	//aim constrain at second point
+		aimConstraint -offset 0 0 -90 $secondName $curveName;
+
+	//get frame range of keys
+	float $frame = `findKeyframe -hi both -which first $chosen`;
+	float $lastframe = `findKeyframe -hi both -which last $chosen` + 1;
+	currentTime -edit $frame;
+
+	//loop through keys to calculate distance (scaleY) and key visibility
+	while ($frame < $lastframe)
+		{
+		string $firstNameVis = $firstName+".visibility";
+		string $secondNameVis = $secondName+".visibility";
+		int $firstVis = `getAttr $firstNameVis`;
+		int $secondVis = `getAttr $secondNameVis`;
+
+		setKeyframe -at visibility -v 0 $curveName;
+
+		//check to make sure both points visible
+		if (($firstVis == 1) && ($secondVis == 1))
+			{
+			vector $firstNameXYZ = `xform -q -ws -t $firstName`;
+			vector $secondNameXYZ = `xform -q -ws -t $secondName`;
+			float $dist = mag($firstNameXYZ - $secondNameXYZ);
+			setKeyframe -at scaleY -v $dist $curveName;
+			setKeyframe -at visibility -v 1 $curveName;
+			}
+		$frame = $frame + 1;
+		currentTime -edit $frame;
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//

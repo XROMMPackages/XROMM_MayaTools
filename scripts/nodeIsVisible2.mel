@@ -1,0 +1,46 @@
+// check node visibility
+// from http://ewertb.mayasound.com/mel/mel.098.php
+// created by Bryan Ewert
+// copied by S. Gatesy 2/16/21
+
+
+global proc int nodeIsVisible2( string $node )
+{
+  // If user is asking about a bogus node, return FALSE.
+  if ( !`objExists $node` ) return false;
+
+  // Object must be a DAG node, or it's not visible.
+  // There's no MEL query to identify a DAG node, but the kDagNode class adds
+  // the '.visibility' attribute, so we'll use its existence as a cue.
+  if ( !`attributeQuery -node $node -exists "visibility"` ) return false;
+
+  // The obvious: Start with the '.visibility' attribute on the node.
+  int $visible = `getAttr ( $node + ".visibility" )`;
+
+  // If this is an intermediate mesh, it's not visible.
+  if ( `attributeQuery -node $node -exists "intermediateObject"` )
+  {
+    $visible = $visible && !`getAttr ( $node + ".intermediateObject" )`;
+  }
+
+  // For orel - we don't want to check the display layer
+  // If the object is in a displayLayer, and the displayLayer is hidden,
+  // then the object is hidden.
+  //if ( `attributeQuery -node $node -exists "overrideEnabled"` &&
+  //     `getAttr ( $node + ".overrideEnabled" )` )
+  //{
+  //  $visible = $visible && `getAttr ( $node + ".overrideVisibility" )`;
+  //}
+
+  // Ascend the hierarchy and check all of the parent nodes.
+  if ( $visible )
+  {
+    string $parents[] = `listRelatives -parent $node`;
+    if ( `size $parents` > 0 )
+    {
+      $visible = $visible && nodeIsVisible2( $parents[0] );
+    }
+  }
+
+  return $visible;
+}

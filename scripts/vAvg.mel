@@ -1,0 +1,30 @@
+global proc vAvg( string $name)
+{
+	
+	if (size(`ls -sl`) == 0)
+	{
+		confirmDialog -t "Error" -m "No Vertices selected." -b "OK";
+	}
+	else
+	{
+		string $sel[] = `ls -sl -fl`;
+		int $numverts = size($sel);
+		
+		vector $sum = 0;
+		vector $tmp;
+		
+		// sum the vertex positions (could be done faster with vectors)
+		for ($s in $sel)
+		{
+			$tmp = `xform -q -ws -t $s`;
+			$sum = $sum + $tmp;		
+		}
+	
+		//get the average for each 
+		vector $avg = $sum/$numverts;
+	
+		//create and place a locator
+		string $truename[] = `spaceLocator -n $name`;
+		xform -ws -t ($avg.x) ($avg.y) ($avg.z) $truename[0];
+	}
+}

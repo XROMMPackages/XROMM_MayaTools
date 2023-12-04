@@ -1,0 +1,42 @@
+/* global proc vertAvg3()
+
+   Separates polygon into unconnected components and calculates the centroid of each isolated object.  
+   Written by David Baier 6/2015
+*/
+			
+global proc string vertAvgOnSurf(string $obj)
+{	
+	// get number of vertices
+	int $count[] = `polyEvaluate -v $obj`;
+	vector $sum = {0.0,0.0,0.0};
+	vector $curVtx;
+	
+	for ($i = 0; $i<$count[0]; $i++)
+	{
+		$curVtx = `xform -q -ws -t ($obj+".vtx["+$i+"]")`;
+		$sum = ($sum + $curVtx);
+	}
+	
+	vector $avg = $sum/$count[0];
+	//create and place a locator
+	string $truename[] = `spaceLocator -n ($obj+"Centroid")`;
+	xform -ws -t ($avg.x) ($avg.y) ($avg.z) $truename[0];
+	
+	//Now average the vector from the centroid to all of the vertices
+	int $closestvtx; float $curdist;
+	float $dist = 10000.0;
+	for ($i = 0; $i<$count[0]; $i++)
+	{
+		$curVtx = `xform -q -ws -t ($obj+".vtx["+$i+"]")`;
+		$curdist = mag($curVtx-$avg);
+		if ($curdist < $dist){$dist = $curdist; $closestvtx = $i;}
+	}
+	
+	vector $closest = `xform -q -ws -t ($obj+".vtx["+$closestvtx+"]")`;
+	//create and place a locator
+	string $truename2[] = `spaceLocator -n ($obj+"closestVtx")`;
+	xform -ws -t ($closest.x) ($closest.y) ($closest.z) $truename2[0];
+	
+	
+	return $truename[0];
+}

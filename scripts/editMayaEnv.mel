@@ -1,0 +1,48 @@
+global proc editMayaEnv(string $var, string $dir)
+{
+	/* var = the name of a maya environment variable such as MAYA_SCRIPT_PATH
+		dir = directory to be added to that environment variable
+		Maybe intended for call from setpaths? not called by anything else.
+	*/
+	
+	// system spacer for env files
+    string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+    // directory of the env file
+    string $mayaEnv = `about -environmentFile`;
+    // read the current env file into array (each line is an array element)
+    string $mayaEnvLines[] = `fileread($mayaEnv)`;
+    // make sure the input directory is in the native path for os
+    $dir = toNativePath($dir);
+    
+    //initialize new lines
+    string $newEnvLines[]; $match = 0;
+    
+    // check each line for the environment variable
+    for ($line in $mayaEnvLines) 
+    {
+        // if the current line contains MAYA_SCRIPT_PATH or other var, append it to the line
+        if (`gmatch $line ($var+"*")`)
+            {$line = ($line+$spacer+$dir); $match = 1;}
+        $newEnvLines[size($newEnvLines)] = $line;
+    }
+    
+    // if there are no current MAYA_SCRIPT_PATH lines listed, create one
+    if ($match == 0)
+        {$newEnvLines[size($newEnvLines)] = ($var+" = "+$dir);}
+    
+    // write a new maya.env file - overwriting the original - perhaps this should show the
+    // user a preview and ask if its ok to overwrite
+    for($i=0;$i<size($newEnvLines)-1;$i++)
+        {
+          if ($i != (size($newEnvLines)-1))
+                    {$newEnvLines[$i]=($newEnvLines[$i]+"\n");}   
+                else
+                    {$newEnvLines[$i]=($newEnvLines[$i]);}
+        }   
+    $fileId = `fopen $mayaEnv "w"`;
+    for ($line in $newEnvLines)
+    {
+        fprint $fileId ($line);
+    }
+    fclose $fileId;
+}

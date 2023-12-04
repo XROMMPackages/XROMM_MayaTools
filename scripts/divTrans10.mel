@@ -1,0 +1,15 @@
+global proc divTrans10()
+/* Bone models from ct scans or geomagic are often in mm rather than cm. Maya works best in cm.
+	if inertial axes were calculated in mm they will be properly oriented but 10x the x y z position. */
+{
+    vector $t;
+    
+    string $objs[]=`ls -sl`;
+    for ($obj in $objs)
+    {
+        $t = `getAttr ($obj+".t")`;
+        $t = $t/10;
+        setAttr ($obj+".t") ($t.x) ($t.y) ($t.z);
+    }
+}
+

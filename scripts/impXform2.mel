@@ -1,0 +1,143 @@
+global proc impXform2(string $impdata[], string $flags[], string $atts[])
+{
+	// clear selections if needed
+	 if (`radioButtonGrp -q -sl objTypeRadioGrp`!=4)
+            	{select -cl;}
+            
+	// gets just the rows and columns for import
+	string $subsetdata[] = `getSubsetData($impdata)`;
+    string $objs[] = getObjList($impdata, $subsetdata);
+	float $frames[] = `getFrames($impdata)`;
+	
+	// tmp node to store vals
+	//string $tmploc[0] =`spaceLocator -p 0 0 0 -n "tmpImpDataLocator"`;
+	//string $tmp = $tmploc[0];
+	//string $curobjParent[]; float $attval;
+	
+	// If seeKeys is checked, set all keys from 0 to one frame after the endframe to zero vis
+	// It will be rekeyed to visible below if data exists 
+	if (`checkBox -q -v seeKeyCheck`)
+		{for ($n = 0; $n < ($frames[size($frames)-1]+2);$n++)
+			for ($o in $objs)
+			{
+				setAttr ($o+".visibility") 0;
+				setKeyframe -t $n -at "visibility"  $o;
+			}
+		}
+	
+	// num columns in impdata must equal the numobjs * numatts
+	// and the num rows must equal the size of frames
+	if ((size($objs)*size($atts)) != (size(stringToStringArray($subsetdata[0],","))) || size($subsetdata) != size($frames))
+	{confirmDialog -t "File size mismatch" 
+		-m "The file size does not match the selected parameters, check column and row headers and try again"
+		-b "OK";}
+	else
+	{
+		string $xcord; string $absrel; string $val[]; string $subVals[]; string $valstr;
+		int $frIdx = 0;
+		int $numatts = size($atts); int $n; float $frame; string $data[]; string $curflag;
+		string $curflagatts[]; float $testvalstr[]; string $curobj;
+		
+		// flag for xform coordinate system
+		if (`radioButtonGrp -q -sl icoordRadioButton` == 1)
+			{$xcord = "-ws";}
+		else
+			{$xcord = "-os";}
+		
+		// flag for absolute or relative
+		if (`radioButtonGrp -q -sl typeRadioGrp` == 1)
+			{$absrel = "-a";}
+		else
+			{$absrel = "-r";}
+		
+		// if not a time series, group objects if greater than 1 line
+		if ((!`checkBox -q -v timeSeriesCheck`) &&  (`radioButtonGrp -q -sl objTypeRadioGrp`!=4))
+		{ 
+			if (size($subsetdata)>1)
+			{for ($i = 0;$i<size($objs);$i++)
+				{group -n ($objs[$i]+"Group") $objs[$i];}
+			}
+		}
+			 
+		for ($imp in $subsetdata)
+		{		
+			// get the frame num and/or row of data
+			$frame = $frames[$frIdx];
+			tokenizeList($imp,$data);
+		                                          
+			// for each object
+			for ($i = 1;$i <= size($objs);$i++)
+			{
+				
+				if (`checkBox -q -v timeSeriesCheck`)
+					{$curobj = $objs[$i-1];}
+				else
+					if (size($subsetdata)>1)
+					{
+						{string $dupObjs[] = `duplicate $objs[$i-1]`;
+						$curobj = $dupObjs[0];}
+					}
+					else
+						{$curobj = $objs[$i-1];}
+					
+				// parent our temp locator under the same parent as obj
+				//$curobjParent = `listRelatives -p $curobj`;
+				//if (`size($curobjParent)` == 1){parent $tmp $curobjParent;}
+				
+				// get data for current object
+				for ($j = $numatts ;$j > 0;$j--)
+					{$val[size($val)] = $data[($i*$numatts)-$j];}			
+				
+				// for each flag
+				for ($k = 1; $k < (size($flags)+1); $k++)
+				{
+					// get size of the current attribute array
+					$curflag = $flags[$k-1];
+					$curflagatts = getflagatts($curflag);
+					$testvalstr = eval("xform -q " + $xcord + " " + $absrel + " " + $curflag + " " + $curobj + ";");
+					$n = size($testvalstr);
+					
+					// get just the values for the current flag
+					for ($m = $n;$m > 0;$m--)
+					{$subVals[size($subVals)] = $val[($k*$n)-$m];}
+				
+					if ($subVals[0] != "NaN")
+					{		
+						$valstr = stringArrayToString($subVals," ");
+						eval("xform " + $xcord + " " + $absrel + " " + $curflag + " " + $valstr + " " + $curobj + ";");
+						
+						if (`checkBox -q -v timeSeriesCheck`)
+						{
+							for ($att in $curflagatts)
+							{
+								$attval = `getAttr ($curobj + "." + $att)`;
+								setAttr ($curobj + "." + $att) ($attval);
+								setKeyframe -t $frame -at $att $curobj;
+							}
+							if (`checkBox -q -v seeKeyCheck`)
+							{setAttr ($curobj+".visibility") 1;
+							setKeyframe -t $frame -at "visibility"  $curobj;}
+						}
+					}
+					clear $subVals;
+				}
+			clear $val;	
+			}
+		$frIdx = $frIdx+1;
+	
+			if ((!`checkBox -q -v timeSeriesCheck`) &&  (`radioButtonGrp -q -sl objTypeRadioGrp`!=4))
+			{
+				if (size($subsetdata)>1)
+				{
+					for ($i = 0;$i<size($objs);$i++)
+						{delete $objs[$i];}
+				}
+			}
+			if (`checkBox -q -v timeSeriesCheck`)
+			{
+				//adjust the time slider
+				playbackOptions -max ($frames[size($frames)-1]);
+			}
+		}
+	}
+}

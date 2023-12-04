@@ -1,0 +1,38 @@
+global proc seeKeysOnly2()
+
+//Key visibility of selected bones/objects based on presence of keys
+//Steve Gatesy August 1, 2016
+//Last updated 6/3/19
+
+{
+//get name of selected object
+string $sels[] = `ls -sl`;
+string $sel;
+
+for ($sel in $sels)
+	{
+	//get total keyframe array, total number of keyframes, first key, and last key
+	float $keys[] = `keyframe -q -tc -at{".tx"} $sel`;
+	int $total = size($keys);
+	print ("total = "+$total+"\n");
+
+	int $first = `findKeyframe -which first $sel`;
+	print ("first = "+$first+"\n");
+
+	int $last = 1 + `findKeyframe -which last $sel`;
+	print ("last = "+$last+"\n");
+
+	//deal with internal gaps first		
+	for ($i=$first; $i<$last+1; $i++)
+		{
+		if (floatArrayContains($i, $keys))
+			{
+			setKeyframe -t $i -at visibility -v 1 $sel;
+			}
+		else
+			{
+			setKeyframe -t $i -at visibility -v 0 $sel;
+			}
+		}
+	}
+}

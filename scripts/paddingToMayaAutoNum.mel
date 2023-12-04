@@ -1,0 +1,33 @@
+global proc string[] paddingToMayaAutoNum(string $objs[], int $padsize)
+{
+	string $newObjNames[];
+	string $endstr; string $newstr; int $strsize; string $pad;
+	for ($i = 1; $i <= $padsize; $i++){$pad = ($pad+"0");}
+		
+	int $numObjs = `size($objs)`;	
+	int $endCharRemove = 1;
+	
+	// rename so with padding in marker numbers
+	for ($i = 0;$i<$numObjs;$i++)
+	{
+		if ($i == 9){$endCharRemove = 2;if(`size($pad)`==1){$pad="";}else{$pad = endString($pad,1);}}
+		if ($i == 99){$endCharRemove = 3;if(`size($pad)`==1){$pad="";}else{$pad = endString($pad,1);}}
+		if ($i == 9999){$endCharRemove = 4;if(`size($pad)`==1){$pad="";}else{$pad = endString($pad,1);}}
+		
+		//get last digit
+		$endstr = endString ($objs[$i],$endCharRemove);
+		// remove last digit
+		$strsize = `size($objs[$i])`;
+		$newstr = `substring $objs[$i] 1 ($strsize-$endCharRemove)`;
+		// add a zero and then the last digit
+		$newstr = ($newstr+$pad+$endstr);
+		$newObjNames[size($newObjNames)] = $newstr;
+		rename $objs[$i] $newstr;				
+	}	
+	return $newObjNames;
+}
+	
+
+	
+	
+	

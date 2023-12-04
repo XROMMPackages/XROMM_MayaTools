@@ -1,0 +1,21 @@
+global proc string[] getMayaEnvPythonPaths()
+{
+    // get all locations that maya is currently looking for scripts
+	string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+	string $mayaEnv = `about -environmentFile`;
+    string $mayaEnvLines[] = `fileread($mayaEnv)`;
+    string $pp[];
+     
+    for ($m in $mayaEnvLines)
+    { 
+        if(`gmatch $m ("PYTHONPATH*")`)
+        {
+            $m = substituteAllString($m,"PYTHONPATH","");
+            $m = substituteAllString($m,"=","");
+            $m = strip($m);
+            $pp = stringToStringArray($m,$spacer);
+        }
+    }
+    
+    return $pp;
+}

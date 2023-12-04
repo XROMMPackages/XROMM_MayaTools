@@ -1,0 +1,12 @@
+global proc string[] selectAllAnimNodesWithPrefix(string $namespace)
+{
+    string $objs[] = `ls -tr ($namespace)`;
+    string $anims[]; string $isAnim[];
+    for ($o in $objs)
+    {
+        $isAnim = `listConnections -source 1 - type "animCurve" $o`;
+        if (`size $isAnim` > 0){$anims[size($anims)] = $o;}
+    }
+    select $anims;
+    return $anims;
+}

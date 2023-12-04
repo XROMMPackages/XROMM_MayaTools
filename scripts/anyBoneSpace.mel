@@ -1,0 +1,52 @@
+global proc anyBoneSpace()
+
+/*
+last modified 6/3/19 by AR Manafzadeh and SM Gatesy
+
+creates inverse node for an arbitrary bone- select the bone before running
+NOTE: matrixNodes.bundle must be loaded in plug-in manager!!!!!!
+*/
+
+{
+
+	string $selObj[] = `ls -selection`;
+	string $obj = $selObj[0];
+
+	string $objInverse = ($obj+ "Inverse");
+	string $decomposeMatrixObj = ("decomposeMatrix"+ $obj);
+
+	if( `objExists $objInverse`)
+	{
+	
+	print "This inverse node already exists! Delete it and try again.";
+
+	}
+
+	else
+	{
+
+	if( `objExists $decomposeMatrixObj`)
+
+	{
+	
+	delete $decomposeMatrixObj;
+
+	}
+
+	//create locator with inverseMatrix transforms to undo obj animation
+	spaceLocator -n $objInverse;
+
+	//create decomposeMatrixObj node
+	createNode -n $decomposeMatrixObj decomposeMatrix; 
+
+	//connect objInverseMatrix to decomposeMatrixObj inputMatrix;
+	connectAttr -f ($obj+".inverseMatrix") ($decomposeMatrixObj+".inputMatrix");
+
+	//connect decomposeMatrixObj translate, rotate, and scale to objInverse
+	connectAttr -f ($decomposeMatrixObj+".outputTranslate") ($objInverse+".translate");
+	connectAttr -f ($decomposeMatrixObj+".outputRotate") ($objInverse+".rotate");
+	connectAttr -f ($decomposeMatrixObj+".outputScale") ($objInverse+".scale");
+
+	print "Parent desired objects to resulting inverse locator in Hypergraph.";
+}
+}

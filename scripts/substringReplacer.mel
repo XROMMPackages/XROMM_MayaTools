@@ -1,0 +1,8 @@
+string $newname;
+string $nodes[] = `ls -sl`;
+
+for ($n in $nodes)
+{
+    $newname = substituteAllString($n,"imp_","");
+    rename($n, $newname);
+};

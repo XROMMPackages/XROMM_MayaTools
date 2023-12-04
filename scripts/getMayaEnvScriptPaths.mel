@@ -1,0 +1,21 @@
+global proc string[] getMayaEnvScriptPaths()
+{
+    // get all locations that maya is currently looking for scripts
+	string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+	string $mayaEnv = `about -environmentFile`;
+    string $mayaEnvLines[] = `fileread($mayaEnv)`;
+    string $msp[];
+     
+    for ($m in $mayaEnvLines)
+    { 
+        if (`gmatch $m ("MAYA_SCRIPT_PATH*")`)
+        {
+            $m = substituteAllString($m,"MAYA_SCRIPT_PATH","");
+            $m = substituteAllString($m,"=","");
+            $m = strip($m);
+            $msp = stringToStringArray($m,$spacer);
+        }
+    }
+    
+    return $msp;
+}

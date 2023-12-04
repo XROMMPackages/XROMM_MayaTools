@@ -1,0 +1,13 @@
+global proc pz()
+{
+	string $objs[] = `ls -sl`;
+	string $child;
+	string $parent = $objs[(size($objs)-1)];
+	for ($i=0;$i<(size($objs)-1);$i++)
+	{
+		$child = $objs[$i];
+		parent $child $parent;
+		setAttr ($child+".t") 0 0 0;
+		setAttr ($child+".r") 0 0 0;	
+	}
+}

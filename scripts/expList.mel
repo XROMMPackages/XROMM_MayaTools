@@ -1,0 +1,18 @@
+global proc expList() 
+ {
+ 	string $files[] = getXrommPointfiles("Save as", 0, "text files (*.txt)", 1);
+ 	string $filename = $files[0];
+
+ 	$fileId=`fopen $filename "w"`;
+	fprint $fileId ("");
+	fclose $fileId;
+
+	$fileId=`fopen $filename "a"`;
+	string $selection[] = `ls -sl`;
+	for($sel in $selection) 
+	{
+		fprint $fileId ($sel+"\n");
+	}
+	fclose $fileId;
+ }
+	

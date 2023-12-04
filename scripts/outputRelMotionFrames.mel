@@ -1,0 +1,184 @@
+/*  global proc outputRelMotionFrames()
+    calculates the transforms of the distal object relative to the proximal object coordinate space and
+    outputs the relative motion data as keyframes on a locator
+    
+ 	based on JointAxes script by Dave Baier
+	last updated by Steve Gatesy 1/30/14
+	7/30/2021 Baier - begin changing for visiblity check. The issue is that animation is usually not stored on the 
+	nodes that are being output (axes parented under animated bones). So even with visiblity keyed on 
+	animated object, there is no way for this to be checked.
+	8/20/2021 added checkbox to not calculate if not visibile.
+	
+	8/14/2023 Baier updates
+	Will now calculate a single frame if there are no keyframes in the scene (allows for quick calculation of two objects relative
+	to each other and creates an object with a single keyframe at frame 1
+	
+	Created attributes to show what two objects were used to create the new node.
+			
+*/
+global proc outputRelMotionFrames()
+{
+    int $height = 220;
+	int $width = 500;
+	
+	if (`window -exists jointAxesWindow` == true) deleteUI jointAxesWindow;  
+
+	string $mainWindow = `window -title "Output relative motion"-menuBar true
+	    -maximizeButton false -minimizeButton true -sizeable true -resizeToFitChildren false
+		jointAxesWindow`;
+		
+	frameLayout -label "Output relative motion" -height $height -width $width -mw 5 -mh 5;
+	    columnLayout;
+	        menu -label "File";
+	        menuItem -label "Reset" -command cRec resetButton;
+	        menuItem -label "Close" -command "deleteUI jointAxesWindow" closeButton;
+	    columnLayout;
+	        text "Step 1: Select the proximal and distal objects";
+	        textFieldButtonGrp -label "Proximal Object" -text "Select proximal element and click Insert Selection" 
+	            -buttonLabel "Insert Selection" -buttonCommand proxSelectB proxFieldGroup;
+	        textFieldButtonGrp -label "Distal Object" -text "Select distal element and click Insert Selection" 
+	            -buttonLabel "Insert Selection" -buttonCommand distSelectB distFieldGroup;
+	        text "output node";
+	        textField -width $width -text  "m" outputNameField;
+	        checkBox -label "Calculate only if .Visibility is True" -v 0 orelVisCheck;
+	        intFieldGrp -numberOfFields 2
+	                    -label "start frame" -extraLabel "end frame" orelFrIntFieldGrp;
+	setParent..;
+	    text " ";
+	    button	-label "Output relative data" -enable 1 -w ($width) -command getAxesData;
+	    button	-label "Close" -w ($width) closeButton;
+	    button -edit -command "deleteUI jointAxesWindow" closeButton;
+
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+}
+
+
+global proc proxSelectB()
+{
+	string $objs[] = `ls -sl`;
+	textFieldButtonGrp -e -text $objs[0] proxFieldGroup;
+}
+
+
+global proc distSelectB()
+{
+	string $objs[] = `ls -sl`;
+	textFieldButtonGrp -e -text $objs[0] distFieldGroup;
+}
+
+
+global proc enableCheckB()
+{
+	string $prox = `textFieldButtonGrp -q -text proxFieldGroup`;
+	string $dist = `textFieldButtonGrp -q -text distFieldGroup`;
+	string $axes = `textField -q -text outputNameField`;
+	
+	if (`objExists $prox` && `objExists $dist`)
+	{
+		if (!`objExists $axes`)
+		{
+			button -edit -enable 1 createAxesBButton;
+			button -edit -enable 0 setAxesBButton;
+		}
+		else
+		{
+			button -edit -enable 0 createAxesBButton;
+			button -edit -enable 1 setAxesBButton;
+		}
+	}
+}
+
+global proc getAxesData()
+{
+	// if autokeyframe is on, turn it off and store the value to return
+    int $turnAutoBackOn = `autoKeyframe -q -state`;
+    if (`autoKeyframe -q -state` == 1){autoKeyframe -state 0;}
+	
+	string $axesP = `textFieldButtonGrp -q -text proxFieldGroup`;
+	string $axesD = `textFieldButtonGrp -q -text distFieldGroup`;
+    string $axes = `textField -q -text outputNameField`;
+	int $globalKeys = 0;
+	
+	float $frame = `intFieldGrp -q -value1 orelFrIntFieldGrp`;
+    float $lastframe = `intFieldGrp -q -value2 orelFrIntFieldGrp`;
+	
+	int $previousframe = $lastframe+1;
+	
+	if ($frame <= 0){$frame = 1;}
+
+	currentTime -update 1 -edit $frame;
+	
+	// create an output name based on user input name. if user chose an object
+	// that already exists, it will be created with a new unique name e.g. axes 
+	// becomes axes1. So we have to query the name after the node is created.
+	string $actualName[] = `spaceLocator -n ($axes + "data")`;
+	string $output = $actualName[0];
+	
+	// add attributes so we know what objects were used to calculate rel motion
+	// in order to make this visible in the channel box - it has to be type enum 
+	// rather than string
+	// string can't have : or it truncates. Problematic with referening and name spaces
+	string $axesPlabel = substituteAllString ($axesP,":","");
+	string $axesDlabel = substituteAllString ($axesD,":","");
+	addAttr -ln "proxobj" -sn "proxo" -at "enum" -en ($axesPlabel+":"+$axesPlabel) $output;
+	setAttr -e -channelBox true ($output+".proxo");
+	addAttr -ln "distobj" -sn "disto" -at "enum" -en ($axesDlabel+":"+$axesDlabel) $output;
+	setAttr -e -channelBox true ($output+".disto");
+	
+	
+	//does the user want to sue visibility check
+	int $visCheck = `checkBox -q -v orelVisCheck`;
+	int $PVis = 1; int $DVis = 1;
+	
+	progressWindow -title "Calculating Joint Axes" -min $frame -max ($lastframe+1)  -progress $frame
+		 -status ("Processing frame: "+$frame) -isInterruptable true;
+	
+		//loop through time
+		while ($frame <= $lastframe)
+		{
+			//check visibility to decide whether to calculate or not using nodeIsVisble procedure
+			if ($visCheck)
+			{
+				$PVis = `nodeIsVisible2($axesP)`;
+				$DVis = `nodeIsVisible2($axesD)`;
+			}
+			if (($PVis == 1) && ($DVis== 1)) 
+			{	
+				//get the worldspace xform of the current object
+				$oldMatrix = `xform -ws -q -m $axesD`;
+				matrix $axesDurChild[4][4] = mmTotm(`xform -ws -q -m $axesD`);
+				matrix $axesDurParent[4][4] = mmTotm(`xform -ws -q -m $axesP`);
+				matrix $outchild[4][4] = relativeTm($axesDurParent, $axesDurChild);
+		
+			   // apply the new rotation matrix to the oldMatrix
+				$newMatrix = tmTomm($outchild);
+				
+				xform -m    ($newMatrix[0]) ($newMatrix[1]) ($newMatrix[2]) ($newMatrix[3])
+							($newMatrix[4]) ($newMatrix[5]) ($newMatrix[6]) ($newMatrix[7])
+							($newMatrix[8]) ($newMatrix[9]) ($newMatrix[10]) ($newMatrix[11])
+							($newMatrix[12]) ($newMatrix[13]) ($newMatrix[14]) ($newMatrix[15]) $output;
+							
+				// ideally we should have a continuous angle check here
+				setKeyframe -at "rotate" $output;
+				setKeyframe -at "translate" $output;
+			}
+			
+			// Check if the dialog has been cancelled
+			if ( `progressWindow -query -isCancelled` ) break;
+				
+			if ($globalKeys == 0)
+			{$frame = `findKeyframe -hi both -which next $axesD $axesP`;}
+			else
+			{$frame = `findKeyframe -hi both -which next $transformList`;}	
+			
+			if (($frame-$previousframe) == 0){break;}
+			$previousframe = $frame;
+			
+			progressWindow -edit -progress $frame -status ("Processing frame: "+$frame);
+			
+			currentTime -update 1 -edit $frame;
+		}
+		progressWindow -endProgress;
+		if ($turnAutoBackOn){autoKeyframe -state 1;}
+}

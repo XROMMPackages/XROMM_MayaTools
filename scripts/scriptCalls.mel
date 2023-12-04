@@ -1,0 +1,30 @@
+global proc scriptCalls()
+{
+
+	string $scripts[] = getXrommPointfiles("select files", 4, "", 1);
+	
+	string $lines[]; string $basename; string $sbasename; string $tbasename;
+	for ($s in $scripts)
+	{
+		$sbasename = basename($s,"");
+		print ($sbasename+"\n");
+		$basename = basename($s,".mel");
+		for ($t in $scripts)
+		{
+			$tbasename = basename($t,"");
+			if (!gmatch($tbasename,$sbasename))
+			{
+				$lines = `fileread($t)`;
+				$counter = 0;
+				for ($l in $lines)
+				{
+					$counter = $counter+1;
+					if (gmatch ($l,("*"+$basename+"*")))
+					{
+						print ("\t"+$tbasename+" line: "+$counter+"\n");
+					}     
+				}
+			}
+		}
+	}
+}
