@@ -1,6 +1,6 @@
 # README #
 
-XROMM_MayaTools are a set of maya-embedded-language (.mel) scripts and a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer.
+XROMM_MayaTools are a set of maya-embedded-language (.mel) scripts and a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer and should be acknowledged in all publications using XROMM MayaTools.
 
 XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XROMM data, import X-ray camera reconstructions, create joint coordinate systems and export XROMM data.
 ***
