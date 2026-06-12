@@ -62,8 +62,10 @@ global proc string[] impInertias(string $fileList[],float $size, string $style, 
 			{
 				print ("Bad file name. Skipping: "+$file+"\n");
 			}	
-		}   
-    }
+		} 
+		select $createdInertias;
+		allViewFit(0);
+    }   
     return $createdInertias;
 }
 

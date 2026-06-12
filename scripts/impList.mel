@@ -1,7 +1,0 @@
-global proc string[] impList() 
- {
- 	string $files[] = getXrommPointfiles("Save as", 1, "text files (*.txt)", 1);
- 	string $list[] = `fileread($files[0])`;
- 	return $list;
- }
-	

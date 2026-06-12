@@ -30,7 +30,7 @@ global proc float CoMvolume(string $o)
 	string $objv = $o+".vtx";
 	string $objf = $o+".f";
 	
-	//set variables
+	//initialize variables
 	string $curIdx[];
 	vector $p1; vector $p2; vector $p3; vector $i; vector $j; vector $k;
 	vector $u; vector $ii; vector $jj; vector $kk;

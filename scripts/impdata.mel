@@ -428,8 +428,12 @@ global proc string[] removeColWithRowHeaders(string $impdata[], int $firstCol)
 
 global proc string[] getSubsetRows(string $impdata[], int $subsetIdx[])
 {
-	string $subsetData[];
+	string $subsetData[]; int $colheaderInt;
 	for ($sr in $subsetIdx)
+		if (`checkBox -q -v colHeaderCheck`)
+		{$colheaderInt = `intField -q -v chInRowInt`;
+		$subsetData[size($subsetData)] = ($impdata[($sr+$colheaderInt)]);}
+		else
 		{$subsetData[size($subsetData)] = ($impdata[$sr]);}
 	
 	return $subsetData;	

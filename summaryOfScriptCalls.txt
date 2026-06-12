@@ -1,22 +1,17 @@
 adj.mel
-	animPanScan.mel line: 50
-	animPanScan.mel line: 82
-	getXrommPointfiles.mel line: 32
-	impdata.mel line: 864
-	impdata.mel line: 872
-	impdata.mel line: 1015
-	impdata2.mel line: 872
-	impdata2.mel line: 880
-	impdata2.mel line: 1023
-	impXform2.mel line: 138
+	animPanScan.mel line: 51
+	animPanScan.mel line: 83
+	getXrommPointfiles.mel line: 39
+	impdata.mel line: 868
+	impdata.mel line: 876
+	impdata.mel line: 1019
+	impdata2.mel line: 625
+	impdata2.mel line: 633
+	impdata2.mel line: 770
 	inv.mel line: 1
 	inv.mel line: 17
 	inv.mel line: 18
 	jointAxesDual.mel line: 77
-	xcam01.mel line: 296
-	xcam01.mel line: 300
-	xcam01.mel line: 311
-	xcam01.mel line: 358
 	xcam02.mel line: 340
 	xcam02.mel line: 344
 	xcam02.mel line: 355
@@ -25,12 +20,16 @@ animPanScan.mel
 	animPanScanShaderChange.mel line: 1
 	animPanScanShaderChange.mel line: 2
 	animPanScanShaderChange.mel line: 6
+	shelf_XROMM_tools_2_2_6.mel line: 492
+	shelf_XROMM_tools_2_2_6.mel line: 507
+	shelf_XROMM_tools_2_2_6.mel line: 527
 animPanScanShaderChange.mel
+	shelf_XROMM_tools_2_2_6.mel line: 507
+	shelf_XROMM_tools_2_2_6.mel line: 527
 anyBoneSpace.mel
-applyMatrix.mel
-applyXform.mel
-	applyMatrix.mel line: 9
+axesCams.mel
 axesCreate.mel
+	axesCams.mel line: 8
 	axesCreateUI.mel line: 1
 	axesCreateUI.mel line: 2
 	axesCreateUI.mel line: 6
@@ -40,30 +39,30 @@ axesCreate.mel
 	axisCreate.mel line: 16
 	createGiantLocator.mel line: 10
 	createGiantLocator.mel line: 12
-	impdata.mel line: 685
-	impdata2.mel line: 693
+	impdata.mel line: 689
+	impdata2.mel line: 961
 	impInertias.mel line: 38
 	jointAxesDual.mel line: 165
 	jointAxesDual.mel line: 215
 axesCreateUI.mel
 	createGiantLocator.mel line: 10
 	createGiantLocator.mel line: 12
+axesMirror.mel
 axesRotd.mel
 axesShaderMake.mel
 	axesCreate.mel line: 19
 	axisCreate.mel line: 19
+axesSwitch.mel
 axisCreate.mel
-camExposureAdj.mel
-changeXcamImage.mel
-	xcamBrightnessCtrl.mel line: 1
+changeRotKeepAnim2.mel
 cleanStrForObjectName.mel
 	axesCreateUI.mel line: 51
 	CTMexport.mel line: 204
 	CTMexport.mel line: 239
-	impdata.mel line: 587
-	impdata.mel line: 661
-	impdata2.mel line: 590
-	impdata2.mel line: 670
+	impdata.mel line: 591
+	impdata.mel line: 665
+	impdata2.mel line: 940
+	impdata2.mel line: 1069
 	impInertias.mel line: 36
 	impObjs.mel line: 43
 CoM.mel
@@ -73,9 +72,10 @@ CoMvolume.mel
 	CoM.mel line: 92
 createGiantLocator.mel
 	jointAxesDual.mel line: 161
+	shelf_XROMM_tools_2_2_6.mel line: 332
+	shelf_XROMM_tools_2_2_6.mel line: 352
 CTMexport.mel
-	oRelBatch.mel line: 98
-	oRelBatch.mel line: 101
+	shelf_XROMM_tools_2_2_6.mel line: 177
 det.mel
 	adj.mel line: 39
 	adj.mel line: 44
@@ -95,198 +95,88 @@ det.mel
 	adj.mel line: 69
 	adj.mel line: 70
 	CoMvolume.mel line: 77
-	expdata.mel line: 8
-	exportGetAttr.mel line: 138
-	exportGetAttr.mel line: 184
-	exportXform.mel line: 160
+	expdata.mel line: 7
 	inv.mel line: 12
 	inv.mel line: 14
 	inv.mel line: 16
-divTrans10.mel
 editMayaEnv.mel
+	shelf_XROMM_tools_2_2_6.mel line: 37
 expdata.mel
-	impdata.mel line: 575
-	impdata2.mel line: 578
-expIMdist.mel
-expList.mel
+	impdata.mel line: 579
+	impdata2.mel line: 1057
+	shelf_XROMM_tools_2_2_6.mel line: 227
+	shelf_XROMM_tools_2_2_6.mel line: 247
 expObj.mel
-	expdata.mel line: 55
-	expUI.mel line: 25
-exportGetAttr.mel
-	expUI.mel line: 140
-	expUI.mel line: 151
-	expUI.mel line: 153
-	expUI.mel line: 155
-	expUI.mel line: 159
-exportXform.mel
-	exportGetAttr.mel line: 4
-	expUI.mel line: 132
-	expUI.mel line: 134
-	expUI.mel line: 136
-	expUI.mel line: 138
-	expUI.mel line: 157
-expUI.mel
+	expdata.mel line: 50
 extractSubsetAnim.mel
 	extractSubsetAnimUI.mel line: 1
 	extractSubsetAnimUI.mel line: 3
 	extractSubsetAnimUI.mel line: 9
 	extractSubsetAnimUI.mel line: 47
-	xtools.mel line: 21
+	shelf_XROMM_tools_2_2_6.mel line: 681
+	shelf_XROMM_tools_2_2_6.mel line: 701
 extractSubsetAnimUI.mel
-	xtools.mel line: 21
+	shelf_XROMM_tools_2_2_6.mel line: 681
+	shelf_XROMM_tools_2_2_6.mel line: 701
 fileread.mel
 	editMayaEnv.mel line: 13
 	getMayaEnvPythonPaths.mel line: 6
 	getMayaEnvScriptPaths.mel line: 6
 	impdata.mel line: 211
 	impdata.mel line: 253
-	impdata.mel line: 741
-	impdata2.mel line: 214
-	impdata2.mel line: 256
-	impdata2.mel line: 749
-	impList.mel line: 4
-	impOneMarker.mel line: 13
-	impTwoMarker.mel line: 19
-	setpath.mel line: 6
-	setpath.mel line: 88
-	setpath.mel line: 155
-	setpath.mel line: 218
-	setpath.mel line: 284
+	impdata.mel line: 745
+	impdata2.mel line: 309
+	impdata2.mel line: 361
+	impdata2.mel line: 495
+	scriptCalls.mel line: 20
 	setpaths.mel line: 6
 	setpaths.mel line: 85
 	setpaths.mel line: 114
 	setpaths.mel line: 191
 	setpaths.mel line: 266
 	setpaths.mel line: 344
-	xcam01.mel line: 228
 	xcam02.mel line: 269
 freezeBone.mel
-	tmTomm.mel line: 3
 getMayaEnvPythonPaths.mel
-	setpath.mel line: 19
-	setpath.mel line: 133
-	setpath.mel line: 267
 	setpaths.mel line: 28
 	setpaths.mel line: 167
 	setpaths.mel line: 327
 getMayaEnvScriptPaths.mel
-	setpath.mel line: 19
-	setpath.mel line: 66
-	setpath.mel line: 201
 	setpaths.mel line: 22
 	setpaths.mel line: 90
 	setpaths.mel line: 249
-getParentHIer.mel
 getXrommPointfiles.mel
-	changeXcamImage.mel line: 55
 	CTMexport.mel line: 271
+	expdata.mel line: 128
 	expdata.mel line: 131
-	expdata.mel line: 134
-	expIMdist.mel line: 17
-	expList.mel line: 3
-	expObj.mel line: 10
-	expUI.mel line: 97
-	expUI.mel line: 102
+	expObj.mel line: 12
 	fileread.mel line: 13
 	impdata.mel line: 177
-	impdata2.mel line: 180
+	impdata2.mel line: 264
 	impInertias.mel line: 16
-	impList.mel line: 3
 	impObjs.mel line: 20
-	impObjsInertias.mel line: 28
-	setpath.mel line: 12
-	setpath.mel line: 65
-	setpath.mel line: 132
+	scriptCalls.mel line: 7
 	setpaths.mel line: 12
 	setpaths.mel line: 85
 	setpaths.mel line: 89
 	setpaths.mel line: 166
-	xcam01.mel line: 52
-	xcam01.mel line: 62
 	xcam02.mel line: 128
 	xcam02.mel line: 136
-	xcamBrightnessCtrl.mel line: 55
-hasAnim.mel
+	xcamImageChange.mel line: 55
 impdata.mel
 	impdata2.mel line: 1
 	impdata2.mel line: 14
-	impdata2.mel line: 256
-	impdata2.mel line: 258
-	impdata2.mel line: 260
-	impdata2.mel line: 261
-	impdata2.mel line: 267
-	impdata2.mel line: 269
-	impdata2.mel line: 271
-	impdata2.mel line: 273
-	impdata2.mel line: 275
-	impdata2.mel line: 284
-	impdata2.mel line: 286
-	impdata2.mel line: 288
-	impdata2.mel line: 290
-	impdata2.mel line: 292
-	impdata2.mel line: 409
-	impdata2.mel line: 411
-	impdata2.mel line: 416
-	impdata2.mel line: 421
-	impdata2.mel line: 423
-	impdata2.mel line: 432
-	impdata2.mel line: 436
-	impdata2.mel line: 441
-	impdata2.mel line: 446
-	impdata2.mel line: 448
-	impdata2.mel line: 450
-	impdata2.mel line: 460
-	impdata2.mel line: 463
-	impdata2.mel line: 469
-	impdata2.mel line: 512
-	impdata2.mel line: 522
-	impdata2.mel line: 526
-	impdata2.mel line: 539
-	impdata2.mel line: 543
-	impdata2.mel line: 550
-	impdata2.mel line: 627
-	impdata2.mel line: 662
-	impdata2.mel line: 709
-	impdata2.mel line: 717
-	impdata2.mel line: 733
-	impdata2.mel line: 749
-	impdata2.mel line: 752
-	impdata2.mel line: 753
-	impdata2.mel line: 788
-	impdata2.mel line: 795
-	impdata2.mel line: 796
-	impdata2.mel line: 797
-	impdata2.mel line: 810
-	impdata2.mel line: 886
-	impdata2.mel line: 893
-	impdata2.mel line: 894
-	impdata2.mel line: 895
-	impdata2.mel line: 913
 	impObjs.mel line: 6
-	impObjsInertias.mel line: 9
-	impOneMarker.mel line: 6
-	impTwoMarker.mel line: 9
-	impXform2.mel line: 1
-	impXform2.mel line: 8
-	impXform2.mel line: 9
-	impXform2.mel line: 10
-	impXform2.mel line: 28
+	shelf_XROMM_tools_2_2_6.mel line: 192
+	shelf_XROMM_tools_2_2_6.mel line: 212
 impdata2.mel
+	shelf_XROMM_tools_2_2_6.mel line: 212
 impInertias.mel
 	impdata.mel line: 58
 	impdata2.mel line: 58
-	impObjsInertias.mel line: 41
-impList.mel
 impObjs.mel
 	impdata.mel line: 57
 	impdata2.mel line: 57
-	impObjsInertias.mel line: 1
-	impObjsInertias.mel line: 20
-	impObjsInertias.mel line: 38
-impObjsInertias.mel
-impOneMarker.mel
-impTwoMarker.mel
-impXform2.mel
 inv.mel
 	anyBoneSpace.mel line: 6
 	anyBoneSpace.mel line: 21
@@ -297,40 +187,31 @@ inv.mel
 	fileread.mel line: 31
 	impdata.mel line: 94
 	impdata.mel line: 297
-	impdata.mel line: 604
-	impdata2.mel line: 94
-	impdata2.mel line: 300
-	impdata2.mel line: 607
+	impdata.mel line: 608
+	impdata2.mel line: 403
+	impdata2.mel line: 1086
 	jcs.mel line: 76
 	relativeMm.mel line: 17
 	relativeTm.mel line: 11
-	relxyz.mel line: 17
-	xcam01.mel line: 380
 	xcam02.mel line: 427
 isKeyed.mel
-	expdata.mel line: 438
-	expdata.mel line: 638
-	expdata.mel line: 673
-	expdata.mel line: 742
-	exportGetAttr.mel line: 7
-	exportGetAttr.mel line: 52
-	exportGetAttr.mel line: 105
-	exportXform.mel line: 71
-	exportXform.mel line: 128
-	relMotion.mel line: 39
+	expdata.mel line: 504
+	expdata.mel line: 505
+	expdata.mel line: 512
+	expdata.mel line: 633
+	expdata.mel line: 656
+	expdata.mel line: 691
+	expdata.mel line: 847
 jcs.mel
-	relMotion.mel line: 1
-	relMotion.mel line: 4
-	relMotion.mel line: 12
+	shelf_XROMM_tools_2_2_6.mel line: 402
+	shelf_XROMM_tools_2_2_6.mel line: 407
+	shelf_XROMM_tools_2_2_6.mel line: 414
+	shelf_XROMM_tools_2_2_6.mel line: 422
 jointAxesDual.mel
-	tmTomm.mel line: 3
 	XROMMmayaConfig.mel line: 7
 	XROMMmayaConfigUI.mel line: 7
-maxa.mel
-meana.mel
-	stda.mel line: 4
+	shelf_XROMM_tools_2_2_6.mel line: 387
 mmTor.mel
-	relmesh.mel line: 10
 	wsCoordinateAlongAxis.mel line: 13
 	wsCoordinateAlongAxis.mel line: 20
 mmTot.mel
@@ -343,20 +224,10 @@ mmTot.mel
 	jointAxesDual.mel line: 346
 	jointAxesDual.mel line: 347
 	mmTotm.mel line: 1
-	oRelBatch.mel line: 218
-	oRelBatch.mel line: 219
 	outputRelMotion.mel line: 187
 	outputRelMotion.mel line: 188
-	outputRelMotionFrames.mel line: 150
-	outputRelMotionFrames.mel line: 151
 	relativeMm.mel line: 14
 	relativeMm.mel line: 15
-	relCurTransRot.mel line: 18
-	relCurTransRot.mel line: 19
-	relMotion.mel line: 47
-	relMotion.mel line: 48
-	relxyz.mel line: 14
-	relxyz.mel line: 15
 mmTotm.mel
 	freezeBone.mel line: 217
 	freezeBone.mel line: 220
@@ -366,115 +237,67 @@ mmTotm.mel
 	freezeBone.mel line: 254
 	jointAxesDual.mel line: 346
 	jointAxesDual.mel line: 347
-	oRelBatch.mel line: 218
-	oRelBatch.mel line: 219
 	outputRelMotion.mel line: 187
 	outputRelMotion.mel line: 188
-	outputRelMotionFrames.mel line: 150
-	outputRelMotionFrames.mel line: 151
 	relativeMm.mel line: 14
 	relativeMm.mel line: 15
-	relCurTransRot.mel line: 18
-	relCurTransRot.mel line: 19
-	relMotion.mel line: 47
-	relMotion.mel line: 48
-	relxyz.mel line: 14
-	relxyz.mel line: 15
-moveRots.mel
 nodeIsVisible2.mel
-	oRelBatch.mel line: 211
-	oRelBatch.mel line: 212
 	outputRelMotion.mel line: 180
 	outputRelMotion.mel line: 181
-	outputRelMotionFrames.mel line: 143
-	outputRelMotionFrames.mel line: 144
-oRelBatch.mel
 outputRelMotion.mel
-	oRelBatch.mel line: 1
-	outputRelMotionFrames.mel line: 1
-	outputRelMotionFrames.mel line: 19
-outputRelMotionFrames.mel
+	shelf_XROMM_tools_2_2_6.mel line: 437
+	shelf_XROMM_tools_2_2_6.mel line: 457
 paddingToMayaAutoNum.mel
 	vertAvg2.mel line: 56
-plotpts.mel
 pointConnectSegmentKeyframe2.mel
-	xtools.mel line: 23
-	xtools.mel line: 24
-pz.mel
+	shelf_XROMM_tools_2_2_6.mel line: 716
+	shelf_XROMM_tools_2_2_6.mel line: 736
 relativeMm.mel
 	relativeTm.mel line: 1
 relativeTm.mel
 	freezeBone.mel line: 222
 	freezeBone.mel line: 253
 	jointAxesDual.mel line: 348
-	oRelBatch.mel line: 220
 	outputRelMotion.mel line: 189
-	outputRelMotionFrames.mel line: 152
-	relCurTransRot.mel line: 20
-	relMotion.mel line: 49
-relCurTransRot.mel
-relmesh.mel
-relMotion.mel
-relxyz.mel
-	relCurTransRot.mel line: 1
 scaleAndBakeKeys.mel
 	extractSubsetAnimUI.mel line: 53
+scriptCalls.mel
 seeKeysOnly2.mel
-	xtools.mel line: 26
-	xtools.mel line: 27
-selectAllAnimNodes.mel
-	selectAllAnimNodesWithPrefix.mel line: 1
-selectAllAnimNodesWithPrefix.mel
-setpath.mel
-	setpaths.mel line: 1
-	setpaths.mel line: 13
-	setpaths.mel line: 15
-	setpaths.mel line: 33
-	setpaths.mel line: 39
-	setpaths.mel line: 77
+	shelf_XROMM_tools_2_2_6.mel line: 751
+	shelf_XROMM_tools_2_2_6.mel line: 771
 setpaths.mel
-srj.mel
-stda.mel
-substringReplacer.mel
-substrMatchFilesInDir.mel
+	editMayaEnv.mel line: 5
+	shelf_XROMM_tools_2_2_6.mel line: 37
 tmTomm.mel
 	freezeBone.mel line: 224
 	freezeBone.mel line: 234
 	freezeBone.mel line: 256
 	jointAxesDual.mel line: 351
-	oRelBatch.mel line: 223
 	outputRelMotion.mel line: 192
-	outputRelMotionFrames.mel line: 155
 	relativeMm.mel line: 18
-	relCurTransRot.mel line: 23
-	relMotion.mel line: 52
-	xcam01.mel line: 386
 	xcam02.mel line: 433
 tmTor.mel
 	tmTorm.mel line: 1
 tmTorm.mel
 transp.mel
 	adj.mel line: 74
-	animPanScan.mel line: 9
 	animPanScan.mel line: 10
-	animPanScan.mel line: 62
-	animPanScan.mel line: 121
-	animPanScan.mel line: 129
+	animPanScan.mel line: 11
+	animPanScan.mel line: 63
+	animPanScan.mel line: 122
 	animPanScan.mel line: 130
 	animPanScan.mel line: 131
-	animPanScan.mel line: 135
+	animPanScan.mel line: 132
 	animPanScan.mel line: 136
 	animPanScan.mel line: 137
-	animPanScan.mel line: 141
+	animPanScan.mel line: 138
 	animPanScan.mel line: 142
 	animPanScan.mel line: 143
+	animPanScan.mel line: 144
 	animPanScanShaderChange.mel line: 2
-	transpose.mel line: 1
-	transpose.mel line: 29
 	wsCoordinateAlongAxis.mel line: 24
-transpose.mel
-	transp.mel line: 6
-	wsCoordinateAlongAxis.mel line: 24
+	shelf_XROMM_tools_2_2_6.mel line: 507
+	shelf_XROMM_tools_2_2_6.mel line: 527
 vAvg.mel
 	CTMexport.mel line: 213
 	CTMexport.mel line: 243
@@ -490,7 +313,8 @@ vAvg.mel
 	vertAvg2.mel line: 70
 	vertAvg2.mel line: 73
 	vertAvg2.mel line: 78
-vectorCreate.mel
+	shelf_XROMM_tools_2_2_6.mel line: 92
+	shelf_XROMM_tools_2_2_6.mel line: 99
 vertAvg.mel
 	vertAvg2.mel line: 1
 	vertAvg2.mel line: 6
@@ -498,30 +322,24 @@ vertAvg.mel
 	vertAvg2.mel line: 15
 	vertAvg2.mel line: 26
 	vertAvg2.mel line: 29
-	vertAvg3.mel line: 1
-	vertAvg3.mel line: 7
-	vertAvgOnSurf.mel line: 1
-	vertAvgOnSurf.mel line: 7
+	shelf_XROMM_tools_2_2_6.mel line: 87
+	shelf_XROMM_tools_2_2_6.mel line: 107
+	shelf_XROMM_tools_2_2_6.mel line: 122
+	shelf_XROMM_tools_2_2_6.mel line: 142
 vertAvg2.mel
-vertAvg3.mel
-	vertAvgOnSurf.mel line: 1
-vertAvgOnSurf.mel
-vertexConnections.mel
-vertexPositions.mel
+	shelf_XROMM_tools_2_2_6.mel line: 122
+	shelf_XROMM_tools_2_2_6.mel line: 142
 wft.mel
 wsCoordinateAlongAxis.mel
-	transpose.mel line: 2
 	xcamAngle.mel line: 20
 	xcamAngle.mel line: 21
 xcam01.mel
-	tmTomm.mel line: 3
-	xcamChooseImage.mel line: 6
+	shelf_XROMM_tools_2_2_6.mel line: 282
 xcam02.mel
 	xcam01.mel line: 15
 xcamAngle.mel
 	wsCoordinateAlongAxis.mel line: 10
-xcamBrightnessCtrl.mel
-xcamChooseImage.mel
+xcamImageChange.mel
 XROMMmayaConfig.mel
 	XROMMmayaConfigReverse.mel line: 2
 	XROMMmayaConfigReverse.mel line: 9
@@ -529,10 +347,13 @@ XROMMmayaConfig.mel
 	XROMMmayaConfigUI.mel line: 12
 	XROMMmayaConfigUI.mel line: 14
 	XROMMmayaConfigUI.mel line: 21
+	shelf_XROMM_tools_2_2_6.mel line: 52
+	shelf_XROMM_tools_2_2_6.mel line: 72
 XROMMmayaConfigReverse.mel
 XROMMmayaConfigUI.mel
 	XROMMmayaConfig.mel line: 1
 	XROMMmayaConfig.mel line: 13
 	XROMMmayaConfig.mel line: 15
 	XROMMmayaConfig.mel line: 22
-xtools.mel
+	shelf_XROMM_tools_2_2_6.mel line: 72
+shelf_XROMM_tools_2_2_6.mel

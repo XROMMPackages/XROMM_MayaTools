@@ -1,5 +1,6 @@
 global proc string[] paddingToMayaAutoNum(string $objs[], int $padsize)
 {
+	// input is a list of objects with Maya autonumbering
 	string $newObjNames[];
 	string $endstr; string $newstr; int $strsize; string $pad;
 	for ($i = 1; $i <= $padsize; $i++){$pad = ($pad+"0");}
@@ -10,16 +11,17 @@ global proc string[] paddingToMayaAutoNum(string $objs[], int $padsize)
 	// rename so with padding in marker numbers
 	for ($i = 0;$i<$numObjs;$i++)
 	{
+		// adjust the number of characters to remove
 		if ($i == 9){$endCharRemove = 2;if(`size($pad)`==1){$pad="";}else{$pad = endString($pad,1);}}
-		if ($i == 99){$endCharRemove = 3;if(`size($pad)`==1){$pad="";}else{$pad = endString($pad,1);}}
-		if ($i == 9999){$endCharRemove = 4;if(`size($pad)`==1){$pad="";}else{$pad = endString($pad,1);}}
+		if ($i == 99){$endCharRemove = 3;if(`size($pad)`==2){$pad="";}else{$pad = endString($pad,1);}}
+		if ($i == 999){$endCharRemove = 4;if(`size($pad)`==3){$pad="";}else{$pad = endString($pad,1);}}
 		
-		//get last digit
+		//store digits from end of string
 		$endstr = endString ($objs[$i],$endCharRemove);
-		// remove last digit
+		// remove digits from end of string
 		$strsize = `size($objs[$i])`;
 		$newstr = `substring $objs[$i] 1 ($strsize-$endCharRemove)`;
-		// add a zero and then the last digit
+		// add padding zeros and then replace original digits at end of string
 		$newstr = ($newstr+$pad+$endstr);
 		$newObjNames[size($newObjNames)] = $newstr;
 		rename $objs[$i] $newstr;				

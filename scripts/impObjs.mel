@@ -62,9 +62,10 @@ global proc string[] impObjs(string $fileList[], string $scaleChoice)
 				print ("Bad file name. Skipping: "+$file+"\n");
 			}
 		}
-		allViewFit(1);
+		select $createdObjs;
+		allViewFit(0);
 		scriptEditorInfo -e -suppressWarnings $seWarn;
-    }
+    }   
     return $createdObjs;
 }
 

@@ -15,7 +15,8 @@ global proc CTMexport()
 	columnLayout;
 		rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.4) -cw 2 ($width*0.2) -cw 3 ($width*0.4);
 			columnLayout;
-				text "All Locators (double-click to rename)";
+				text " ";
+				text -font "boldLabelFont" "All Locators (double-click to rename)";
 				textScrollList
 					-allowMultiSelection 1 -w ($width*0.4) -sc allLocatorListSelectCmd
 					-dcc "renameLocatorCmd(\"allLocatorList\")" 
@@ -38,6 +39,7 @@ global proc CTMexport()
 				button -label "move left" -al "center" -w ($width*0.19) -c moveLeftButtonCmd moveLeftButton;
 			setParent..;
 			columnLayout;
+				text " ";
 				text "Export Locators";
 				textScrollList
 					-allowMultiSelection 1 -w ($width*0.4) -sc selLocatorListSelectCmd 

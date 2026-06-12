@@ -15,7 +15,7 @@ global proc xcam02(int $numCams)
     // GUI
 	if (`window -exists xCamWindow2` == true) deleteUI xCamWindow2;  
 
-	int $height = 550;
+	int $height = 450;
 	int $width = 600;
 	string $defMCamCtrl = "xsetPath";
 	string $defImCt = "ximagePath";
@@ -26,7 +26,7 @@ global proc xcam02(int $numCams)
 	string $mainWindow = `window -title "Xcam - Create Camera from .mayaCam file" -maximizeButton false
 		-minimizeButton true -sizeable true -resizeToFitChildren false xCamWindow2`;
         
-        columnLayout xCamColumnLayout1;
+        columnLayout -adj 1 xCamColumnLayout1;
             text " ";
             rowColumnLayout -numberOfColumns 4 xCamRowColumn1;
                 text "Number of Cameras ";
@@ -34,30 +34,30 @@ global proc xcam02(int $numCams)
                 intField  -value 2 -h 20 -w 30 -cc updateCamNumCommand camNumintField; 
                 button -label "+" -h 20 -w 20 -c addCamCommand;
              setParent..;   
-                scrollLayout -w $width -h ($height-100) xCamScriptLayout1;
-                    for ($i = 1; $i < ($numCams+1); $i++)
-                    {
-                    frameLayout -label ("Camera" + ($i)) -bv 1 -w ($width) ("xCamScriptFrameLayout"+$i);
-                        textFieldButtonGrp -label "MayaCam File" -text "" -w ($width) -buttonLabel "..." 
-                        -columnWidth3 ($width/10*1.5) ($width/10*7.5) ($width/10*0.5)
-                        -buttonCommand ("xsetFileCommand(\""+$defMCamCtrl+$i+"\")") ($defMCamCtrl+$i);
-            
-                        textFieldButtonGrp -label "Image(s)" -text "" -enable 1 -w ($width) -buttonLabel "..."
-                        -columnWidth3 ($width/10*1.5) ($width/10*7.5) ($width/10*0.5)
-                        -buttonCommand ("ximageFileCommand(\""+$defImCt+$i+"\")") ($defImCt+($i));
-                    
-                        checkBox -label "image sequence" -value 1 -enable 1 ($defCheckCtrl+($i));
-                        textFieldGrp -label "Camera Name"  -en 1 -text ($defaultCam+($i)) 
-                        -cl2 "center" "left" ($defaultCamCtrl+($i));
-                        text " ";
-                    setParent..;
-                    }
+			scrollLayout -cr 1 -w $width -h ($height-100) xCamScriptLayout1;
+				for ($i = 1; $i < ($numCams+1); $i++)
+				{
+				frameLayout -label ("Camera" + ($i)) -bv 1 -w ($width) ("xCamScriptFrameLayout"+$i);
+					textFieldButtonGrp -adj 2 -label "MayaCam File" -text "" -w ($width) -buttonLabel "..." 
+					-columnWidth3 ($width/10*1.5) ($width/10*7.5) ($width/10*0.5)
+					-buttonCommand ("xsetFileCommand(\""+$defMCamCtrl+$i+"\")") ($defMCamCtrl+$i);
+		
+					textFieldButtonGrp -adj 2 -label "Image(s)" -text "" -enable 1 -w ($width) -buttonLabel "..."
+					-columnWidth3 ($width/10*1.5) ($width/10*7.5) ($width/10*0.5)
+					-buttonCommand ("ximageFileCommand(\""+$defImCt+$i+"\")") ($defImCt+($i));
+				
+					checkBox -label "image sequence" -value 1 -enable 1 ($defCheckCtrl+($i));
+					textFieldGrp -label "Camera Name"  -en 1 -text ($defaultCam+($i)) 
+					-cl2 "center" "left" ($defaultCamCtrl+($i));
+					text " ";
+				setParent..;
+				}
             setParent..;
-    text " ";
-    text " ";
-	button	-label "import" -enable 1 -w $width -command "makeXcam" impXbutton;
-	button	-label "Close" -w $width closeButton;
-	button -edit -command "deleteUI xCamWindow2" closeButton;
+		text " ";
+		text " ";
+		button	-label "import" -enable 1 -w $width -command "makeXcam" impXbutton;
+		button	-label "Close" -w $width closeButton;
+		button -edit -command "deleteUI xCamWindow2" closeButton;
 
 	showWindow $mainWindow;
 	window -e -width $width -height $height $mainWindow;
@@ -97,11 +97,11 @@ global proc updateCamNumCommand()
 	    for ($i = ($numCurCams+1); $i < ($numCams+1); $i++)
 	    {
 	        frameLayout -label ("Camera" + ($i)) -bv 1 -w ($width) -p $scriptLayoutPath ("xCamScriptFrameLayout"+$i);
-                textFieldButtonGrp -label "MayaCam File" -text "" -w ($width) -buttonLabel "..."
+                textFieldButtonGrp -adj 2 -label "MayaCam File" -text "" -w ($width) -buttonLabel "..."
                 -columnWidth3 ($width/10*1.5) ($width/10*7.5) ($width/10*0.5)
                 -buttonCommand ("xsetFileCommand(\""+$defMCamCtrl+$i+"\")")   ($defMCamCtrl+$i);
     
-                textFieldButtonGrp -label "Image(s)" -text "" -enable 1 -w ($width) -buttonLabel "..."
+                textFieldButtonGrp -adj 2 -label "Image(s)" -text "" -enable 1 -w ($width) -buttonLabel "..."
                 -columnWidth3 ($width/10*1.5) ($width/10*7.5) ($width/10*0.5)
                 -buttonCommand ("ximageFileCommand(\""+$defImCt+$i+"\")")  ($defImCt+($i));
             

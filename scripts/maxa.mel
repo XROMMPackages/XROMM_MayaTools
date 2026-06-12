@@ -1,9 +1,0 @@
-global proc float maxa(float $arr[])
-{
-    float $max = $arr[0];
-    for ($a in $arr)
-    {
-        if ($a >$max){$max = $a;}
-    }
-    return $max;
-}

@@ -1,6 +1,6 @@
 global proc vAvg( string $name)
 {
-	
+	//calculates average position of selected vertices. Written by Dave Baier
 	if (size(`ls -sl`) == 0)
 	{
 		confirmDialog -t "Error" -m "No Vertices selected." -b "OK";

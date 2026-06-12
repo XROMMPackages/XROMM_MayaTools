@@ -1,9 +1,0 @@
-global proc getParentHier(string $node, string $result[])
-{
-    string $parents[] = `listRelatives -ap $node`;
-    for($p in $parents)
-    {
-        getParentHier($p, $result);
-        $result[size($result)] = $p;
-    }
-}

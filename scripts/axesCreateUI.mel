@@ -7,13 +7,13 @@ global proc axesCreateUI()
 {  
     if (`window -exists createCoordWindow` == true){deleteUI createCoordWindow;} 
     
-    string $window = `window -title "Coordinate object inputs" -maximizeButton false
+    string $window = `window -title "Create Axes Inputs" -maximizeButton false
 		-minimizeButton true -sizeable true -resizeToFitChildren false createCoordWindow`;
 	int $height = 100; int $width = 300;
 		
 	columnLayout;
         textFieldGrp -label "Name" -text "axes1" -cw 1 40 -cl2 "left" "left" coordNameUI;       
-        floatFieldGrp -nf 1 -label "Scale" -extraLabel "cm" -cw 1 40 
+        floatFieldGrp -nf 1 -label "Size" -extraLabel "cm" -cw 1 40 
             -cl3 "left" "left" "left" -value1 5.0 coordScaleUI;
         radioButtonGrp -nrb 2 -label "Style" -labelArray2 "Hemi" "Full" 
             -cw 1 40 -cl3 "left" "left" "left" styleUI;
@@ -22,13 +22,13 @@ global proc axesCreateUI()
             -cw 1 40 -cl3 "left" "left" "left" singleObjectUI;
         radioButtonGrp -e -sl 1 singleObjectUI; 
         text " ";
-	    rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.25) -cw 2 ($width*0.5) -cw 3 ($width*0.25) -cw 4 ($width*0.2) coordRC;
-	        frameLayout  -borderVisible 0 -lv 0;
-	    setParent..;
-	        frameLayout  -borderVisible 0 -lv 0;
-	        button -l "CreateLocator"  -w ($width*0.5) -en 1 -c "createCoordCmd" coordCreateButton;	         
-	    setParent..;
-	     	frameLayout  -borderVisible 0 -lv 0;
+			rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.25) -cw 2 ($width*0.5) -cw 3 ($width*0.25) -cw 4 ($width*0.2) coordRC;
+				frameLayout  -borderVisible 0 -lv 0;
+			setParent..;
+			frameLayout  -borderVisible 0 -lv 0;
+				button -l "Create Axes"  -w ($width*0.5) -en 1 -c "createCoordCmd" coordCreateButton;	         
+			setParent..;
+	    frameLayout  -borderVisible 0 -lv 0;
 	    setParent..;
 	    text " ";
 	showWindow $window;

@@ -1,10 +1,11 @@
 # README #
 
-XROMM_MayaTools are a set of maya-embedded-language (.mel) scripts and a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer.
+XROMM_MayaTools are a set of maya-embedded-language (.mel) and python scripts along with a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer, with substantial contributions from Steve Gatesy and Armita Manafzedeh who should be acknowledged in all publications using XROMM MayaTools. The inertialAxes tool is modified from Matlab scripts that were developed and generously shared by Joseph Crisco and others. If you use the INRTAxes, please cite Joseph J. Crisco, James C. Coburn, Douglas C. Moore, Mohammad A. Upal,2005, Carpal bone size and scaling in men versus in women, The Journal of Hand Surgery, 30(1)35-42 and D. C. Moore; J. J. Crisco; T. G. Trafton; E. L. Leventhal, 2007, A digital database of wrist bone anatomy and carpal kinematics, Journal of Biomechanics 40(11):2537-2542 and references therein (Eberly et al., 1991; Gonzalez-Ochoa et al., 1998; Messner and Taylor, 1980)
 
-XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XROMM data, import X-ray camera reconstructions, create joint coordinate systems and export XROMM data.
+
+XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XROMM data, import X-ray camera reconstructions, create joint coordinate systems, export XROMM data, and aid in analyzing XROMM data. See also https://github.com/XROMMPackages/xromm_other_mel_scripts for a collection of additional XROMM tools by various developers.
 ***
-# Download [XROMM_MayaTools_2.2.5](https://bitbucket.org/xromm/xromm_mayatools/downloads/XROMM_MayaTools_2.2.5.zip) #
+# Download [XROMM_MayaTools_2.2.5](https://github.com/XROMMPackages/xromm_mayatools/releases/) #
 ***
 # Installation of MEL scripts and XROMM Shelf #
 v. 2.2.5 has a new installation method

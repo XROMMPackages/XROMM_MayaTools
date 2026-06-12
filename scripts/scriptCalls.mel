@@ -1,5 +1,8 @@
 global proc scriptCalls()
 {
+	// print a list of script calls within a maya folder. Ourpur in maya script editor
+	// Written by David Baier 11/7/23
+	// Last modified 7/8/2025
 
 	string $scripts[] = getXrommPointfiles("select files", 4, "", 1);
 	

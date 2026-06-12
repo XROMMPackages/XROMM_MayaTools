@@ -11,6 +11,8 @@ global proc axesRotd(string $obj, string $axis, float $deg)
 {
 	if (`size $obj` == 0)
 		{string $objs[] = `ls -sl -tr`; $obj = $objs[0];}
+	//in case capital X Y or Z sent
+	$axis = tolower($axis);
 	
     if (`size $obj` > 0)
     {

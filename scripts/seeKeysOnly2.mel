@@ -12,7 +12,7 @@ string $sel;
 for ($sel in $sels)
 	{
 	//get total keyframe array, total number of keyframes, first key, and last key
-	float $keys[] = `keyframe -q -tc -at{".tx"} $sel`;
+	float $keys[] = `keyframe -q -tc ($sel+".tx")`;
 	int $total = size($keys);
 	print ("total = "+$total+"\n");
 

@@ -32,32 +32,32 @@ global proc setpaths()
 	// Make the window
 	if (`window -exists setpathWindow` == true) deleteUI setpathWindow;  
 
-	int $height = 600;
+	int $height = 500;
 	int $width = 600;
   
 	string $mainWindow = `window -title "Set Path" -maximizeButton false -minimizeButton true
 		-sizeable true -resizeToFitChildren false setpathWindow`;
 		
-	frameLayout -label "Current User-defined PATHS" -height $height -width $width -mw 5 -mh 5;
+	frameLayout -label "Current PATHS" -height $height -width $width -mw 5 -mh 5;
 		columnLayout;
             text "User-defined MAYA_SCRIPT_PATHS";
-            textScrollList -numberOfRows 7 -width ($width - 20)
+            textScrollList -numberOfRows 4 -width ($width - 20)
                 -allowMultiSelection 1 -showIndexedItem 1 mspScrollField;
             for($m in $usermsp)
                 {textScrollList -e -append $m mspScrollField;}
             text "default MAYA_SCRIPT_PATHS";
-            textScrollList -numberOfRows 7 -width ($width - 20)
+            textScrollList -numberOfRows 4 -width ($width - 20)
                 -allowMultiSelection 1 -showIndexedItem 1 defmspScrollField;
             for($m in $mayamsp)
                 {textScrollList -e -append $m defmspScrollField;}
             text "";
             text "User-defined PYTHONPATHS";
-            textScrollList -numberOfRows 7 -width ($width - 20)
+            textScrollList -numberOfRows 4 -width ($width - 20)
                 -allowMultiSelection 1 -showIndexedItem 1 ppScrollField;
             for($p in $userpp)
                {textScrollList -e -append $p ppScrollField;}
             text "default PYTHONPATHS";
-            textScrollList -numberOfRows 7 -width ($width - 20)
+            textScrollList -numberOfRows 4 -width ($width - 20)
                 -allowMultiSelection 1 -showIndexedItem 1 defppScrollField;
             for($p in $mayapp)
                {textScrollList -e -append $p defppScrollField;}
@@ -220,15 +220,16 @@ global proc int newPpDir()
         fclose $fileId;
         
         // This added the new path(s) to the File - but the actual environment variable will not update
-        // until maya is restarted. Now we'll add the path to the current session
+        // until maya is restarted. Now we'll add the path to the current session (this
+        // doesn't seem to work. We'll try using the python command below
         string $curPathStr = `getenv "PYTHONPATH"`;
         putenv "PYTHONPATH" ($curPathStr + $spacer + $newPathStr);
-        rehash;
         
         // Now append the display list
         for($p in $newPathArr)
         {
         	$p = fromNativePath($p);
+        	python("import sys; sys.path.append('"+$p+"')");
             textScrollList -e -append $p ppScrollField;
         } 
     }
@@ -385,6 +386,7 @@ global proc int removePPath()
             for($p in $pathToBeRemoved)
 			{
 				$p = fromNativePath($p);
+				python("import sys; sys.path.remove('"+$p+"')");
 				textScrollList -e -ri $p ppScrollField;;
 			}
     }

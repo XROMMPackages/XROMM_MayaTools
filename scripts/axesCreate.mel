@@ -1,7 +1,7 @@
-/* global proc string axesCreate(string $name, float $size, string $style, int $singleObject)
+/* global proc string axesCreate(string $name, float $unitLength, string $style, int $singleObject)
 
     Input:  $name = name for the axis. 
-            $size = length of each axis. 
+            $unitLength = length of each axis. 
             $style = "hemi" for vectors only in positive direction.
                      "full" for vectors in both positive and negative directions.
             $singleObject = if 1 - all axes are merged into a single object
@@ -13,14 +13,14 @@
 	Written by David Baier 7/26/2016
 	
 */
-global proc string axesCreate(string $name, float $size, string $style, int $singleObject)
+global proc string axesCreate(string $name, float $unitLength, string $style, int $singleObject)
 { 
     string $output;
     axesShaderMake;
-    float $cylLen = $size*0.9; 
-    float $coneLen = $size*0.1;
-    float $cylRad = $size*0.01;
-    float $coneRad = $size*0.02;
+    float $cylLen = $unitLength*0.9; 
+    float $coneLen = $unitLength*0.1;
+    float $cylRad = $unitLength*0.01;
+    float $coneRad = $unitLength*0.02;
     
     // axes cylinders
     string $xAxisName[] = `polyCylinder -axis 1 0 0 -h $cylLen -r $cylRad -n ($name+"X")`;
@@ -78,5 +78,11 @@ global proc string axesCreate(string $name, float $size, string $style, int $sin
             connectAttr -f ($output+".axThickness") ($zAxisName[0]+".scaleX");
             select $output;
         }
+	addAttr -ln "unitLenCM" -sn "ulCM" -at double -dv $unitLength $output;
+	int $styleInt = 0; if($style=="full"){$styleInt = 1;}
+	setAttr -e -keyable true -lock true ($output+".unitLenCM");
+	addAttr -ln "style" -sn "style" -at enum -enumName "hemi:full" -dv $styleInt $output;
+	addAttr -ln "singleObject" -sn "sob" -at bool -dv $singleObject $output;
+	
     return $output;
 }
