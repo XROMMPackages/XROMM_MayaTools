@@ -5,63 +5,55 @@
 */
 global proc axesCreateUI()
 {  
-    if (`window -exists createCoordWindow` == true){deleteUI createCoordWindow;} 
-    
-    string $window = `window -title "Create Axes Inputs" -maximizeButton false
-		-minimizeButton true -sizeable true -resizeToFitChildren false createCoordWindow`;
-	int $height = 100; int $width = 300;
-		
-	columnLayout;
-        textFieldGrp -label "Name" -text "axes1" -cw 1 40 -cl2 "left" "left" coordNameUI;       
+    if (`window -exists axuiWindow` == true){deleteUI axuiWindow;} 
+    int $w = 265;
+    window -title "Create Axes Inputs" -maximizeButton false
+		-minimizeButton true -sizeable true -resizeToFitChildren true axuiWindow;
+	columnLayout -co "left" 10 -rs 5 axuiCL1;
+        textFieldGrp -label "Name" -text "axes1" -cw2 40 200 -cl2 "left" "left" axuiTFG1;       
         floatFieldGrp -nf 1 -label "Size" -extraLabel "cm" -cw 1 40 
-            -cl3 "left" "left" "left" -value1 5.0 coordScaleUI;
+            -cl3 "left" "left" "left" -value1 5.0 axuiFFG1;
         radioButtonGrp -nrb 2 -label "Style" -labelArray2 "Hemi" "Full" 
-            -cw 1 40 -cl3 "left" "left" "left" styleUI;
-        radioButtonGrp -e -sl 1 styleUI;
+            -cw 1 40 -cl3 "left" "left" "left" axuiRBG1;
+        radioButtonGrp -e -sl 1 axuiRBG1;
         radioButtonGrp -nrb 2 -label "Output" -labelArray2 "Single Object" "Separate axes" 
-            -cw 1 40 -cl3 "left" "left" "left" singleObjectUI;
-        radioButtonGrp -e -sl 1 singleObjectUI; 
-        text " ";
-			rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.25) -cw 2 ($width*0.5) -cw 3 ($width*0.25) -cw 4 ($width*0.2) coordRC;
-				frameLayout  -borderVisible 0 -lv 0;
-			setParent..;
-			frameLayout  -borderVisible 0 -lv 0;
-				button -l "Create Axes"  -w ($width*0.5) -en 1 -c "createCoordCmd" coordCreateButton;	         
-			setParent..;
-	    frameLayout  -borderVisible 0 -lv 0;
-	    setParent..;
-	    text " ";
-	showWindow $window;
-	window -e -width $width -height $height $window;
-	if (`optionVar -ex "xrommAxesCreateLastUsedInputs"`)
+            -cw 1 40 -cl3 "left" "left" "left" axuiRBG2;
+        radioButtonGrp -e -sl 1 axuiRBG2; 
+		rowLayout  axiuRL1;
+			button -l "Create Axes" -w ($w-25)-en 1 -c "createCoordCmd" axuiBtn;
+		setParent..;
+	setParent..;
+	showWindow axuiWindow;
+	window -e -w $w axuiWindow;
+
+	if (`optionVar -ex "axuiWinPrefs"`)
 	{
-		string $prevInputs[] = stringToStringArray(`optionVar -q "xrommAxesCreateLastUsedInputs"`,",");
-		//textFieldGrp -e -text $prevInputs[0] coordNameUI;
-		floatFieldGrp -e -value1 (float($prevInputs[1])) coordScaleUI;
-		if($prevInputs[2]=="full"){radioButtonGrp -e -sl 2 styleUI;}
-		if($prevInputs[3]=="0"){radioButtonGrp -e -sl 2 singleObjectUI;}
+		string $prevInputs[] = stringToStringArray(`optionVar -q "axuiWinPrefs"`,",");
+		//textFieldGrp -e -text $prevInputs[0] axuiTFG1;
+		floatFieldGrp -e -value1 (float($prevInputs[1])) axuiFFG1;
+		if($prevInputs[2]=="full"){radioButtonGrp -e -sl 2 axuiRBG1;}
+		if($prevInputs[3]=="0"){radioButtonGrp -e -sl 2 axuiRBG2;}
 	}
-	
 }
 
 global proc createCoordCmd()
 {
     //  get the user inputs
-    string $name = `textFieldGrp -q -text coordNameUI`; 
+    string $name = `textFieldGrp -q -text axuiTFG1`; 
     $name = cleanStrForObjectName($name);
-    textFieldGrp -e -text $name coordNameUI;
+    textFieldGrp -e -text $name axuiTFG1;
     
-    float $scale = `floatFieldGrp -q -value1 coordScaleUI`;
+    float $scale = `floatFieldGrp -q -value1 axuiFFG1`;
     string $style = "hemi";
     int $singleObject = 1;
-    if (`radioButtonGrp -q -sl styleUI`==2){$style = "full";}
-    if (`radioButtonGrp -q -sl singleObjectUI`==2){$singleObject = 0;}
+    if (`radioButtonGrp -q -sl axuiRBG1`==2){$style = "full";}
+    if (`radioButtonGrp -q -sl axuiRBG2`==2){$singleObject = 0;}
     
     $name = axesCreate($name,$scale,$style,$singleObject);
-    textFieldGrp -e -text $name coordNameUI;
+    textFieldGrp -e -text $name axuiTFG1;
     
     // lets create an option variable to store the users last used settings
-    optionVar -sv "xrommAxesCreateLastUsedInputs" ($name+","+$scale+","+$style+","+$singleObject);
+    optionVar -sv "axuiWinPrefs" ($name+","+$scale+","+$style+","+$singleObject);
 }
     
 	

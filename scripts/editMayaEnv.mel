@@ -2,7 +2,7 @@ global proc editMayaEnv(string $var, string $dir)
 {
 	/* var = the name of a maya environment variable such as MAYA_SCRIPT_PATH
 		dir = directory to be added to that environment variable
-		Maybe intended for call from setpaths? not called by anything else.
+		Maybe intended for call from setpaths2? not called by anything else.
 	*/
 	
 	// system spacer for env files

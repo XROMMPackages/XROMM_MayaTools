@@ -12,34 +12,26 @@ global proc CTMexport()
 	string $mainWindow = `window -title "Marker Export" -menuBar true -maximizeButton false -minimizeButton true
 		-sizeable true -resizeToFitChildren false CTMexportWindow`;
 		
-	columnLayout;
+	columnLayout -co "left" 10 -rs 5;
 		rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.4) -cw 2 ($width*0.2) -cw 3 ($width*0.4);
 			columnLayout;
-				text " ";
 				text -font "boldLabelFont" "All Locators (double-click to rename)";
 				textScrollList
 					-allowMultiSelection 1 -w ($width*0.4) -sc allLocatorListSelectCmd
 					-dcc "renameLocatorCmd(\"allLocatorList\")" 
 					-dragCallback allLocatorDrag -dropCallback allLocatorDrop -nr 15 allLocatorList;
 			setParent..;
-			columnLayout;
-				text " ";
-				text " ";
-				text " ";
+			columnLayout -co "left" 10 -rs 5;
 				button -label "sortA-Z Left" -al "center" -w ($width*0.19) -c sortLeftButtonCmd sortLeftButton;
 				button -label "sortA-Z Right" -al "center" -w ($width*0.19) -c sortRightButtonCmd sortRightButton;
-				text " ";
 				text -al "center" -w ($width*0.19) "Middle" ;
 				text -al "center" -w ($width*0.19) "Mouse" ;
 				text -al "center" -w ($width*0.19) "<--Drag--> " ;
-				text " ";
 				text -al "center" -w ($width*0.19) "or";
-				text " ";
-				button -label "move right" -al "center" -w ($width*0.19) -c moveRightButtonCmd moveRightButton;
-				button -label "move left" -al "center" -w ($width*0.19) -c moveLeftButtonCmd moveLeftButton;
+				button -label "move right-->" -al "center" -w ($width*0.19) -c moveRightButtonCmd moveRightButton;
+				button -label "<--move left" -al "center" -w ($width*0.19) -c moveLeftButtonCmd moveLeftButton;
 			setParent..;
-			columnLayout;
-				text " ";
+			columnLayout -co "left" 10 -rs 5;
 				text "Export Locators";
 				textScrollList
 					-allowMultiSelection 1 -w ($width*0.4) -sc selLocatorListSelectCmd 
@@ -47,11 +39,9 @@ global proc CTMexport()
 					-dragCallback selLocatorDrag -dropCallback selLocatorDrop -nr 15 selectedLocatorList;
 			setParent..;		
 		setParent..;
-		text " ";
-	    //textFieldButtonGrp -label "Rename Centroid" -text "Type the new name" -buttonLabel "Rename" 
-		//-buttonCmd renameCentroidCmd renameFieldGroup;
 	button	-label "Export to .csv file" -w ($width-20) -command runCTMexport ctmExportButton;
-
+	button -label "Parent markers to selected" -command ctmParentCmd ctmParentButton;
+	textScrollList -allowMultiSelection 1 -w ($width) -nr 5 rigidBodyTSL;
 	button	-label "Close" -w ($width-20) closeButton;
 	button -edit -command "deleteUI CTMexportWindow" closeButton;
 
@@ -64,23 +54,30 @@ global proc CTMexport()
 		{textScrollList -edit -append $obj allLocatorList;}
 	updateOnSelCmd;
 	scriptJob -p $mainWindow -e "SelectionChanged" updateOnSelCmd;	
-	scriptJob -p $mainWindow -e "NameChanged" updateOnSelCmd;	
+	scriptJob -p $mainWindow -e "NameChanged" updateOnSelCmd;
+	
+	// populate possible parents for markers
+	string $possibleParents[] = `getNonMarkerMeshList`;
+	for($pos in $possibleParents)
+		{textScrollList -edit -append $pos rigidBodyTSL;}
 }
 
 global proc allLocatorListSelectCmd()
 {
     // selects object(s) selected in the left list
+    textScrollList -e -da selectedLocatorList;
 	string $name[] = `textScrollList -q -si allLocatorList`;
 	select $name;
-	//textFieldButtonGrp -e -text $name[0] renameFieldGroup;
+    setFocus MayaWindow;	
 }
 
 global proc selLocatorListSelectCmd()
 {
-    // selects object(s) selected in the left list
+    // selects object(s) selected in the right list
+    textScrollList -e -da allLocatorList;
 	string $name[] = `textScrollList -q -si selectedLocatorList`;
 	select $name;
-	//textFieldButtonGrp -e -text $name[0] renameFieldGroup;
+	setFocus MayaWindow;
 }
 
 global proc updateOnSelCmd()
@@ -210,57 +207,44 @@ global proc renameLocatorCmd(string $listCtrl)
         int $idx[] = `textScrollList -q -sii $listCtrl`;
         textScrollList -e -rii $idx[0] $listCtrl;
         textScrollList -e -ap $idx[0] $actualNewname $listCtrl;
-	
-		// if vAv2 was used, rename the mesh that goes with it
-		string $meshName = `substitute "vAvg2" $curName[0] ""`;
+                
+        // rename associated mesh
+        // the mesh has curName less "vtxAvg" or curnName"Mesh"
+		string $meshName = `substitute "vtxAvg" $curName[0] ""`;
+		//$meshName = `substitute "Mesh" $meshName ""`;
 		if (`objExists $meshName`){rename $meshName ($actualNewname+"Mesh");}
+		if (`objExists ($meshName+"Mesh")`){rename ($meshName+"Mesh") ($actualNewname+"Mesh");}
 		// if the mesh was already renamed by this script, we can get that name and rename it again
-		string $alreadyRenamedMesh = ($curName[0]+"Mesh");
-		if (`objExists $alreadyRenamedMesh`){rename $alreadyRenamedMesh ($actualNewname+"Mesh");}
 	}
 }
-/*
-global proc renameCentroidCmd()
+
+global proc refreshLists()
 {
-	// selected object in All Locators
-	string $curName[] = `textScrollList -q -si allLocatorList`;
-	// has to only be one item selected
-	if (size($curName)!=1) 
-	{confirmDialog 	-title "Selection error" 
-	    -message "You must have ONE object selected for renaming" 
-	    -button "OK" -defaultButton "OK";
-	}
-	else
+	string $allList[] = `textScrollList -q -ai allLocatorList`;
+	string $selList[] = `textScrollList -q -ai selectedLocatorList`;
+	for ($a in $allList)
 	{
-		// list of everything in All list (including selected)
-		string $curAllList[] = `textScrollList -q -ai allLocatorList`;
-		// list of everything in All List (except selected)
-		string $newAllList[] = stringArrayRemove($curName,$curAllList);
-		// get user input name and clean it up
-		string $newName = `textFieldButtonGrp -q -text renameFieldGroup`;
-		$newName = cleanStrForObjectName($newName);
-		
-		// capture the rename
-		string $actualNewname = `rename $curName[0] $newName`;
-		//if the user not already renamed, we can get the vAvg2 name for the mesh and rename it
-		string $meshName = `substitute "vAvg2" $curName[0] ""`;
-		if (`objExists $meshName`){rename $meshName ($actualNewname+"Mesh");}
-		// if the mesh was already renamed by this script, we can get that name and rename it again
-		string $alreadyRenamedMesh = `substitute "vAvg2" $curName[0] "Mesh"`;
-		if (`objExists $alreadyRenamedMesh`){rename $alreadyRenamedMesh ($actualNewname+"Mesh");}
-		
-		// add the new name to the list
-		$newAllList[size($newAllList)] = $actualNewname;
-		$newAllList = `sort($newAllList)`;
-		
-		textScrollList -edit -removeAll allLocatorList;
-		for($n in $newAllList)
-			{textScrollList -edit -append $n allLocatorList;}
-		textScrollList -e -si $actualNewname allLocatorList;
-		textFieldButtonGrp -e -text "Type the new name" renameFieldGroup;
+		if (!`objExists $a`){textScrollList -edit -removeItem $a allLocatorList;}
+	}
+	for ($s in $selList)
+	{
+		if (!`objExists $s`){textScrollList -edit -removeItem $s selectedLocatorList;}
 	}
 }
-*/
+
+global proc ctmParentCmd()
+{
+	// selected parent
+	string $parent[] = `textScrollList -q -si rigidBodyTSL`;
+	//get list of selected locators
+	string $allList[] = `textScrollList -q -si allLocatorList`;
+	string $selList[] = `textScrollList -q -si selectedLocatorList`;
+	string $sel[] = stringArrayCatenate($allList,$selList);
+	//get list their markerMesh parent
+	string $meshParent[] = `listRelatives -p $sel`;
+	//parent markerMeshList to selected rigid body
+	parent $meshParent $parent;	
+}
 
 global proc runCTMexport()
 {
@@ -270,7 +254,7 @@ global proc runCTMexport()
 	// only run if there are markers actually selected
 	if (size($markers)>0)
     {
-        string $pointfile[] = getXrommPointfiles("Export File Name", 0, "CSV files (*.csv)",1);
+        string $pointfile[] = getXrommPointfiles2("Export File Name", 0, "CSV files (*.csv)",1,"");
         
         // only run if it wasn't cancelled
         if (size($pointfile) > 0)
@@ -280,8 +264,7 @@ global proc runCTMexport()
             $fileId = `fopen $newfile "w"`;
             fprint $fileId "";  
             fclose $fileId;
-            
-            
+                       
             //$markers = sort($markers);
             $fileId = `fopen $newfile "a"`;
             

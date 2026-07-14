@@ -26,8 +26,7 @@ global proc animPanScanShaderChange()
 	for($s in $shaders)
 		{textScrollList -edit -append $s shaderList;}
 	global string $gPanScanShader;
-	textScrollList -edit -si $gPanScanShader shaderList;
-	
+	textScrollList -edit -si $gPanScanShader shaderList;	
 }
 
 global proc setPSDRShader()

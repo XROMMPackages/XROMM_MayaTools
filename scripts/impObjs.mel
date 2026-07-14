@@ -17,7 +17,7 @@ global proc string[] impObjs(string $fileList[], string $scaleChoice)
 	string $createdObjs[];
 	string $objname;
 	if (size($fileList) == 0)
-	    {$fileList = getXrommPointfiles("import .obj files",4,"OBJ files (*.obj)",1);}
+	    {$fileList = getXrommPointfiles2("import .obj files",4,"OBJ files (*.obj)",1,"");}
 
 	// in case the user hit cancel
 	if (size($fileList) != 0)
@@ -52,8 +52,10 @@ global proc string[] impObjs(string $fileList[], string $scaleChoice)
 				}
 				// add the original file name as an attribute, so the user can still track provenience 
 				string $origFileName = basename($file,"");
+				addAttr -ln "fromImpObjs" -sn "impobjs" -at "bool" -dv 1 $objname;
+				setAttr -e -channelBox true ($objname+".impobjs");
 				addAttr -ln "originalFile" -sn "of" -at "enum" -en ($origFileName+":"+$origFileName) $objname;
-				setAttr -e-channelBox true ($objname+".of");
+				setAttr -e -channelBox true ($objname+".of");
 				$createdObjs[size($createdObjs)] = $objname;
 				print ("imported "+$file+"\n");
 			}
@@ -65,6 +67,7 @@ global proc string[] impObjs(string $fileList[], string $scaleChoice)
 		select $createdObjs;
 		allViewFit(0);
 		scriptEditorInfo -e -suppressWarnings $seWarn;
+		
     }   
     return $createdObjs;
 }

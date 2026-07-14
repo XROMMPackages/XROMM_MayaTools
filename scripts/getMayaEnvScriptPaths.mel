@@ -15,7 +15,6 @@ global proc string[] getMayaEnvScriptPaths()
             $m = strip($m);
             $msp = stringToStringArray($m,$spacer);
         }
-    }
-    
+    }   
     return $msp;
 }

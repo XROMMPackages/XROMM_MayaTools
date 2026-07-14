@@ -1,10 +1,8 @@
 /*  global proc string cleanStrForObjectName(string $input)
-
     Inputs:
         $input = string 
     Output:
-        $output = legal string for object name
-        
+        $output = legal string for object name      
    Checks string for illegal characters in maya object naming.
    Dashes are replaced with underscores.
    Spaces are replaced with underscores.

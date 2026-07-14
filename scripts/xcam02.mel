@@ -9,7 +9,7 @@
     
     Written by David Baier 
     last updated: 4/9/2017
-*/ 
+*/
 global proc xcam02(int $numCams)
 {
     // GUI
@@ -62,7 +62,19 @@ global proc xcam02(int $numCams)
 	showWindow $mainWindow;
 	window -e -width $width -height $height $mainWindow;
 }
-
+proc string getShape(string $node)
+// returns shape node of selected or input object
+{
+	string $shapeNodes[]; string $shapeNode;
+	if (`size $node` == 0){string $nodes[] = `ls -sl`; $node = $nodes[0];}
+	
+	if (size($node) > 0) 
+		{$shapeNodes = `listRelatives -shapes $node`;} 
+	else 
+		{print("No node is selected or input.\n");}
+	$shapeNode = $shapeNodes[0];
+	return $shapeNode;
+}
 global proc subtractCamCommand()
 {
      int $curCamNum = `intField  -q -value camNumintField`;
@@ -125,7 +137,7 @@ global proc updateCamNumCommand()
 global proc xsetFileCommand(string $textField)
 {
 	// get file
-	string $pointfiles[] = 	getXrommPointfiles("import Xcam", 1, "MayaCam files (*.csv *.txt)",1);
+	string $pointfiles[] = 	getXrommPointfiles2("import Xcam", 1, "MayaCam files (*.csv *.txt)",1,"");
     string $pointfile = $pointfiles[0];	
 	textFieldButtonGrp -e -text $pointfile $textField;
 }
@@ -133,7 +145,7 @@ global proc xsetFileCommand(string $textField)
 global proc ximageFileCommand(string $textField)
 {
 	// get file
-	string $pointfiles[] = 	getXrommPointfiles("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1);
+	string $pointfiles[] = 	getXrommPointfiles2("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1,"");
 	$pointfile = $pointfiles[0];	
 	textFieldButtonGrp -e -text $pointfile $textField;
 }
@@ -311,6 +323,9 @@ global proc makeXcam()
         string $imfiles[] =  `getFileList -folder ($ximage) -filespec ("*"+$ext)`;
         playbackOptions -max (size($imfiles));
 	}
+	select -cl;
+	allViewFit(1);
+    if (`window -exists xCamWindow2` == true) deleteUI xCamWindow2;
 }
 
 global proc oldXcamPos(string $cn,string $pn, string $pnI, string $imp[], string $cnLoc)

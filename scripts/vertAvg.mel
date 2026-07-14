@@ -14,31 +14,33 @@
 global proc vertAvg()
 {
 	if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;  
+	int $w = 250; int $h = 160;
 
-	int $height = 250;
-	int $width = 320;
-
-	string $mainWindow = `window -title "Vertex Average" -menuBar true
+	string $win = `window -title "Vertex Average" -menuBar true
 		-maximizeButton false -minimizeButton true -sizeable true
-		-resizeToFitChildren false vertAvgWindow`;
+		-resizeToFitChildren false -cc  "selectMode -o" vertAvgWindow`;
 		
-	frameLayout -label "Marker Name Input" -height $height -width $width -mw 5 -mh 5;	
-		columnLayout;
-		columnLayout;
-			text " ";
-			text " 1) Right click/hold on the marker object and select Vertex.";
-			text " 2) Drag to select desired vertices.";
-			text " 3) Click the calculate centroid button.";
-			text " ";
-	
-			text "Marker Name";
-			textField -width ($width-20) -text  "myMarkerName" markerNameField;
-			
-			button	-label "Calculate Centroid" -w ($width-20) -command vAvgCall;
-			button	-label "Close" -w ($width-20) closeButton;
-			button -edit -command "deleteUI vertAvgWindow; selectMode -o" closeButton;
-
-	showWindow $mainWindow;
+	frameLayout -label "Marker Name Input" -height $h -width $w -mw 10 -mh 5;	
+		columnLayout -rs 10 vaCL1;
+			columnLayout vaCL2;
+				// Valid values are "boldLabelFont", "smallBoldLabelFont", 
+				//"tinyBoldLabelFont", "plainLabelFont", "smallPlainLabelFont", 
+				//"obliqueLabelFont", "smallObliqueLabelFont", "fixedWidthFont" 
+				//and "smallFixedWidthFont".
+				string $font = "boldLabelFont";
+				text -l " 1) Right click/hold on the object" -font $font vaT1;
+				text -l "    and select Vertex from Marking Menu." -font $font vaT2;
+			setParent..;
+			columnLayout vaCL3;
+				text -l " 2) Drag to select vertices." -font $font vaT3;
+			setParent..;
+			columnLayout vaCL4;
+				textField -width ($w-20) -text  "vtxAvg" markerNameField;			
+				button	-label "Calculate Centroid" -w ($w-20) -command vAvgCall;
+			setParent..;		
+		setParent..;
+	showWindow $win;
+	window -e -wh $w $h $win;
 }
 
 global proc vAvgCall()

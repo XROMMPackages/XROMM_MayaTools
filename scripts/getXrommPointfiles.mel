@@ -1,5 +1,5 @@
-global proc string[] getXrommPointfiles(string $caption, int $filemode, string $filt, int $style)
-/* global proc string[] getXrommPointfiles(string $caption, int $filemode, string $filt, int $style)
+global proc string[] getXrommPointfiles2(string $caption, int $filemode, string $filt, int $style)
+/* global proc string[] getXrommPointfiles2(string $caption, int $filemode, string $filt, int $style)
 
    Inputs:  $caption = caption for the browser.
             $filemode =  type of return   
@@ -20,7 +20,7 @@ global proc string[] getXrommPointfiles(string $caption, int $filemode, string $
 		string $pointfiles[] = `fileDialog2 -cap $caption -dir $startPath 
  	                      -fm $filemode -ff $filt -ds $style`;
  	    //example2                  
-        string $dir[] = getXrommPointfiles("get directory", 3, "", 1);
+        string $dir[] = getXrommPointfiles2("get directory", 3, "", 1);
 	
 	 Returns an array of path names from fileDialog2 and stores the most recently chosen path 
 	 as the default for the next time this script is called. (optionVar "xrommWorkingDirectory")
@@ -34,7 +34,7 @@ global proc string[] getXrommPointfiles(string $caption, int $filemode, string $
 		{$startPath = `optionVar -q "xrommWorkingDirectory"`;}
 	else
 		{$startPath = `workspace -q -o`;}
- 	
+
 	// get the file(s) or folder
 	string $pointfiles[] = `fileDialog2 -cap $caption -dir $startPath 
  	                      -fm $filemode -ff $filt -ds $style`;

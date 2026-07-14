@@ -21,102 +21,60 @@ global proc impdata2()
 {
 	if (`window -exists impDataWindow` == true) deleteUI impDataWindow;
 	
-	global string $gMainWindow; // This global variable holds the name of the main Maya window
-	int $widthHeight[] = `window -query -widthHeight $gMainWindow`;
-
-	// Extract the width and height values
-	int $screenWidth = $widthHeight[0];
-	int $screenHeight = $widthHeight[1];
-	int $width = ($screenWidth/4);
-	int $height = ($screenHeight/4+20);
-	int $indent = ($width/8);
-
-	string $mainWindow = `window -title "Import Data" -maximizeButton false 
+	int $width = 265;
+	int $height = 125;
+	
+	window -title "Import Data" -maximizeButton false 
 	-minimizeButton true -sizeable false -bgc 0.8 0.8 0.8 
-	-resizeToFitChildren false -closeCommand rememberImpWinPrefs impDataWindow`;
+	-resizeToFitChildren false -closeCommand rememberImpWinPrefs impDataWindow;
 		
-	columnLayout;
-		frameLayout -label "Import Objects" -w $width -h ($width/5) -bv 1 -lv 1 -bgc 0.7 0.7 0.7 impfrLayout6;
-				text " ";
-				rowColumnLayout -numberOfColumns 4 -cw 1 ($width*0.05) -cw 2 ($width*0.40) -cw 3 ($width*0.10) -cw 4 ($width*0.40) impRC1;
-					frameLayout  -borderVisible 0 -lv 0 impFL1;
-					setParent..;
-					frameLayout  -borderVisible 0 -lv 0 impFL2;
-					button -l "Import .objs" -bgc 0.9 0.9 0.9 -w ($width*0.30) -en 1 -c "impObjs({},\"\")" impObjButton0;	         
-					setParent..;
-					frameLayout  -borderVisible 0 -lv 0 impFL3;
-					setParent..;
-					frameLayout  -borderVisible 0 -lv 0 impFL4;
-					button -l "Import inertial axes" -bgc 0.9 0.9 0.9 -w ($width*0.30) -en 1 -c "impInertias({},10,\"full\",1,\"\")" impInertiasButton;
-					setParent..;
+	columnLayout -rs 5 imp2CL1;			
+		frameLayout -l "Import XMAlab data" -gsp 5 -w ($width-2) -bv 1 -lv 1 -bgc 0.7 0.7 0.7 imp2FL2;
+			columnLayout -co "left" 5 -gsp 5 imp2CL2;
+				separator -h 3;
+				radioButtonGrp  -numberOfRadioButtons 2 -sl 2 
+				-labelArray2 "3d Points" "Rigid Body" imprbgrp1;
+				checkBox -label "Hide object on frames with no data" 
+					-ann "Keys visibility. Objects are invisible during unkeyed frames"
+					-v 0 -en 1 seeKeyCheck2;
+				separator -h 3;
+			setParent..;
+		setParent..;
+		// xma events import could be added in several ways need to decide for next version
+		// add an attribute to animated object or create a new object with just event keyframes
+		/*frameLayout -label "Import XMAlab Events" -w $width -h ($width/5) -bv 1 -lv 1 -bgc 0.7 0.7 0.7 impfrLayout7;
+			text " ";
+			rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.3) -cw 2 ($width*0.40) -cw 3 ($width*0.30) impRC2;
+				frameLayout  -borderVisible 0 -lv 0 impFL5;
 				setParent..;
-			setParent..;
-			// xma events import could be added in several ways need to decide for next version
-			// add an attribute to animated object or create a new object with just event keyframes
-			/*frameLayout -label "Import XMAlab Events" -w $width -h ($width/5) -bv 1 -lv 1 -bgc 0.7 0.7 0.7 impfrLayout7;
-				text " ";
-				rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.3) -cw 2 ($width*0.40) -cw 3 ($width*0.30) impRC2;
-					frameLayout  -borderVisible 0 -lv 0 impFL5;
-					setParent..;
-					frameLayout  -borderVisible 0 -lv 0 impFL6;
-					button -l "Import Events" -bgc 0.9 0.9 0.9 -w ($width*0.30) -en 1 -c "impEvents" impEventsButton;	         
-					setParent..;
-					frameLayout  -borderVisible 0 -lv 0 impFL7;
-					setParent..;
-				setParent..;*/
-			setParent..;
-		frameLayout -l "Import XMAlab data" -w $width -h 88 -bv 1 -lv 1 -bgc 0.7 0.7 0.7 impfrLayout1;
-			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
-			-cw2 ($width/2) ($width/2) -enable 1 -sl 2 
-			-labelArray2 "3d Points" "Rigid Body" imprbgrp1;
-		setParent..;
-		rowColumnLayout -numberOfColumns 2 -cw 1 ($width*0.5) -cw 2 ($width*0.5) impRC0;
-			frameLayout  -borderVisible 0 -lv 0 imp0FL1;
-			setParent..;
-			frameLayout  -borderVisible 0 -lv 0 impFL2;
-			checkBox -label "Hide object on frames with no data" -ann "Keys visibility. Objects are invisible during unkeyed frames"
-						-v 0 -en 1 seeKeyCheck2;
-			setParent..;
-		setParent..;
-		text " ";
-			string $form = `formLayout -numberOfDivisions 100 -w $width`;
-			string $b1 = `button	-label "Advanced Import Options" -bgc 0.9 0.9 0.9 -command "impdataAdvanced" impAdvButton`;
-			string $b2 = `button	-label "Close" -bgc 0.9 0.9 0.9 closeButton`;
-			string $b3 = `button	-label "Import" -bgc 0.9 0.9 0.9  -command "impXMAdata" impButton`;
+				frameLayout  -borderVisible 0 -lv 0 impFL6;
+				button -l "Import Events" -bgc 0.9 0.9 0.9 -w ($width*0.30) -en 1 -c "impEvents" impEventsButton;	         
+				setParent..;
+				frameLayout  -borderVisible 0 -lv 0 impFL7;
+				setParent..;
+			setParent..;*/
+		rowLayout -nc 3 -gsp 3 -cw3 130 60 60 impRL1; 
+			button	-label "Advanced Import Options" -bgc 0.9 0.9 0.9 
+			-command "impdataAdvanced" impAdvButton;
+			button	-label "Close" -w 60 -bgc 0.9 0.9 0.9 closeButton;
+			button	-label "Import" -w 60 -bgc 0.9 0.9 0.9  -command "impXMAdata" impButton;
 			button -edit -command "deleteUI impDataWindow" closeButton;
-			formLayout -e
-				-attachForm     $b1     "top"   	10
-				-attachForm     $b1     "left"  	5
-				-attachForm  	$b1     "bottom"	10
-				-attachPosition $b1     "right" 	5 40
-	
-				-attachForm     $b2     "top" 		10
-				-attachPosition $b2     "left"   	0 55
-				-attachForm     $b2     "bottom" 	10
-				-attachNone     $b2     "right"  
-	
-				-attachForm     $b3 	"top"    	10
-				-attachControl 	$b3 	"left" 		10 $b2
-				-attachForm  	$b3 	"bottom" 	10
-				-attachForm     $b3 	"right"  	20 
-				$form;
-			setParent..;	
 		setParent..;
-	
-	showWindow $mainWindow;
-	window -e -width $width -height $height $mainWindow;
-	restoreImpWinPrefs;
-	
+	setParent..;
+	showWindow impDataWindow;
+	window -e -width $width -height $height impDataWindow;
+	restoreImpWinPrefs;	
 }
-
+/************************************************************
+******************* Save User input PROCS **********************
+*************************************************************/
 global proc rememberImpWinPrefs()
 {
 	int $imp3DorRigid = `radioButtonGrp -q -sl imprbgrp1`;
 	optionVar -cat "impWinPrefs" -iv "imp3DorRigid" $imp3DorRigid;
 	int $impSeeKeys = `checkBox -q -v seeKeyCheck2`;
-	optionVar -cat "impWinPrefs" -iv "impSeeKeys" $impSeeKeys;;
+	optionVar -cat "impWinPrefs" -iv "impSeeKeys" $impSeeKeys;
 }
-
 global proc restoreImpWinPrefs()
 {
 	int $int;
@@ -130,8 +88,119 @@ global proc restoreImpWinPrefs()
 	else{$int = 2;}                 
 	checkBox -e -v $int seeKeyCheck2;
 }
+global proc rememberImpWinAdvPrefs()
+{
+	string $typeButton;
+	string $dataType[] = `radioCollection -q -collectionItemArray itypeCollection`;
+	for ($dt in $dataType)
+		{if (`radioButton -q -sl $dt`){$typeButton = $dt;}}
+	optionVar -cat "impAdvWinPrefs" -sv "impDataTypeSel" $typeButton;
+	int $impCoord = `radioButtonGrp -q -sl icoordRadioButton`;
+	optionVar -cat "impAdvWinPrefs" -iv "impCoord" $impCoord;
+	int $impColHeader = `checkBox -q -v impColHeaderCheck`;
+	optionVar -cat "impAdvWinPrefs" -iv "impColHeader" $impColHeader;
+	int $impRowHeader = `checkBox -q -v impRowHeaderCheck`;
+	optionVar -cat "impAdvWinPrefs" -iv "impRowHeader" $impRowHeader;
+	int $impTimeSeries = `checkBox -q -v impTimeSeriesCheck`;
+	optionVar -cat "impAdvWinPrefs" -iv "impTimeSeries" $impTimeSeries;
+	int $impTypeAbsRel = `radioButtonGrp -q -sl impTypeAbsRelRadioGrp`;
+	optionVar -cat "impAdvWinPrefs" -iv "impTypeAbsRel" $impTypeAbsRel;
+	int $seeKeyCheck = `checkBox -q -v seeKeyCheck`;
+	optionVar -cat "impAdvWinPrefs" -iv "seeKeyCheck" $seeKeyCheck;
+	string $applyToButton;
+	string $applyTo[] = `radioCollection -q -collectionItemArray iApplyToCollection`;
+	for ($at in $applyTo)
+		{if (`radioButton -q -sl $at`){$applyToButton = $at;}}
+	optionVar -cat "impAdvWinPrefs" -sv "impApplyToSel" $applyToButton;
+	int $impObjNameFrom = `radioButtonGrp -q -sl impObjNameRadioGrp`;
+	optionVar -cat "impAdvWinPrefs" -iv "impObjNameFrom" $impObjNameFrom;
+	string $impCustomObjName = `textField -q -text newObjTxtField`;
+	optionVar -cat "impAdvWinPrefs" -sv "impCustomObjName" $impCustomObjName;
+	float $impObjSize = `floatField -q -v impObjSize`;
+	optionVar -cat "impAdvWinPrefs" -fv "impObjSize" $impObjSize;	
+}
+global proc restoreImpWinAdvPrefs()
+{
+	string $str;
+	if (`optionVar -ex "impDataTypeSel"`)
+		{$str = `optionVar -q "impDataTypeSel"`;}
+	else{$str = "irbmatrix";}
+	radioButton -e -sl $str;
+	 
+	int $int;
+	if (`optionVar -ex "impCoord"`)
+		{$int = `optionVar -q "impCoord"`;}
+	else{$int = 1;}
+	radioButtonGrp -e -sl $int icoordRadioButton;
+	
+	if (`optionVar -ex "impColHeader"`)
+		{$int = `optionVar -q "impColHeader"`;}
+	else{$int = 1;}
+	checkBox -e -v $int impColHeaderCheck;
+	
+	if (`optionVar -ex "impRowHeader"`)
+		{$int = `optionVar -q "impRowHeader"`;}
+	else{$int = 0;}
+	checkBox -e -v $int impRowHeaderCheck;
+	
+	if (`optionVar -ex "impTimeSeries"`)
+		{$int = `optionVar -q "impTimeSeries"`;}
+	else{$int = 1;}
+	checkBox -e -v $int impTimeSeriesCheck;
+	
+	if (`optionVar -ex "impTypeAbsRel"`)
+		{$int = `optionVar -q "impTypeAbsRel"`;}
+	else{$int = 1;}                 
+	radioButtonGrp -e -sl $int impTypeAbsRelRadioGrp;
+	
+	if (`optionVar -ex "seeKeyCheck"`)
+		{$int = `optionVar -q "seeKeyCheck"`;}
+	else{$int = 0;}
+	checkBox -e -v $int seeKeyCheck;
+	
+	if (`optionVar -ex "impApplyToSel"`)
+		{$str = `optionVar -q "impApplyToSel"`;}
+	else{$str = "iselob";}
+	radioButton -e -sl $str;
+	
+	if (`optionVar -ex "impObjNameFrom"`)
+		{$int = `optionVar -q "impObjNameFrom"`;}
+	else{$int = 1;}                 
+	radioButtonGrp -e -sl $int impObjNameRadioGrp;
 
-global proc string[] pluckColumn(string $fileRows[], int $colIdx)
+	if (`optionVar -ex "impCustomObjName"`)
+		{$str = `optionVar -q "impCustomObjName"`;}
+	else{$str = "obj1";}                 
+	textField -e -text $str newObjTxtField;	
+	
+	float $float;
+	if (`optionVar -ex "impObjSize"`)
+		{$float = `optionVar -q "impObjSize"`;}
+	else{$float = 1.0;}                 
+	floatField -e -v $float impObjSize;	
+}
+global proc restoreDefaultImpAdvWindowOptions()
+{
+	radioButton -e -sl "irbmatrix";
+	radioButtonGrp -e -sl 1 icoordRadioButton;
+	checkBox -e -v 1 impColHeaderCheck;
+	checkBox -e -v 0 impRowHeaderCheck;
+	checkBox -e -v 1 impTimeSeriesCheck;             
+	radioButtonGrp -e -sl 1 impTypeAbsRelRadioGrp;
+	checkBox -e-v 0 cSubsetCheck;
+	textField -e -text "" cSubsetIdxText;
+	checkBox -e -v 0 rSubsetCheck;
+	textField -e -text "" rSubsetIdxText;
+	checkBox -e -v 0 seeKeyCheck;
+	radioButton -e -sl "iselob";              
+	radioButtonGrp -e -sl 1 impObjNameRadioGrp;               
+	textField -e -text "obj1" newObjTxtField;	               
+	floatField -e -v 1.0 impObjSize;	
+}
+/************************************************************
+******************* Other helper PROCS **********************
+*************************************************************/
+proc string[] pluckColumn(string $fileRows[], int $colIdx)
 {
 	// extract a single column (zero-based index)
 	string $output[]; string $data[];
@@ -143,8 +212,7 @@ global proc string[] pluckColumn(string $fileRows[], int $colIdx)
 	
 	return $output;
 }
-
-global proc int integerCheck(string $str)
+proc int integerCheck(string $str)
 {
 	// returns 1 if the string is an integer, 0 otherwise.(auto check for frame numbers in first columun)
 	string $digitExpr;
@@ -152,9 +220,8 @@ global proc int integerCheck(string $str)
 			{$digitExpr = ($digitExpr+"[0-9]");}
 	int $isInteger = `gmatch $str $digitExpr`;
 	return $isInteger;
-}
-	
-global proc string[] autoGetColHeaders(string $firstrow)
+}	
+proc string[] autoGetColHeaders(string $firstrow)
 {
 	// returns a string array of column headers. Empty if none exist. Assumes col headers have at least one letter character.
 	// why did I exclude a and n? because it could be NaN
@@ -168,8 +235,7 @@ global proc string[] autoGetColHeaders(string $firstrow)
 	
 	return $colHeaders;
 }
-
-global proc float[] autoGetRowHeaders(string $fileRows[])
+proc float[] autoGetRowHeaders(string $fileRows[])
 {
 	// returns a string array of frame numbers (row headers). Empty if none exist
 	float $frameNums[];
@@ -194,8 +260,7 @@ global proc float[] autoGetRowHeaders(string $fileRows[])
 	
 	return $frameNums;
 }
-
-global proc string[] cropRowHeaders(string $fileRows[])
+proc string[] cropRowHeaders(string $fileRows[])
 {
 	string $output[];
 	$rowHeaders = autoGetRowHeaders($fileRows);
@@ -217,8 +282,7 @@ global proc string[] cropRowHeaders(string $fileRows[])
 	
 	return $output;	
 }
-
-global proc string[] cropColHeaders(string $fileRows[])
+proc string[] cropColHeaders(string $fileRows[])
 {
 	string $output[] = $fileRows;
 	$colHeaders = autoGetColHeaders($fileRows[0]);
@@ -226,8 +290,7 @@ global proc string[] cropColHeaders(string $fileRows[])
 	if (size($colHeaders)>0){stringArrayRemoveAtIndex(0,$output);}
 	return $output;	
 }
-
-global proc int selFileSizeCompare(string $pointfiles[], string $objs[], int $attSize)
+proc int selFileSizeCompare(string $pointfiles[], string $objs[], int $attSize)
 {
 	//#objects*attSize = #columns in pointfiles
 	int $selFileSizeMatch = 0;
@@ -243,8 +306,7 @@ global proc int selFileSizeCompare(string $pointfiles[], string $objs[], int $at
 		{$selFileSizeMatch = 1;}
 	return $selFileSizeMatch;
 }
-
-global proc int[] numObjsPerFile(string $pointfiles[], int $attSize)
+proc int[] numObjsPerFile(string $pointfiles[], int $attSize)
 {
 	int $numObjsPerFile[];
 	string $fileRows[]; int $curCols;
@@ -257,36 +319,17 @@ global proc int[] numObjsPerFile(string $pointfiles[], int $attSize)
 	}
 	return $numObjsPerFile;
 }
-
-proc string getDecomposeNode(string $obj)
-{
-	// based on Armita Manafezdah and Steve Gatesy orelFast
-	//load matrix nodes plugin if not loaded already
-	if (!`pluginInfo -q -l  matrixNodes`){loadPlugin matrixNodes;}
-	// use decompose to read out translate and rotate in world space
-	string $decomposeNode = `createNode "decomposeMatrix" -n ($obj + "DecomposeNode")`;
-	connectAttr -f ($obj+".worldMatrix[0]") ($decomposeNode+".inputMatrix");
-	return $decomposeNode;
-}
-
-proc string getDecomposeOutput(string $decomposeNode)
-{
-	// based on Armita Manafezdah and Steve Gatesy orelFast
-	string $tmpoutput[] = `spaceLocator -n ("tmpObj")`;
-	connectAttr -f ($decomposeNode+".outputTranslate") ($tmpoutput[0]+".translate");
-	connectAttr -f ($decomposeNode+".outputRotate") ($tmpoutput[0]+".rotate");
-	return $tmpoutput[0];
-}
-
+/************************************************************
+******************* USER CLICK PROCS **********************
+*************************************************************/
 global proc impXMAdata()
 {
 	// select file(s) 
-	string $pointfiles[] = getXrommPointfiles("Select File(s)", 4, "CSV files (*.csv)",1);
+	string $pointfiles[] = getXrommPointfiles2("Select File(s)", 4, "CSV files (*.csv)",1,"");
 	
 	// file selection cancelled
 	if (size($pointfiles)==0){print "Import Cancelled\n";}
-	// run the import
-	else
+	else // run the import
 	{
 		string $fileRows[]; int $maxRows; 
 		// if rigid body 
@@ -342,129 +385,9 @@ global proc impXMAdata()
 		}
 		playbackOptions -minTime 1 -maxTime $maxRows;
 		FrameSelectedWithoutChildrenInAllViews;
+		if (`window -exists impDataWindow` == true) deleteUI impDataWindow;
 	}
 }
-
-global proc impXMAGlobalmatrix(string $fileRows[], string $objs[])
-{
-	float $frames[];
-	string $atts[] = {"tx","ty","tz","rx","ry","rz","sx","sy","sz"};
-
-	float $rowHeaders[] = `autoGetRowHeaders($fileRows)`;
-	
-	//get frame numbers
-	if (size($rowHeaders)>0){$frames = $rowHeaders;}
-	else {for ($i=0; $i<size($fileRows); $i++){$frames[size($frames)] = ($i+1);}}
-	//get data only
-	$fileRows = `cropColHeaders($fileRows)`;
-	$fileRows = `cropRowHeaders($fileRows)`;
-	
-	string $fileRowArray[]; string $data[];
-	
-	progressWindow -title "Importing" -min $frames[0] -max $frames[size($frames)-1]
-	 -progress $frames[0] -status ("Processing frame: "+$frames[0]) -isInterruptable true;
-	 
-	// loop through frames
-	for ($i=0; $i < size($fileRows); $i++)
-	{
-		progressWindow -edit
-		 -progress $i -status ("Processing frame: " + $i);
-		 
-		// if the whole row is NaNs, skip it
-		if (`gmatch $fileRows[$i] "*[0-9]*"`)
-		{
-			tokenizeList($fileRows[$i],$fileRowArray);
-			$col = 0;
-			for ($obj in $objs)
-			{
-				for ($j = $col; $j < $col+16; $j++){$data[size($data)] = $fileRowArray[$j];}
-				if ($data[0] != "NaN")
-				{
-					eval("xform -ws -m "+stringArrayToString($data," ")+" "+$obj);
-					for ($att in $atts)
-						{setKeyframe -t $frames[$i] -at $att $obj;}
-				}
-				$col = $col+16;
-				clear $data;
-			}
-		}
-	}
-	progressWindow -endProgress;
-	if (`checkBox -q -v seeKeyCheck2`){seeKeysOnly2;}
-}
-
-global proc string[] impXMAGlobal3dpts(string $fileRows[])
-{
-	float $frames[];
-	string $atts[] = {"tx","ty","tz"};
-	
-	string $colHeaders[] = `autoGetColHeaders($fileRows[0])`;
-	float $rowHeaders[] = `autoGetRowHeaders($fileRows)`;
-	
-	// create/name locators
-	string $objs[]; string $objNames[]; string $tmp[]; int $numCols; int $numMarkers;
-	if (size($colHeaders) != 0) // use column header names
-	{
-		$objNames = stripColHeaders($colHeaders,size($atts));
-		for ($i = 0;$i<size($objNames);$i++)
-		{
-			$objNames[$i]=cleanStrForObjectName($objNames[$i]);
-			$tmp = `spaceLocator -n $objNames[$i]`;
-			$objs[size($objs)] = $tmp[0];
-		}
-	}
-	else // just create locators
-	{
-		$numCols = size(stringToStringArray($fileRows[0],","));
-		if (size($rowHeaders)>0){$numCols = $numCols-1;}
-		$numMarkers = $numCols/3;
-		for ($i = 0;$i<$numMarkers;$i++)
-		{
-			$tmp = `spaceLocator`;
-			$objs[size($objs)] = $tmp[0];
-		}
-	}
-	//get frame numbers
-	if (size($rowHeaders)>0){$frames = $rowHeaders;}
-	else {for ($i=0;$i<size($fileRows);$i++){$frames[size($frames)] = ($i+1);}}
-	// just the data now
-	$fileRows = `cropColHeaders($fileRows)`;
-	$fileRows = `cropRowHeaders($fileRows)`;
-	
-	string $data[]; int $col = 0;
-	
-	progressWindow -title "Importing" -min $frames[0] -max $frames[size($frames)-1]
-	 -progress $frames[0] -status ("Processing frame: "+$frames[0]) -isInterruptable true;
-	 
-	for ($i =0; $i<size($fileRows); $i++)
-	{
-		progressWindow -edit
-		 -progress $i -status ("Processing frame: " + $i);
-		 
-		// if whole row is NaN we'll skip it
-		if (`gmatch $fileRows[$i] "*[0-9]*"`)
-		{
-			tokenizeList($fileRows[$i],$data);
-			$col = 0;
-			for ($obj in $objs)
-			{
-				for ($att in $atts)
-				{
-					if ($data[$col] != "NaN")
-					{
-						setAttr ($obj + "." + $att) (float($data[$col]));
-						setKeyframe -t $frames[$i] -at $att  $obj;
-					}
-					$col = $col+1;
-				}
-			}
-		}
-	}
-	progressWindow -endProgress;
-	if (`checkBox -q -v seeKeyCheck2`==1){select $objs; seeKeysOnly2;};
-	return $objs;
-}
-
 global proc impdataAdvanced()
 {
 	float $mayaVersion = `getApplicationVersionAsFloat` ;
@@ -604,122 +527,6 @@ global proc impdataAdvanced()
 	objNameFromCommand;
 }
 
-/************************************************************
-******************* USER CLICK PROCS **********************
-*************************************************************/
-global proc rememberImpWinAdvPrefs()
-{
-	string $typeButton;
-	string $dataType[] = `radioCollection -q -collectionItemArray itypeCollection`;
-	for ($dt in $dataType)
-		{if (`radioButton -q -sl $dt`){$typeButton = $dt;}}
-	optionVar -cat "impAdvWinPrefs" -sv "impDataTypeSel" $typeButton;
-	int $impCoord = `radioButtonGrp -q -sl icoordRadioButton`;
-	optionVar -cat "impAdvWinPrefs" -iv "impCoord" $impCoord;
-	int $impColHeader = `checkBox -q -v impColHeaderCheck`;
-	optionVar -cat "impAdvWinPrefs" -iv "impColHeader" $impColHeader;
-	int $impRowHeader = `checkBox -q -v impRowHeaderCheck`;
-	optionVar -cat "impAdvWinPrefs" -iv "impRowHeader" $impRowHeader;
-	int $impTimeSeries = `checkBox -q -v impTimeSeriesCheck`;
-	optionVar -cat "impAdvWinPrefs" -iv "impTimeSeries" $impTimeSeries;
-	int $impTypeAbsRel = `radioButtonGrp -q -sl impTypeAbsRelRadioGrp`;
-	optionVar -cat "impAdvWinPrefs" -iv "impTypeAbsRel" $impTypeAbsRel;
-	int $seeKeyCheck = `checkBox -q -v seeKeyCheck`;
-	optionVar -cat "impAdvWinPrefs" -iv "seeKeyCheck" $seeKeyCheck;
-	string $applyToButton;
-	string $applyTo[] = `radioCollection -q -collectionItemArray iApplyToCollection`;
-	for ($at in $applyTo)
-		{if (`radioButton -q -sl $at`){$applyToButton = $at;}}
-	optionVar -cat "impAdvWinPrefs" -sv "impApplyToSel" $applyToButton;
-	int $impObjNameFrom = `radioButtonGrp -q -sl impObjNameRadioGrp`;
-	optionVar -cat "impAdvWinPrefs" -iv "impObjNameFrom" $impObjNameFrom;
-	string $impCustomObjName = `textField -q -text newObjTxtField`;
-	optionVar -cat "impAdvWinPrefs" -sv "impCustomObjName" $impCustomObjName;
-	float $impObjSize = `floatField -q -v impObjSize`;
-	optionVar -cat "impAdvWinPrefs" -fv "impObjSize" $impObjSize;	
-}
-
-global proc restoreImpWinAdvPrefs()
-{
-	string $str;
-	if (`optionVar -ex "impDataTypeSel"`)
-		{$str = `optionVar -q "impDataTypeSel"`;}
-	else{$str = "irbmatrix";}
-	radioButton -e -sl $str;
-	 
-	int $int;
-	if (`optionVar -ex "impCoord"`)
-		{$int = `optionVar -q "impCoord"`;}
-	else{$int = 1;}
-	radioButtonGrp -e -sl $int icoordRadioButton;
-	
-	if (`optionVar -ex "impColHeader"`)
-		{$int = `optionVar -q "impColHeader"`;}
-	else{$int = 1;}
-	checkBox -e -v $int impColHeaderCheck;
-	
-	if (`optionVar -ex "impRowHeader"`)
-		{$int = `optionVar -q "impRowHeader"`;}
-	else{$int = 0;}
-	checkBox -e -v $int impRowHeaderCheck;
-	
-	if (`optionVar -ex "impTimeSeries"`)
-		{$int = `optionVar -q "impTimeSeries"`;}
-	else{$int = 1;}
-	checkBox -e -v $int impTimeSeriesCheck;
-	
-	if (`optionVar -ex "impTypeAbsRel"`)
-		{$int = `optionVar -q "impTypeAbsRel"`;}
-	else{$int = 1;}                 
-	radioButtonGrp -e -sl $int impTypeAbsRelRadioGrp;
-	
-	if (`optionVar -ex "seeKeyCheck"`)
-		{$int = `optionVar -q "seeKeyCheck"`;}
-	else{$int = 0;}
-	checkBox -e -v $int seeKeyCheck;
-	
-	if (`optionVar -ex "impApplyToSel"`)
-		{$str = `optionVar -q "impApplyToSel"`;}
-	else{$str = "iselob";}
-	radioButton -e -sl $str;
-	
-	if (`optionVar -ex "impObjNameFrom"`)
-		{$int = `optionVar -q "impObjNameFrom"`;}
-	else{$int = 1;}                 
-	radioButtonGrp -e -sl $int impObjNameRadioGrp;
-
-	if (`optionVar -ex "impCustomObjName"`)
-		{$str = `optionVar -q "impCustomObjName"`;}
-	else{$str = "obj1";}                 
-	textField -e -text $str newObjTxtField;	
-	
-	float $float;
-	if (`optionVar -ex "impObjSize"`)
-		{$float = `optionVar -q "impObjSize"`;}
-	else{$float = 1.0;}                 
-	floatField -e -v $float impObjSize;	
-}
-
-global proc restoreDefaultImpAdvWindowOptions()
-{
-	radioButton -e -sl "irbmatrix";
-	radioButtonGrp -e -sl 1 icoordRadioButton;
-	checkBox -e -v 1 impColHeaderCheck;
-	checkBox -e -v 0 impRowHeaderCheck;
-	checkBox -e -v 1 impTimeSeriesCheck;             
-	radioButtonGrp -e -sl 1 impTypeAbsRelRadioGrp;
-	checkBox -e-v 0 cSubsetCheck;
-	textField -e -text "" cSubsetIdxText;
-	checkBox -e -v 0 rSubsetCheck;
-	textField -e -text "" rSubsetIdxText;
-	checkBox -e -v 0 seeKeyCheck;
-	radioButton -e -sl "iselob";              
-	radioButtonGrp -e -sl 1 impObjNameRadioGrp;               
-	textField -e -text "obj1" newObjTxtField;	               
-	floatField -e -v 1.0 impObjSize;	
-}
-	
-
 global proc itypeChangeCmd()
 {
 	// Data type change defaults for each data type; Rigid Body Matrix defaults to 'selected object'.
@@ -740,8 +547,6 @@ global proc itypeChangeCmd()
 		{radioButton -edit -sl inloc;}
 	objTypeRadioCommand;
 }
-
-
 global proc cHeaderCC()
 {
 	// Column Headers in Row check command.
@@ -754,7 +559,6 @@ global proc cHeaderCC()
 		 if (`radioButtonGrp -q -sl impObjNameRadioGrp`== 1)
 		{radioButtonGrp -edit -sl 3 impObjNameRadioGrp;}}
 }
-
 global proc rHeaderCC()
 {
 	// Row Headers in Column check command.
@@ -765,7 +569,6 @@ global proc rHeaderCC()
 		{intField -edit -v 0 rhInColInt;
 		 intField -edit -editable 0 rhInColInt;}
 }
-
 global proc timeSeriesCC()
 {
 	// 'Rows are time series' check command
@@ -776,7 +579,6 @@ global proc timeSeriesCC()
 		{radioButtonGrp -edit -enable 0 impTypeAbsRelRadioGrp;
 		checkBox -e -v 0 -en 0 seeKeyCheck;}
 }
-
 global proc cSubsetCC()
 {
 	// 'Use subset(ex: 1-3,,5,7)' Columns Check Command
@@ -788,7 +590,6 @@ global proc cSubsetCC()
 		textField -edit -en 0 cSubsetIdxText;
 		textField -edit -text "" cSubsetIdxText;}
 }
-
 global proc rSubsetCC()
 {
 	// 'Use subset' Rows Check Command
@@ -800,7 +601,6 @@ global proc rSubsetCC()
 		textField -edit -en 0 rSubsetIdxText;
 		textField -edit -text "" rSubsetIdxText;}
 }
-
 global proc objTypeRadioCommand()
 {
 	// Called from itypeChangeCommand; sets appearance if 'selected object' is chosen
@@ -821,7 +621,6 @@ global proc objTypeRadioCommand()
 			radioButtonGrp -edit -en 1 impObjNameRadioGrp;
 		}
 }
-
 global proc objNameFromCommand()
 {
 	// Called from itypeChangeCommand; sets appearance if 'selected object' is chosen
@@ -830,12 +629,10 @@ global proc objNameFromCommand()
 	else	
 		{textField -edit -en 0 newObjTxtField;}
 }
-
-
 global proc setFileName()
 {
 	// Browse to Select Files Button command; Choose file(s)
-	string $pointfiles[] = 	getXrommPointfiles("import", 4, "CSV files (*.csv)",1);
+	string $pointfiles[] = 	getXrommPointfiles2("import", 4, "CSV files (*.csv)",1,"");
 	//if files are chosen, print file names in textScrollList and enable import and preview buttons
 	if (size($pointfiles)>0)
 	{
@@ -858,7 +655,6 @@ global proc setFileName()
         print "No file(s) chosen";
     }         
 }
-
 global proc clearFileName()
 {
 	//Clear File List Button command
@@ -872,7 +668,6 @@ global proc clearFileName()
 	text -edit -en 0 cTxt;
 	intFieldGrp -edit -en 1 -v1 0 -v2 0 matSizeIntGrp;
 }
-
 global proc setSelRowCol()
 {
 	// Count and Display Rows and Columns for currently selected filename in textScrollList
@@ -886,7 +681,6 @@ global proc setSelRowCol()
 		intFieldGrp -edit -en 1 -v1 $rowNum -v2 $colNum matSizeIntGrp;
 	}
 }
-
 global proc processOptions()
 {
 	// Import Button Command
@@ -978,7 +772,349 @@ global proc processOptions()
         }
     }
 }
+/************************************************************
+*************** getSubsetData helper procs* *****************
+*************************************************************/
+proc string[] removeRowWithColHeaders(string $dataRows[], int $firstRow)
+{
+	string $subsetData[] = $dataRows;
+	for ($i = 0; $i<$firstRow;$i++) {stringArrayRemoveAtIndex(0,$subsetData);}
+	return $subsetData;	
+}
+proc int[] getSubsetIndexes(string $subsetStr)
+{
+	//Input: subsetSt - string from subset field (e.g. 1-3,5,7)
+	//Output: integer array of indices (e.g {1,2,3,5,7}
+	
+	// comma separated list
+	string $subsetStrAr[] = stringToStringArray($subsetStr,",");
+	// initialize variables
+	int $subset[]; string $x[];
+	for ($s in $subsetStrAr)
+	{
+		// if the string contains a dash, we want all integers in between
+		if (gmatch ($s,"*-*"))
+		{
+			// $x are the integers on either side of the dash
+			string $x[] = stringToStringArray($s,"-");
+			for ($i=int($x[0]);$i<=int($x[1]);$i++)
+				// we subtract one because the array index is zero based
+				{if(($i-1)>=0){$subset[size($subset)] = $i-1;}}
+		}
+		else
+		{
+			if((int($s)-1)>=0){$subset[size($subset)] = (int($s)-1);}
+		}
+	}
+	return $subset;
+}
+proc string[] getSubsetRows(string $dataRows[], int $subsetIdx[])
+{
+	// currently extracts rows so if user just wants to see row 5,
+	// only row 5 becomes row 1. Should we give back an array that presrves
+	// row number (replace rows 1-4 with Nana)
+	string $subsetData[];
+	for ($sr in $subsetIdx)
+		{$subsetData[size($subsetData)] = ($dataRows[$sr]);}
+	
+	return $subsetData;	
+}
+proc string[] removeColWithRowHeaders(string $dataRows[], int $firstCol)
+{
+	string $subsetData[];
+	string $data[];
+	
+	for ($i = 0;$i<size($dataRows);$i++)
+		{
+			tokenizeList($dataRows[$i], $data);
+			for ($j = 0; $j<$firstCol;$j++) 
+				{stringArrayRemoveAtIndex(0,$data);}
+			$subsetData[$i] = stringArrayToString($data,",");
+		}
+	return $subsetData;	
+}
+proc string[] getSubsetCols(string $dataRows[], int $subsetIdx[])
+{
+	string $subsetData[]; string $cols[]; string $cols2[];
 
+	if (`checkBox -q -v impColHeaderCheck` && !`checkBox -q -v cSubsetCheck`)
+		{$dataRows = removeRowWithColHeaders($dataRows, `intField -q -v chInRowInt`);}
+		
+	for ($i = 0;$i<size($dataRows);$i++)
+	{
+		tokenizeList($dataRows[$i], $cols);
+		for ($sc in $subsetIdx) 
+			{$cols2[size($cols2)] = $cols[$sc];}
+		$subsetData[$i] = stringArrayToString($cols2,",");
+		clear $cols2;
+	}
+
+	return $subsetData;
+}
+/************************************************************
+*************** getObjList helper procs* *****************
+*************************************************************/
+proc int getNumAtts()
+{
+    int $natts;
+		// need index and import type
+	if (`radioButton -q -sl irbtrans` || `radioButton -q -sl irbrot`)
+		{$natts = 3;}
+	else if(`radioButton -q -sl irbtransrot`)
+		{$natts = 6;}
+	else if(`radioButton -q -sl irbmatrix`)
+		{$natts = 16;}
+	else if(`radioButton -q -sl irbselattr`)
+		{$natts = size(`channelBox -q -sma "mainChannelBox"`);}
+	else
+		{$natts = 0;}
+	return $natts;
+}
+proc string[] getColHeaders(string $dataRows[])
+{
+	// if col headers is not checked, returns empty array.
+	string $colHeaders[]; 
+	string $subsetData[] = $dataRows;
+	int $colHeaderRow = `intField -q -v chInRowInt`;
+	
+	// if there are column headers
+	if ((`checkBox -q -v impColHeaderCheck`) && ($colHeaderRow != 0))
+	{
+		// first get rid of column of row headers if it exists
+		if (`checkBox -q -v impRowHeaderCheck`)
+			{$subsetData = removeColWithRowHeaders($dataRows, `intField -q -v rhInColInt`);}
+		
+		// extract column header row
+		$colHeaderRow = $colHeaderRow-1;
+		$colHeaders = stringToStringArray($subsetData[$colHeaderRow],",");
+		
+		// if subset of columns was chosen
+		if (`checkBox -q -v cSubsetCheck`)
+		{
+			string $cols2[];
+			// get the list of columns to keep
+			int $subsetCols[] = getSubsetIndexes(`textField -q -text cSubsetIdxText`);
+			for ($sc in $subsetCols) 
+					{$cols2[size($cols2)] = $colHeaders[$sc];}
+			clear $colHeaders;
+			$colHeaders = $cols2;
+		}		
+	}
+	return $colHeaders;
+}
+proc string[] stripColHeaders(string $colHeaders[], int $numatts)
+{
+	// if col headers is not checked, returns empty array.
+	string $outputHeaders[];
+	// get the first column header for each object
+	for ($i = 0;$i<size($colHeaders);$i += $numatts)
+		{$outputHeaders[size($outputHeaders)] = $colHeaders[$i];}
+		// remove suffixes given by expdata
+		string $suffixes[] = {".tx",".ty",".tz",".rx",".ry",".rz",".rxx",".rxy",".rxz",".rx0",".ryx",".ryy",".ryz",".ry0",".rzx",".rzy",".rzz",".tx",".ty",".tz",".t1","_x","_y","_z","_X","_Y","_Z"};
+		for ($i = 0;$i<size($outputHeaders);$i++)
+		{
+			for ($s in $suffixes)
+			{
+				$outputHeaders[$i] = substituteAllString($outputHeaders[$i], $s, "");
+			}
+		}
+	return $outputHeaders;
+}
+/************************************************************
+*************** getFrames helper procs* *****************
+*************************************************************/
+proc string[] getRowHeaders(string $dataRows[])
+{
+	// if row headers is not checked or row header column# is zero, returns empty array.
+	string $rowHeaders[]; string $subsetData[]; int $rhcol = `intField -q -v rhInColInt`;
+	
+	// only do this if there are row headers
+	if ((`checkBox -q -v impRowHeaderCheck`) && ($rhcol != 0))
+	{
+		// first get rid of row of column headers if it exists
+		if (`checkBox -q -v impColHeaderCheck`)
+			{$subsetData = removeRowWithColHeaders($dataRows, `intField -q -v chInRowInt`);}
+		
+		// then extract row header column (change to zero-based index)
+		$rhcol = $rhcol-1;
+		$rowHeaders = getSubsetCols($dataRows, {$rhcol});
+		
+		// if subset of row was chosen
+		if (`checkBox -q -v rSubsetCheck`)
+		{
+			// get the list of rows to keep
+			int $subsetRows[] = getSubsetIndexes(`textField -q -text rSubsetIdxText`);
+			$rowHeaders = getSubsetRows($rowHeaders, $subsetRows);
+		}		
+	}
+	return $rowHeaders;
+}
+/************************************************************
+******************* imp helper procs* ***********************
+*************************************************************/
+proc string[] getSubsetData(string $dataRows[])
+{
+	// this removes column and row headers and strips subsets of rows and columns
+    string $subsetData[] = $dataRows; 
+    int $subsetRows[]; int $subsetCols[];string $subsetStr;
+    
+    // first remove rows
+   	// if there are column headers (rows to skip)
+	if (`checkBox -q -v impColHeaderCheck`)
+		{$subsetData = removeRowWithColHeaders($dataRows, `intField -q -v chInRowInt`);}
+	// if subset of rows was chosen
+	if (`checkBox -q -v rSubsetCheck`)
+	{
+		// Indices are zero-based. User types in one-based row or column numbers
+		// should we keep row number here which means keeping row number by nans
+		$subsetIdx = getSubsetIndexes(`textField -q -text rSubsetIdxText`);
+		$subsetData = getSubsetRows($subsetData,$subsetIdx);
+	}		
+	
+	// next remove columns
+	// if there are row headers (columns to skip)
+	if (`checkBox -q -v impRowHeaderCheck`)
+		{$subsetData = removeColWithRowHeaders($subsetData, (`intField -q -v rhInColInt`));}
+	// if subset of columns was chosen
+	if (`checkBox -q -v cSubsetCheck`)
+	{
+		$subsetIdx = getSubsetIndexes(`textField -q -text cSubsetIdxText`);
+		$subsetData = getSubsetCols($subsetData, $subsetIdx);
+	}
+	return $subsetData;
+}
+proc string[] getObjList(string $dataRows[], string $subsetdata[])
+{
+	// gets object list name or creates objects for imported data
+	string $objs[];
+	
+	// total number of objects
+	int $numcols = size(stringToStringArray($subsetdata[0],","));
+	int $numatts = getNumAtts();
+	int $numobjs = $numcols/$numatts;
+		
+	// Apply to: user input
+	int $type;
+	if (`radioButton -q -sl ingrp`){$type = 0;}
+	else if (`radioButton -q -sl inloc`){$type = 1;}
+	else if (`radioButton -q -sl inaxes`){$type = 2;}
+	else if (`radioButton -q -sl insph`){$type = 3;}
+	else if (`radioButton -q -sl iselob`){$type = 4;}
+	else {}
+	
+	// if applying transforms to selected objects
+	if ($type==4)
+    {
+        $objs = `ls -sl`;		    
+        if (size($objs) != $numobjs){clear $objs;}
+    }
+	// if creating new objects
+	else
+	{
+		string $objPrefix[];
+		// get the object name choice by the user
+		int $nametype = `radioButtonGrp -q -sl impObjNameRadioGrp`;
+		// if column headers exist, name the object after the column header
+		if ($nametype == 1)
+		// use column headers
+		{
+			string $colHeaders[] = getColHeaders($dataRows);
+			$objs = stripColHeaders($colHeaders, $numatts);
+		}
+		// use file name
+		else if ($nametype ==2)
+		{
+		    string $selFile[] = `textScrollList -q -si fileList`;
+		    string $bname = basename($selFile[0],".csv");
+			$bname = cleanStrForObjectName($bname);
+			for ($i = 0;$i<$numobjs;$i++){$objs[size($objs)] = $bname;}
+		}
+		// custom
+		else if ($nametype ==3)
+			{
+				string $bname = `textField -q -text newObjTxtField`;
+				// if not timeseries, we need to check if the basename+Group exists
+				// if it does, the basename needs an integer added
+				if (`objExists ($bname+"Group")`)
+				{
+					string $tmporigbname = `group -em -n $bname`;
+					string $tmpnewbname = `group -em -n $tmporigbname`;
+					delete $tmporigbname $tmpnewbname;
+					$bname = $tmpnewbname;
+				}
+				for ($i = 0;$i<$numobjs;$i++){$objs[size($objs)] = $bname;}
+				
+			}
+		else{}
+				
+		// create the object(s)
+		string $tmpEval[]; string $tmpEvalstr; string $actObjs[];
+		float $size = (`floatField -q -value impObjSize`/10);
+		for ($o in $objs)
+		{
+			if ($type==0)
+				{$tmpEvalstr = `eval("group -em -n " + $o)`; 
+				$actObjs[size($actObjs)] = $tmpEvalstr;}
+			else if ($type==1)
+				{$tmpEval = `eval("spaceLocator -n " + $o)`; 
+				$actObjs[size($actObjs)] = $tmpEval[0];}
+			else if ($type==2)
+				{$tmpEval[0] = `eval("axesCreate( \""+$o+"\","+$size+",\"full\",1)")`; 
+				$actObjs[size($actObjs)] = $tmpEval[0];}
+			else if ($type ==3)
+				{$tmpEval = `eval("sphere -n " + $o)`;
+				$actObjs[size($actObjs)] = $tmpEval[0];}
+			else{}	
+		}
+		scale $size $size $size $actObjs;
+		if ($type!=4){$objs = $actObjs;}
+	}	
+	return $objs;
+}
+proc float[] getFrames(string $dataRows[])
+{
+	string $frameStr[];
+	float $frames[]; 
+		
+	// if there are row headers we can pluck the rows out and read the frame number
+	if (`checkBox -q -v impRowHeaderCheck`)
+	{
+		$frameStr = getRowHeaders($dataRows);
+		for ($f in $frameStr){$frames[size($frames)] = float($f);}
+	}
+	// without row headers, we need to use row number as an index for frame number
+	else
+	{
+		// if subset of rows was chosen
+		if (`checkBox -q -v rSubsetCheck`)
+		{
+			//parse the text field
+			$subsetRows = getSubsetIndexes(`textField -q -text rSubsetIdxText`);
+			for ($s in $subsetRows){$frames[size($frames)] = (float($s)+1);}
+		}
+		// if no subset just cound the rows
+		else
+		{
+			string $subsetdata[] = getSubsetData($dataRows);
+			for ($i = 0;$i<size($subsetdata);$i++)
+				{$frames[size($frames)] = ($i+1);}
+		}
+	}
+
+	return $frames;
+}
+global proc string[] getflagatts(string $curflag)
+{
+	string $outstring[];
+	if ($curflag == "-t")
+		{$outstring = {"tx","ty","tz"};}
+    else if($curflag == "-ro")
+		{$outstring = {"rx","ry","rz"};}
+	else if($curflag == "-m")
+		{$outstring = {"tx","ty","tz","rx","ry","rz","sx","sy","sz"};}
+	else{}
+	return $outstring;
+}
 /************************************************************
 *******Preview and Import Button Clicks **********************
 *************************************************************/
@@ -994,7 +1130,6 @@ global proc setpreview(int $previewType)
 		{$preview = ($preview + $imp + "\n");}
 	scrollField -edit -text $preview previewTextField;	
 }
-
 global proc previewButtonC(int $previewType)
 {
 	// create the preview window.
@@ -1024,7 +1159,127 @@ global proc previewButtonC(int $previewType)
 	window -e -width $width -height $height $mainWindow;
 	setpreview($previewType);
 }
+/************************************************************
+******************* imp procs* ***********************
+*************************************************************/
+global proc impXMAGlobalmatrix(string $fileRows[], string $objs[])
+{
+	float $frames[];
+	string $atts[] = {"tx","ty","tz","rx","ry","rz","sx","sy","sz"};
 
+	float $rowHeaders[] = `autoGetRowHeaders($fileRows)`;
+	
+	//get frame numbers
+	if (size($rowHeaders)>0){$frames = $rowHeaders;}
+	else {for ($i=0; $i<size($fileRows); $i++){$frames[size($frames)] = ($i+1);}}
+	//get data only
+	$fileRows = `cropColHeaders($fileRows)`;
+	$fileRows = `cropRowHeaders($fileRows)`;
+	
+	string $fileRowArray[]; string $data[];
+	
+	progressWindow -title "Importing" -min $frames[0] -max $frames[size($frames)-1]
+	 -progress $frames[0] -status ("Processing frame: "+$frames[0]) -isInterruptable true;
+	 
+	// loop through frames
+	for ($i=0; $i < size($fileRows); $i++)
+	{
+		progressWindow -edit
+		 -progress $i -status ("Processing frame: " + $i);
+		 
+		// if the whole row is NaNs, skip it
+		if (`gmatch $fileRows[$i] "*[0-9]*"`)
+		{
+			tokenizeList($fileRows[$i],$fileRowArray);
+			$col = 0;
+			for ($obj in $objs)
+			{
+				for ($j = $col; $j < $col+16; $j++){$data[size($data)] = $fileRowArray[$j];}
+				if ($data[0] != "NaN")
+				{
+					eval("xform -ws -m "+stringArrayToString($data," ")+" "+$obj);
+					for ($att in $atts)
+						{setKeyframe -t $frames[$i] -at $att $obj;}
+				}
+				$col = $col+16;
+				clear $data;
+			}
+		}
+	}
+	progressWindow -endProgress;
+	if (`checkBox -q -v seeKeyCheck2`){seeKeysOnly2;}
+}
+global proc string[] impXMAGlobal3dpts(string $fileRows[])
+{
+	float $frames[];
+	string $atts[] = {"tx","ty","tz"};
+	
+	string $colHeaders[] = `autoGetColHeaders($fileRows[0])`;
+	float $rowHeaders[] = `autoGetRowHeaders($fileRows)`;
+	
+	// create/name locators
+	string $objs[]; string $objNames[]; string $tmp[]; int $numCols; int $numMarkers;
+	if (size($colHeaders) != 0) // use column header names
+	{
+		$objNames = stripColHeaders($colHeaders,size($atts));
+		for ($i = 0;$i<size($objNames);$i++)
+		{
+			$objNames[$i]=cleanStrForObjectName($objNames[$i]);
+			$tmp = `spaceLocator -n $objNames[$i]`;
+			$objs[size($objs)] = $tmp[0];
+		}
+	}
+	else // just create locators
+	{
+		$numCols = size(stringToStringArray($fileRows[0],","));
+		if (size($rowHeaders)>0){$numCols = $numCols-1;}
+		$numMarkers = $numCols/3;
+		for ($i = 0;$i<$numMarkers;$i++)
+		{
+			$tmp = `spaceLocator`;
+			$objs[size($objs)] = $tmp[0];
+		}
+	}
+	//get frame numbers
+	if (size($rowHeaders)>0){$frames = $rowHeaders;}
+	else {for ($i=0;$i<size($fileRows);$i++){$frames[size($frames)] = ($i+1);}}
+	// just the data now
+	$fileRows = `cropColHeaders($fileRows)`;
+	$fileRows = `cropRowHeaders($fileRows)`;
+	
+	string $data[]; int $col = 0;
+	
+	progressWindow -title "Importing" -min $frames[0] -max $frames[size($frames)-1]
+	 -progress $frames[0] -status ("Processing frame: "+$frames[0]) -isInterruptable true;
+	 
+	for ($i =0; $i<size($fileRows); $i++)
+	{
+		progressWindow -edit
+		 -progress $i -status ("Processing frame: " + $i);
+		 
+		// if whole row is NaN we'll skip it
+		if (`gmatch $fileRows[$i] "*[0-9]*"`)
+		{
+			tokenizeList($fileRows[$i],$data);
+			$col = 0;
+			for ($obj in $objs)
+			{
+				for ($att in $atts)
+				{
+					if ($data[$col] != "NaN")
+					{
+						setAttr ($obj + "." + $att) (float($data[$col]));
+						setKeyframe -t $frames[$i] -at $att  $obj;
+					}
+					$col = $col+1;
+				}
+			}
+		}
+	}
+	progressWindow -endProgress;
+	if (`checkBox -q -v seeKeyCheck2`==1){select $objs; seeKeysOnly2;};
+	return $objs;
+}
 global proc impSA(string $dataRows[], string $atts[])
 {
 	// clear selections if needed
@@ -1131,7 +1386,6 @@ global proc impSA(string $dataRows[], string $atts[])
 		}
 	}
 }
-
 global proc impXform(string $dataRows[], string $flags[], string $atts[])
 {	
 	// clear selections if anything other than 'Apply to: selected object'
@@ -1273,380 +1527,12 @@ global proc impXform(string $dataRows[], string $flags[], string $atts[])
 	if ($turnAutoBackOn){autoKeyframe -state 1;}
 }
 
-/************************************************************
-******************* Subset data procs ***********************
-*************************************************************/
-global proc string[] getSubsetData(string $dataRows[])
-{
-	// this removes column and row headers and strips subsets of rows and columns
-    string $subsetData[] = $dataRows; 
-    int $subsetRows[]; int $subsetCols[];string $subsetStr;
-    
-    // first remove rows
-   	// if there are column headers (rows to skip)
-	if (`checkBox -q -v impColHeaderCheck`)
-		{$subsetData = removeRowWithColHeaders($dataRows, `intField -q -v chInRowInt`);}
-	// if subset of rows was chosen
-	if (`checkBox -q -v rSubsetCheck`)
-	{
-		// Indices are zero-based. User types in one-based row or column numbers
-		// should we keep row number here which means keeping row number by nans
-		$subsetIdx = getSubsetIndexes(`textField -q -text rSubsetIdxText`);
-		$subsetData = getSubsetRows($subsetData,$subsetIdx);
-	}		
-	
-	// next remove columns
-	// if there are row headers (columns to skip)
-	if (`checkBox -q -v impRowHeaderCheck`)
-		{$subsetData = removeColWithRowHeaders($subsetData, (`intField -q -v rhInColInt`));}
-	// if subset of columns was chosen
-	if (`checkBox -q -v cSubsetCheck`)
-	{
-		$subsetIdx = getSubsetIndexes(`textField -q -text cSubsetIdxText`);
-		$subsetData = getSubsetCols($subsetData, $subsetIdx);
-	}
-	return $subsetData;
-}
-
-global proc string[] removeRowWithColHeaders(string $dataRows[], int $firstRow)
-{
-	string $subsetData[] = $dataRows;
-	for ($i = 0; $i<$firstRow;$i++) {stringArrayRemoveAtIndex(0,$subsetData);}
-	return $subsetData;	
-}
-
-global proc int[] getSubsetIndexes(string $subsetStr)
-{
-	//Input: subsetSt - string from subset field (e.g. 1-3,5,7)
-	//Output: integer array of indices (e.g {1,2,3,5,7}
-	
-	// comma separated list
-	string $subsetStrAr[] = stringToStringArray($subsetStr,",");
-	// initialize variables
-	int $subset[]; string $x[];
-	for ($s in $subsetStrAr)
-	{
-		// if the string contains a dash, we want all integers in between
-		if (gmatch ($s,"*-*"))
-		{
-			// $x are the integers on either side of the dash
-			string $x[] = stringToStringArray($s,"-");
-			for ($i=int($x[0]);$i<=int($x[1]);$i++)
-				// we subtract one because the array index is zero based
-				{if(($i-1)>=0){$subset[size($subset)] = $i-1;}}
-		}
-		else
-		{
-			if((int($s)-1)>=0){$subset[size($subset)] = (int($s)-1);}
-		}
-	}
-	return $subset;
-}
-
-global proc string[] getSubsetRows(string $dataRows[], int $subsetIdx[])
-{
-	// currently extracts rows so if user just wants to see row 5,
-	// only row 5 becomes row 1. Should we give back an array that presrves
-	// row number (replace rows 1-4 with Nana)
-	string $subsetData[];
-	for ($sr in $subsetIdx)
-		{$subsetData[size($subsetData)] = ($dataRows[$sr]);}
-	
-	return $subsetData;	
-}
-
-global proc string[] removeColWithRowHeaders(string $dataRows[], int $firstCol)
-{
-	string $subsetData[];
-	string $data[];
-	
-	for ($i = 0;$i<size($dataRows);$i++)
-		{
-			tokenizeList($dataRows[$i], $data);
-			for ($j = 0; $j<$firstCol;$j++) 
-				{stringArrayRemoveAtIndex(0,$data);}
-			$subsetData[$i] = stringArrayToString($data,",");
-		}
-	return $subsetData;	
-}
-
-global proc string[] getSubsetCols(string $dataRows[], int $subsetIdx[])
-{
-	string $subsetData[]; string $cols[]; string $cols2[];
-
-	if (`checkBox -q -v impColHeaderCheck` && !`checkBox -q -v cSubsetCheck`)
-		{$dataRows = removeRowWithColHeaders($dataRows, `intField -q -v chInRowInt`);}
-		
-	for ($i = 0;$i<size($dataRows);$i++)
-	{
-		tokenizeList($dataRows[$i], $cols);
-		for ($sc in $subsetIdx) 
-			{$cols2[size($cols2)] = $cols[$sc];}
-		$subsetData[$i] = stringArrayToString($cols2,",");
-		clear $cols2;
-	}
-
-	return $subsetData;
-}
-
-/************************************************************
-******************* imp Helper procs **********************
-*************************************************************/
-global proc string[] getObjList(string $dataRows[], string $subsetdata[])
-{
-	// gets object list name or creates objects for imported data
-	string $objs[];
-	
-	// total number of objects
-	int $numcols = size(stringToStringArray($subsetdata[0],","));
-	int $numatts = getNumAtts();
-	int $numobjs = $numcols/$numatts;
-		
-	// Apply to: user input
-	int $type;
-	if (`radioButton -q -sl ingrp`){$type = 0;}
-	else if (`radioButton -q -sl inloc`){$type = 1;}
-	else if (`radioButton -q -sl inaxes`){$type = 2;}
-	else if (`radioButton -q -sl insph`){$type = 3;}
-	else if (`radioButton -q -sl iselob`){$type = 4;}
-	else {}
-	
-	// if applying transforms to selected objects
-	if ($type==4)
-    {
-        $objs = `ls -sl`;		    
-        if (size($objs) != $numobjs){clear $objs;}
-    }
-	// if creating new objects
-	else
-	{
-		string $objPrefix[];
-		// get the object name choice by the user
-		int $nametype = `radioButtonGrp -q -sl impObjNameRadioGrp`;
-		// if column headers exist, name the object after the column header
-		if ($nametype == 1)
-		// use column headers
-		{
-			string $colHeaders[] = getColHeaders($dataRows);
-			$objs = stripColHeaders($colHeaders, $numatts);
-		}
-		// use file name
-		else if ($nametype ==2)
-		{
-		    string $selFile[] = `textScrollList -q -si fileList`;
-		    string $bname = basename($selFile[0],".csv");
-			$bname = cleanStrForObjectName($bname);
-			for ($i = 0;$i<$numobjs;$i++){$objs[size($objs)] = $bname;}
-		}
-		// custom
-		else if ($nametype ==3)
-			{
-				string $bname = `textField -q -text newObjTxtField`;
-				// if not timeseries, we need to check if the basename+Group exists
-				// if it does, the basename needs an integer added
-				if (`objExists ($bname+"Group")`)
-				{
-					string $tmporigbname = `group -em -n $bname`;
-					string $tmpnewbname = `group -em -n $tmporigbname`;
-					delete $tmporigbname $tmpnewbname;
-					$bname = $tmpnewbname;
-				}
-				for ($i = 0;$i<$numobjs;$i++){$objs[size($objs)] = $bname;}
-				
-			}
-		else{}
-				
-		// create the object(s)
-		string $tmpEval[]; string $tmpEvalstr; string $actObjs[];
-		float $size = (`floatField -q -value impObjSize`/10);
-		for ($o in $objs)
-		{
-			if ($type==0)
-				{$tmpEvalstr = `eval("group -em -n " + $o)`; 
-				$actObjs[size($actObjs)] = $tmpEvalstr;}
-			else if ($type==1)
-				{$tmpEval = `eval("spaceLocator -n " + $o)`; 
-				$actObjs[size($actObjs)] = $tmpEval[0];}
-			else if ($type==2)
-				{$tmpEval[0] = `eval("axesCreate( \""+$o+"\","+$size+",\"full\",1)")`; 
-				$actObjs[size($actObjs)] = $tmpEval[0];}
-			else if ($type ==3)
-				{$tmpEval = `eval("sphere -n " + $o)`;
-				$actObjs[size($actObjs)] = $tmpEval[0];}
-			else{}	
-		}
-		scale $size $size $size $actObjs;
-		if ($type!=4){$objs = $actObjs;}
-	}	
-	return $objs;
-}
-
-global proc int getNumAtts()
-{
-    int $natts;
-		// need index and import type
-	if (`radioButton -q -sl irbtrans` || `radioButton -q -sl irbrot`)
-		{$natts = 3;}
-	else if(`radioButton -q -sl irbtransrot`)
-		{$natts = 6;}
-	else if(`radioButton -q -sl irbmatrix`)
-		{$natts = 16;}
-	else if(`radioButton -q -sl irbselattr`)
-		{$natts = size(`channelBox -q -sma "mainChannelBox"`);}
-	else
-		{$natts = 0;}
-	return $natts;
-}
-
-global proc string[] getRowHeaders(string $dataRows[])
-{
-	// if row headers is not checked or row header column# is zero, returns empty array.
-	string $rowHeaders[]; string $subsetData[]; int $rhcol = `intField -q -v rhInColInt`;
-	
-	// only do this if there are row headers
-	if ((`checkBox -q -v impRowHeaderCheck`) && ($rhcol != 0))
-	{
-		// first get rid of row of column headers if it exists
-		if (`checkBox -q -v impColHeaderCheck`)
-			{$subsetData = removeRowWithColHeaders($dataRows, `intField -q -v chInRowInt`);}
-		
-		// then extract row header column (change to zero-based index)
-		$rhcol = $rhcol-1;
-		$rowHeaders = getSubsetCols($dataRows, {$rhcol});
-		
-		// if subset of row was chosen
-		if (`checkBox -q -v rSubsetCheck`)
-		{
-			// get the list of rows to keep
-			int $subsetRows[] = getSubsetIndexes(`textField -q -text rSubsetIdxText`);
-			$rowHeaders = getSubsetRows($rowHeaders, $subsetRows);
-		}		
-	}
-	return $rowHeaders;
-}
-
-global proc string[] getColHeaders(string $dataRows[])
-{
-	// if col headers is not checked, returns empty array.
-	string $colHeaders[]; 
-	string $subsetData[] = $dataRows;
-	int $colHeaderRow = `intField -q -v chInRowInt`;
-	
-	// if there are column headers
-	if ((`checkBox -q -v impColHeaderCheck`) && ($colHeaderRow != 0))
-	{
-		// first get rid of column of row headers if it exists
-		if (`checkBox -q -v impRowHeaderCheck`)
-			{$subsetData = removeColWithRowHeaders($dataRows, `intField -q -v rhInColInt`);}
-		
-		// extract column header row
-		$colHeaderRow = $colHeaderRow-1;
-		$colHeaders = stringToStringArray($subsetData[$colHeaderRow],",");
-		
-		// if subset of columns was chosen
-		if (`checkBox -q -v cSubsetCheck`)
-		{
-			string $cols2[];
-			// get the list of columns to keep
-			int $subsetCols[] = getSubsetIndexes(`textField -q -text cSubsetIdxText`);
-			for ($sc in $subsetCols) 
-					{$cols2[size($cols2)] = $colHeaders[$sc];}
-			clear $colHeaders;
-			$colHeaders = $cols2;
-		}		
-	}
-	return $colHeaders;
-}
-
-global proc string[] stripColHeaders(string $colHeaders[], int $numatts)
-{
-	// if col headers is not checked, returns empty array.
-	string $outputHeaders[];
-	// get the first column header for each object
-	for ($i = 0;$i<size($colHeaders);$i += $numatts)
-		{$outputHeaders[size($outputHeaders)] = $colHeaders[$i];}
-		// remove suffixes given by expdata
-		string $suffixes[] = {".tx",".ty",".tz",".rx",".ry",".rz",".rxx",".rxy",".rxz",".rx0",".ryx",".ryy",".ryz",".ry0",".rzx",".rzy",".rzz",".tx",".ty",".tz",".t1","_x","_y","_z","_X","_Y","_Z"};
-		for ($i = 0;$i<size($outputHeaders);$i++)
-		{
-			for ($s in $suffixes)
-			{
-				$outputHeaders[$i] = substituteAllString($outputHeaders[$i], $s, "");
-			}
-		}
-	return $outputHeaders;
-}
-
-global proc string cleanStrForObjectName(string $input)
-{
-	string $output;
-	$output = substituteAllString($input,"-","_");
-	$output = substituteAllString($input," ","_");
-	
-	if (!isValidObjectName($input))
-	{
-		//just get rid of all special characters
-		string $xs[] = {".","!","@","#","$","%","&","*","(",")","=","+",".",",","~","`","{","}","[","]","|","\\","<",">","/","?"};
-		for ($x in $xs){$output = substituteAllString($output, $x, "");}
-		// can't start with a number so well add an x in front
-		string $frontNums = `match "^[0-9]+" $output`;
-		if (size($frontNums) != 0){$output = ("x"+$output);}
-		$output = strip($output);
-	}
-	
-	// if still invalid object name
-	if (!isValidObjectName($output))
-		{ $output = "obj";}
-	
-	return $output;
-}
-
-global proc string[] getflagatts(string $curflag)
-{
-	string $outstring[];
-	if ($curflag == "-t")
-		{$outstring = {"tx","ty","tz"};}
-    else if($curflag == "-ro")
-		{$outstring = {"rx","ry","rz"};}
-	else if($curflag == "-m")
-		{$outstring = {"tx","ty","tz","rx","ry","rz","sx","sy","sz"};}
-	else{}
-	return $outstring;
-}
 
 
 
-global proc float[] getFrames(string $dataRows[])
-{
-	string $frameStr[];
-	float $frames[]; 
-		
-	// if there are row headers we can pluck the rows out and read the frame number
-	if (`checkBox -q -v impRowHeaderCheck`)
-	{
-		$frameStr = getRowHeaders($dataRows);
-		for ($f in $frameStr){$frames[size($frames)] = float($f);}
-	}
-	// without row headers, we need to use row number as an index for frame number
-	else
-	{
-		// if subset of rows was chosen
-		if (`checkBox -q -v rSubsetCheck`)
-		{
-			//parse the text field
-			$subsetRows = getSubsetIndexes(`textField -q -text rSubsetIdxText`);
-			for ($s in $subsetRows){$frames[size($frames)] = (float($s)+1);}
-		}
-		// if no subset just cound the rows
-		else
-		{
-			string $subsetdata[] = getSubsetData($dataRows);
-			for ($i = 0;$i<size($subsetdata);$i++)
-				{$frames[size($frames)] = ($i+1);}
-		}
-	}
 
-	return $frames;
-}
+
+
+
 
 

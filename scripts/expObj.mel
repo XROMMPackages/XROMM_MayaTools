@@ -9,7 +9,7 @@ global proc expObj(string $objs[], string $pointfiles[])
 	
 	// get directory
 	if (size($pointfiles) == 0)
-		{$pointfiles = getXrommPointfiles("Choose directory",3,"OBJ files (*.obj)",1);}
+		{$pointfiles = getXrommPointfiles2("Choose directory",3,"OBJ files (*.obj)",1,"");}
 	
 	string $curfile; float $curvtx[]; string $curface[]; string $curIdx[]; int $fileId; string $vtxStr; int $count[];
 	

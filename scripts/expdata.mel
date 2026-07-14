@@ -27,66 +27,55 @@ global proc expdata()
         Last Modified 			08/16/2025
  */
 {
+	int $width = 380;
+	int $h = 225;
+	int $indent = 10;
+	
 	if (`window -exists expDataWindow` == true) deleteUI expDataWindow;  
-
-	global string $gMainWindow; // This global variable holds the name of the main Maya window
-	int $widthHeight[] = `window -query -widthHeight $gMainWindow`;
-
-	// Extract the width and height values
-	int $screenWidth = $widthHeight[0];
-	int $screenHeight = $widthHeight[1];
-	int $width = ($screenWidth/4);
-	int $indent = ($width/8);
-  
-	string $mainWindow = `window -title "Export Translations and Rotations" 
+	window -title "Export Data" 
 		-maximizeButton false -minimizeButton true -sizeable false -resizeToFitChildren false 
-		-bgc 0.8 0.8 0.8 -closeCommand rememberExpBasicWinPrefs expDataWindow`;
+		-bgc 0.8 0.8 0.8 -closeCommand rememberExpBasicWinPrefs expDataWindow;
+		
 	columnLayout expColLayout;
 		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 expFrLayout1;
 			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
-			-cw2 ($width/2) ($width/2) -enable 1 -sl 2 -h ($width/10) 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 2 -h ($width/10) 
 			-labelArray2 "Single files" "Combined File" exprbgrp1;
 			setParent..;
 		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 expFrLayout2;
 			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
-			-cw2 ($width/2) ($width/2) -enable 1 -sl 2 -h ($width/10) 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 2 -h ($width/10) 
 			-labelArray2 "No column headers" "Column headers" exprbgrp2;
 			setParent..;
 		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 expFrLayout3;
 			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
-			-cw2 ($width/2) ($width/2) -enable 1 -sl 1 -h ($width/10) 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 1 -h ($width/10) 
 			-labelArray2 "No frame numbers" "Frame numbers (allows subset of frames)" exprbgrp3;
 			setParent..;
 		setParent..;
-					
-		string $form = `formLayout -numberOfDivisions 100 -w $width`;
-		string $b1 = `button	-label "Advanced Export Options" -bgc 0.9 0.9 0.9 -command "expdataAdvanced" expAdvButton`;
-		string $b2 = `button	-label "Cancel" -bgc 0.9 0.9 0.9 ExpCloseButton`;
-		string $b3 = `button	-label "Export" -bgc 0.9 0.9 0.9 -command "processBasicExpInput" expButton`;
-		button -edit -command "deleteUI expDataWindow" ExpCloseButton;
-		
-		formLayout -e
-			-attachForm     $b1     "top"   	10
-			-attachForm     $b1     "left"  	5
-			-attachForm  	$b1     "bottom"	10
-			-attachPosition $b1     "right" 	5 40
-
-			-attachForm     $b2     "top" 		10
-			-attachPosition $b2     "left"   	0 55
-			-attachForm     $b2     "bottom" 	10
-			-attachNone     $b2     "right"  
-
-			-attachForm     $b3 	"top"    	10
-			-attachControl 	$b3 	"left" 		10 $b2
-			-attachForm  	$b3 	"bottom" 	10
-			-attachForm     $b3 	"right"  	20 
-			$form;
-			
-	showWindow $mainWindow;
-	window -e -width $width -height (floor($width/2.5)) $mainWindow;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 expFrLayout4;
+			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 1 -h ($width/10) 
+			-labelArray2 "Current values" "Animation" exprbgrp4;
+			setParent..;
+		setParent..;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 expFrLayout5;
+			rowLayout -nc 2 -cw2 100 40 -ct2 "left" "left" -co2 10 0 expRL1;
+				checkBox -l "Translations" -v 1 expChk1;
+				checkBox -l "Rotations" -v 1 expChk2;
+			setParent..;
+		setParent..;
+		rowLayout -nc 3 -gsp 5 expRL2;			
+			button -label "Advanced Export Options" -w ($width/3+10) -bgc 0.9 0.9 0.9 -command "expdataAdvanced" expAdvButton;
+			button -label "Cancel" -w ($width/3-12) -bgc 0.9 0.9 0.9 ExpCloseButton;
+			button -label "Export" -w ($width/3-12) -bgc 0.9 0.9 0.9 -command "processBasicExpInput" expButton;
+			button -edit -command "deleteUI expDataWindow" ExpCloseButton;
+		setParent..;
+	setParent..;			
+	showWindow expDataWindow;
+	window -e -width $width -height $h expDataWindow;
 	restoreExpBasicUserPrefs;
 }
-
 global proc rememberExpBasicWinPrefs()
 {
 	int $expSingleCombined = `radioButtonGrp -q -sl exprbgrp1`;
@@ -95,8 +84,13 @@ global proc rememberExpBasicWinPrefs()
 	optionVar -cat "expWinPrefs" -iv "expColHeaders" $expColHeaders;
 	int $expFrameHeaders = `radioButtonGrp -q -sl exprbgrp3`;
 	optionVar -cat "expWinPrefs" -iv "expFrameHeaders" $expFrameHeaders;
+	int $expAnim = `radioButtonGrp -q -sl exprbgrp4`;
+	optionVar -cat "expWinPrefs" -iv "expAnim" $expAnim;
+	int $expTransChk = `checkBox -q -v expChk1`;
+	optionVar -cat "expWinPrefs" -iv "expTransChk" $expTransChk;
+	int $expRotChk = `checkBox -q -v expChk2`;
+	optionVar -cat "expWinPrefs" -iv "expRotChk" $expRotChk;
 }
-
 global proc restoreExpBasicUserPrefs()
 {
 	int $int;
@@ -114,41 +108,90 @@ global proc restoreExpBasicUserPrefs()
 		{$int = `optionVar -q "expFrameHeaders"`;}
 	else{$int = 1;}                 
 	radioButtonGrp -e -sl $int exprbgrp3;
+	
+	if (`optionVar -ex "expAnim"`)
+		{$int = `optionVar -q "expAnim"`;}
+	else{$int = 1;}                 
+	radioButtonGrp -e -sl $int exprbgrp4;
+	
+	if (`optionVar -ex "expTransChk"`)
+		{$int = `optionVar -q "expTransChk"`;}
+	else{$int = 1;}                 
+	checkBox -e -v $int expChk1;
+	
+	if (`optionVar -ex "expRotChk"`)
+		{$int = `optionVar -q "expRotChk"`;}
+	else{$int = 1;}                 
+	checkBox -e -v $int expChk2;
 }
-
 global proc processBasicExpInput()
 {
 	string $objs[] = `ls -sl -tr`;
-	string $atts[] = {"tx","ty","tz","rx","ry","rz"};
+	string $atts[];
+	if(`checkBox -q -v expChk1`)
+		{$atts = {"tx","ty","tz"};}
+	if(`checkBox -q -v expChk1`)
+		{stringArrayCatenate($atts,{"rx","ry","rz"});}
+
 	string $pointfiles[];
-	float $first = 1;
-	float $last = `findKeyframe -hi above -which last $objs`;
-	
-	// if we need to get frame numbers
-	if (`radioButtonGrp -q -sl exprbgrp3` == 2)
-		{subsetUI($objs, $atts);}
-	// no frame numbers we'll export frames 1 to last keyframe
-	else
+	if(`radioButtonGrp -q -sl exprbgrp4` == 2)//animation
+	{
+		float $first = 1;
+		float $last = `findKeyframe -hi above -which last $objs`;
+		
+		// if we need to get frame numbers
+		if (`radioButtonGrp -q -sl exprbgrp3` == 2)
+			{subsetUI($objs, $atts);}
+		// no frame numbers we'll export frames 1 to last keyframe
+		else
+		{
+			// if single files, send one at a time, if combined send all at once
+			if (`radioButtonGrp -q -sl exprbgrp1` == 2)
+			{
+				string $pointfiles[] = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");
+				if (size($pointfiles) > 0)
+					{expdataBasic($pointfiles[0], $objs, $atts, $first, $last);}
+				else
+					{confirmDialog -message "Export Cancelled";}
+			}
+			else
+			{
+				string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
+				if (size($savedir) > 0)
+				{
+					for ($o in $objs)
+						{
+							string $fname = substituteAllString($o, ":", "");
+							string $pointfile = ($savedir[0]+"/"+$fname+".csv");
+							expdataBasic($pointfile, {$o}, $atts, $first, $last);
+						}
+				}
+				else
+					{confirmDialog -message "Export Cancelled";}
+			}
+		}
+	}
+	else //Just current values
 	{
 		// if single files, send one at a time, if combined send all at once
 		if (`radioButtonGrp -q -sl exprbgrp1` == 2)
 		{
-			string $pointfiles[] = getXrommPointfiles("Save as",0,"CSV files (*.csv)",1);
+			string $pointfiles[] = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");
 			if (size($pointfiles) > 0)
-				{expdataBasic($pointfiles[0], $objs, $atts, $first, $last);}
+				{expCurrentValues($pointfiles[0], $objs, $atts);}
 			else
 				{confirmDialog -message "Export Cancelled";}
 		}
 		else
 		{
-			string $savedir[] = getXrommPointfiles("Select directory",2,"CSV files (*.csv)",1);
+			string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
 			if (size($savedir) > 0)
 			{
 				for ($o in $objs)
 					{
 						string $fname = substituteAllString($o, ":", "");
 						string $pointfile = ($savedir[0]+"/"+$fname+".csv");
-						expdataBasic($pointfile, {$o}, $atts, $first, $last);
+						expCurrentValues($pointfile, {$o}, $atts);
 					}
 			}
 			else
@@ -156,7 +199,6 @@ global proc processBasicExpInput()
 		}
 	}
 }
-
 global proc subsetUI(string $objs[], string $atts[])
 {
 	float $first = `findKeyframe -hi above -which first $objs`;
@@ -195,8 +237,7 @@ global proc subsetUI(string $objs[], string $atts[])
 		button -edit -command "deleteUI subsetUIWindow" subsetUICloseButton;
 		showWindow $mainWindow;
 		window -e -width $width -height ($width/4) $mainWindow;
-}
-		
+}	
 global proc continueProcessExport()
 {
 	string $objs[] = `ls -sl -tr`;
@@ -208,7 +249,7 @@ global proc continueProcessExport()
 	// if single files, send one at a time, if combined send all at once
 	if (`radioButtonGrp -q -sl exprbgrp1` == 2)
 	{
-		string $pointfiles[] = getXrommPointfiles("Save as",0,"CSV files (*.csv)",1);
+		string $pointfiles[] = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");
 		if (size($pointfiles) > 0)
 			{expdataBasic($pointfiles[0], $objs, $atts, $first, $last);}
 		else
@@ -216,7 +257,7 @@ global proc continueProcessExport()
 	}
 	else
 	{
-		string $savedir[] = getXrommPointfiles("Select directory",2,"CSV files (*.csv)",1);
+		string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
 		if (size($savedir) > 0)
 		{	
 			for ($o in $objs)
@@ -230,7 +271,6 @@ global proc continueProcessExport()
 			{confirmDialog -message "Export Cancelled";}
 	}	
 }
-
 global proc expdataBasic(string $pointfile, string $objs[], string $atts[], float $first, float $last)
 {	
 	int $fileId = `fopen ($pointfile) "w"`;
@@ -291,7 +331,44 @@ global proc expdataBasic(string $pointfile, string $objs[], string $atts[], floa
 	fclose $fileId;
 	print ("exported" + $pointfile + "\n");
 }
+global proc expCurrentValues(string $pointfile, string $objs[], string $atts[])
+{	
+	int $fileId = `fopen ($pointfile) "w"`;
 
+	// write headers if needed
+	if (`radioButtonGrp -q -sl exprbgrp2` == 2)
+	{
+		string $headers[];
+		// if frames numbers in first column
+		if (`radioButtonGrp -q -sl exprbgrp3` == 2)
+			{fprint $fileId "Frame,";}
+		
+		for ($o in $objs)
+		{
+			for ($att in $atts)
+				{$headers[size($headers)] = ($o + "_" + $att);}
+		}
+		fprint $fileId (stringArrayToString($headers,","));
+		fprint $fileId "\n";
+	}
+	
+	// write data
+	float $fvals; string $svals[]; 
+	// write frame number if user input
+	if (`radioButtonGrp -q -sl exprbgrp3` == 2)
+		{int $i = `currentTime -query`;fprint $fileId ($i+",");}
+	for ($o in $objs)
+	{
+		for ($att in $atts)
+		{
+			$fval = `getAttr ($o+"."+$att)`;
+			$svals[size($svals)]  = string($fval);	
+		}
+	}
+	fprint $fileId (stringArrayToString($svals,","));
+	fclose $fileId;
+	print ("exported" + $pointfile + "\n");
+}
 global proc expdataAdvanced()
 {
 	if (`window -exists expDataWindow` == true) deleteUI expDataWindow;  
@@ -359,10 +436,14 @@ global proc expdataAdvanced()
 				text -label "Keyframes from:" -en 1 kfoTxt;
 				radioCollection keyFromCollection;
 					radioButton -label  "Selected objects only" -onc updateFramesCommand rbsel1;
-					radioButton -label  "Hierarchy of selected objects" -onc updateFramesCommand -ann "Keyframes from all objects above selected node(s)"rbhier2;
-					radioButton -label  "Parent of selected objects" -onc updateFramesCommand -ann "Keyframes from selected objects direct parent" rbpar3;
-					radioButton -label  "Constraining/Connected object" -onc updateFramesCommand -ann "Keyframes from the object controlling or constraining the selected object"rbconn4;
-					radioButton -label  "Timeslider" -onc updateFramesCommand -ann "Keyframes from time slider" rbtime5;
+					radioButton -label  "Hierarchy of selected objects" -onc updateFramesCommand 
+					-ann "Keyframes from all objects above selected node(s)"rbhier2;
+					radioButton -label  "Parent of selected objects" -onc updateFramesCommand 
+					-ann "Keyframes from selected objects direct parent" rbpar3;
+					radioButton -label  "Constraining/Connected object" -onc updateFramesCommand 
+					-ann "Keyframes from the object controlling or constraining the selected object"rbconn4;
+					radioButton -label  "Timeslider" -onc updateFramesCommand 
+					-ann "Keyframes from time slider" rbtime5;
 				radioButton -e -sl rbsel1;
 				text " ";
 				text -label "Interpolate unkeyed frames?:" -en 1 interpolateTxt;
@@ -386,7 +467,6 @@ global proc expdataAdvanced()
 	scriptJob -p $mainWindow -e "SelectionChanged" updateFramesCommand;
 	
 }
-
 global proc rememberExpAdvWinPrefs()
 {
 	string $typeButton;
@@ -414,7 +494,6 @@ global proc rememberExpAdvWinPrefs()
 	int $interp = `radioButtonGrp -q -sl interpolateRadio`;
 	optionVar -cat "expWinPrefs" -iv "interp" $interp;
 }
-
 global proc restoreExpAdvUserPrefs()
 {
 	string $str;
@@ -475,10 +554,10 @@ global proc exportType(string $pointfiles[],string $atts[])
 	{  
 		// Single (all objects in one file) vs multiple files (one file per object)
 	    if (`radioButtonGrp -q -sl fileNumRadio` == 1)
-	        {$pointfiles = getXrommPointfiles("Save as",0,"CSV files (*.csv)",1);}
+	        {$pointfiles = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");}
 	    else
 		{
-			string $savedir[] = getXrommPointfiles("Select directory",2,"CSV files (*.csv)",1);
+			string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
 			if (size($savedir) > 0)
 			{
 				for ($o in $objs)
@@ -543,7 +622,6 @@ global proc exportType(string $pointfiles[],string $atts[])
 		}
     }
 }
-
 global proc selAttCommand()
 {
 	// if select attributes, currently must do local, but shouldn't have to
@@ -552,7 +630,6 @@ global proc selAttCommand()
 	else
 		{radioButtonGrp -edit -sl 2 -en 1 coordTypeRadio;}*/
 }
-
 global proc nanSpacingCheckCommand()
 {
 	if(`checkBox -q -v nanSpacingCheck`)
@@ -560,7 +637,6 @@ global proc nanSpacingCheckCommand()
 	else
 		{checkBox -e -v 1 -en 0 rheaderCheck;}
 }
-
 global proc distChangeCommand()
 {
     if(`radioButton -q -sl rbdist6`)
@@ -573,7 +649,6 @@ global proc distChangeCommand()
         checkBox -edit -value 1 -enable 1 nanSpacingCheck;
         radioButtonGrp -edit -sl 1 -en 1 coordTypeRadio;}
 }
-
 global proc curValOnlyCommand()
 {
 	if (`checkBox -q -v curValOnlyCheck`)
@@ -611,7 +686,6 @@ global proc curValOnlyCommand()
     }
     updateFramesCommand;
 }
-
 global proc expIgnoreKeysCheckCommand()
 {
 	if (`checkBox -q -v expIgnoreKeysCheck`)
@@ -689,7 +763,6 @@ global proc updateFramesCommand()
 		floatField -e -value $lastframe expAdvEndFr;
 	}
 }
-
 /************************************************************
 ************************ HelperPROCS ***********************
 *************************************************************/
@@ -707,7 +780,6 @@ proc string headerList(string $objs[], string $hatts[])
     string $headerList = stringArrayToString($sVals, ",");
     return $headerList;
 }
-
 global proc string[] getControlObjs(string $obj)
 {
 	string $controlObjs[]; float $k[];
@@ -763,7 +835,6 @@ global proc string[] getControlObjs(string $obj)
 	$controlObjs = stringArrayRemoveDuplicates($controlObjs);
 	return $controlObjs;
 }
-
 proc int anyKeysOnThisFrame(string $objs[], string $atts[], float $frame)
 {
 	int $anyKeys = 0; string $controlObjs[];
@@ -781,7 +852,6 @@ proc int anyKeysOnThisFrame(string $objs[], string $atts[], float $frame)
 	}
 	return $anyKeys;
 }
-
 global proc int isKeyedExp(string $obj, string $att, float $frame)
 {
 	int $iskeyed;
@@ -822,7 +892,6 @@ global proc int isKeyedExp(string $obj, string $att, float $frame)
 
 	return $iskeyed;
 }
-
 proc string getDecomposeNode(string $obj)
 {
 	//load matrix nodes plugin if not loaded already
@@ -832,7 +901,6 @@ proc string getDecomposeNode(string $obj)
 	connectAttr -f ($obj+".worldMatrix[0]") ($decomposeNode+".inputMatrix");
 	return $decomposeNode;
 }
-
 proc string getDecomposeOutput(string $decomposeNode)
 {
 	string $tmpoutput[] = `spaceLocator -n ("tmpObj")`;
@@ -840,13 +908,9 @@ proc string getDecomposeOutput(string $decomposeNode)
 	connectAttr -f ($decomposeNode+".outputRotate") ($tmpoutput[0]+".rotate");
 	return $tmpoutput[0];
 }
-
 /***************************************************************************
 ************************ Export PROCS **************************************
 ***************************************************************************/
-
-/************************ Export getAttr ***********************/
-
 global proc expGetAttr(string $pointfile, string $atts[])
 {
    	//list selected objs
@@ -984,7 +1048,6 @@ global proc expGetAttr(string $pointfile, string $atts[])
 	fclose $fileId;
 	print ("\/\/Export "+$pointfile+" complete.\n");
 }
-
 /*************** Export Distance Helper Procs ***********************/
 proc string[] wireFrameSwitch()
 {
@@ -998,7 +1061,6 @@ proc string[] wireFrameSwitch()
 	}
 	return $origDisp;
 }
-
 proc wireFrameReturnOrig(string $origDisp[])
 {
 	string $cPanels[] = `getPanel -vis`;
@@ -1008,7 +1070,6 @@ proc wireFrameReturnOrig(string $origDisp[])
 	}
 }
 /************************ Export Distance ***********************/
-
 global proc expdist2(string $pointfile)
 {
 	/* expdist2(string $pointfile)

@@ -1,77 +1,94 @@
 /* global proc vertAvg2()
-
+dir
    Separates polygon into unconnected components and calculates the centroid of each isolated object.  
    Written by David Baier 6/2015
 */
 global proc vertAvg2()
 {
 	if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;  
-
-	int $height = 150;
-	int $width = 320;
-
-	string $mainWindow = `window -title "Vertex Average" -menuBar true
+	int $w = 240; int $h = 75;
+	string $win = `window -title "Vertex Average" -menuBar true
 		-maximizeButton false -minimizeButton true -sizeable false
-		-resizeToFitChildren false vertAvgWindow`;
+		-resizeToFitChildren true vertAvgWindow`;
 		
-	frameLayout -label "Separate Mesh and Calculate Centroid" -height $height -width $width -mw 5 -mh 5;
-		columnLayout;
-		columnLayout;
-		text " ";
-		text "Select the Marker Mesh then Click.";
-		text " ";
-			
-		button	-label "Calculate Vertex Average Centroid" -w ($width-20) -command splitMarkers;
-		button	-label "Close" -w ($width-20) closeButton;
-		button -edit -command "deleteUI vertAvgWindow; selectMode -o" closeButton;
-
-	showWindow $mainWindow;
-	window -e -h $height -w $width vertAvgWindow;
+	frameLayout -label "Separate Mesh and Calculate Vertex Averages" -mw 30 -mh 10 vaFRL1;
+		columnLayout va2CL1;
+			button -label "Calculate Vertex Average Centroid(s)"
+			-ann "Splits polygon into multiple objects for each disconnected set of vertices/faces and then calculates a centroid for each using vertex average "
+			-command splitMarkers vavSplitMarkersBtn;
+		setParent..;
+	setParent..;
+	showWindow $win;
+	window -e -wh $w $h $win;
+	
 }
 
 global proc splitMarkers()
 {
 	if (size(`ls -sl`) == 0)
-	{confirmDialog -t "Error" -m "Nothing selected." -b "OK";}
+	{confirmDialog -t "Nothing selected" -m "Select the Marker Mesh" -b "OK";}
 	else
 	{
-		// duplicate to keep original object
-		string $selobj[] = `ls -sl`;
-		string $origobj[] = `duplicate -n ($selobj[0]+"Orig")`;
-		for ($o in $origobj){setAttr ".visibility" 0 $o;}
+		string $selobj[] = `ls -sl`; 
 		
 		// set padding number, for now default of 1 since rarely more than 100 objects
-		int $pad = 1;
-		
-		string $gn; string $c[]; string $newPolys[];
+		int $pad = 1; string $origFileName = "none";
+		string $centroid; string $cents[]; string $newPolys[]; 
 		for ($s in $selobj)
 		{
-			int $numPolys[] = `polyEvaluate -shell $s`;
+			// get the original filename
+			if (`attributeExists "originalFile" $s`)
+				{$origFileName = `getAttr -asString ($s+".originalFile")`;}
+			
+			// create group to store markers
+			string $vgrp = `group -em -n ($s+"vtxAvgGrp")`;
+			
 			// only run if we have polygonal multiple continuous objects
+			int $numPolys[] = `polyEvaluate -shell $s`;
 			if ($numPolys[0] > 1)
 			{
 				$newPolys = `polySeparate -ch 0 -n $s $s`;
+				// add attributes to identify source of new polys
+				for ($n in $newPolys)
+				{
+					addAttr -ln "mrkrMesh" -sn "psc" -at "bool" -dv 1 $n;
+					setAttr -e -channelBox true ($n+".psc");
+					addAttr -ln "originalFile" -sn "of" -at "enum" -en ($origFileName+":"+$origFileName) $n;
+					setAttr -e -channelBox true ($n+".of");
+				}
+				
+				//set marker numbering padding (allows proper sorting of object names)
+				if (size($newPolys) < 100){$pad = 1;}
+				else if (size($newPolys) >= 100 && size($newPolys) < 1000){$pad = 2;}
+				else if (size($newPolys) >= 1000 && size($newPolys) < 10000){$pad = 3;}
 				
 				// rename so with padding in marker numbers
 				$newPolys = paddingToMayaAutoNum($newPolys, $pad);
-				
+
 				//get centroid
-				for ($n in $newPolys){$c[size($c)] = vAvg2($n,$pad);}
-				group -n ($s+"vAvg2Group") $c;
-				//reorder to match original processing
-				parent $s $origobj[0];
-				parent -w $s;
-				parent ($s+"vAvg2Group") $s;
-				parent -w ($s+"vAvg2Group");
+				for ($n in $newPolys)
+				{
+					$centroid = vAvg2($n,$pad);
+					$cents[size($cents)] = $centroid;
+					parent $n $centroid;
+					rename $n ($n+"MrkrMesh");
+					parent $centroid $vgrp;
+				}
+				delete $s;
 			}
 			// if only one object there will only be one centroid so no need for separating
 			else
 			{
-				$c[size($c)] = vAvg2($s,$pad);
+				$centroid = vAvg2($s,$pad);
 			}
 		}
-		select ($s+"vAvg2Group") ;
+		select ($cents);
 		allViewFit(0);
+		// Now lets check for objects they are closest to each marker.
+		string $meshes[] = `getNonMarkerMeshList`;
+		if (size($meshes)>0){CTMexport2;}
+		else{CTMexport;}
+		if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;
 	}
 }
 				
@@ -92,11 +109,9 @@ global proc string vAvg2(string $obj,int $pad)
 	
 	vector $avg = $sum/$count[0];
 	
-	//create and place a locator
-	$endstr = endString ($obj,$pad);
-	$strsize = `size($obj)`;
-	$basename = `substring $obj 1 ($strsize-$pad)`;
-	string $truename[] = `spaceLocator -n ($basename+"Centroid"+$endstr)`;
+	string $truename[] = `spaceLocator -n ($obj+"vtxAvg")`;
+	addAttr -ln "vtxAvg" -sn "vtxAvg" -at "bool" -dv 1 $truename[0];
+	setAttr -e -channelBox true ($truename[0]+".vtxAvg");
 	xform -ws -t ($avg.x) ($avg.y) ($avg.z) $truename[0];
 	return $truename[0];
 }

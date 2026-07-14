@@ -25,6 +25,8 @@ global proc vAvg( string $name)
 	
 		//create and place a locator
 		string $truename[] = `spaceLocator -n $name`;
+		addAttr -ln "vtxAvg" -sn "vtxAvg" -at "bool" -dv 1 $truename[0];
+					setAttr -e -channelBox true ($truename[0]+".vtxAvg");
 		xform -ws -t ($avg.x) ($avg.y) ($avg.z) $truename[0];
 	}
 }
