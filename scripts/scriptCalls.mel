@@ -4,13 +4,14 @@ global proc scriptCalls()
 	// Written by David Baier 11/7/23
 	// Last modified 7/8/2025
 
-	string $scripts[] = getXrommPointfiles2("select files", 4, "", 1,"");
+	string $scripts[] = xrmFileDlg("select files", 4, "", 1,"");
 	
 	string $lines[]; string $basename; string $sbasename; string $tbasename;
 	for ($s in $scripts)
 	{
 		$sbasename = basename($s,"");
 		print ($sbasename+"\n");
+		//remove the .mel
 		$basename = basename($s,".mel");
 		for ($t in $scripts)
 		{
@@ -22,10 +23,20 @@ global proc scriptCalls()
 				for ($l in $lines)
 				{
 					$counter = $counter+1;
-					if (gmatch ($l,("*"+$basename+"*")))
+					if((size($basename)<4)||($basename == "transp"))
 					{
-						print ("\t"+$tbasename+" line: "+$counter+"\n");
-					}     
+						if (gmatch ($l,("*"+$basename+"(*")))
+						{
+							print ("\t"+$tbasename+" line: "+$counter+"\n");
+						}  
+					}
+					else
+					{
+						if (gmatch ($l,("*"+$basename+"*")))
+						{
+							print ("\t"+$tbasename+" line: "+$counter+"\n");
+						}  
+					}
 				}
 			}
 		}

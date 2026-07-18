@@ -254,13 +254,13 @@ global proc runCTMexport()
 	// only run if there are markers actually selected
 	if (size($markers)>0)
     {
-        string $pointfile[] = getXrommPointfiles2("Export File Name", 0, "CSV files (*.csv)",1,"");
+        string $pth[] = xrmFileDlg("Export File Name", 0, "CSV files (*.csv)",1,"");
         
         // only run if it wasn't cancelled
-        if (size($pointfile) > 0)
+        if (size($pth) > 0)
         {
-            $pointfile[0] = `substitute ".csv" $pointfile[0] ""`;
-            string $newfile = $pointfile[0] +".csv";
+            $pth[0] = `substitute ".csv" $pth[0] ""`;
+            string $newfile = $pth[0] +".csv";
             $fileId = `fopen $newfile "w"`;
             fprint $fileId "";  
             fclose $fileId;

@@ -1,38 +1,7 @@
 scriptCalls;
 adj.mel
-	animPanScan.mel line: 51
-	animPanScan.mel line: 85
-	axesAdjUI.mel line: 17
-	axesAdjUI.mel line: 37
-	axesAdjUI.mel line: 39
-	axesAdjUI.mel line: 50
-	getXrommPointfiles.mel line: 41
-	getXrommPointfiles2.mel line: 44
-	impdata2.mel line: 1376
-	impdata2.mel line: 1384
-	impdata2.mel line: 1522
 	inv.mel line: 1
 	inv.mel line: 17
-	inv.mel line: 18
-	jointAxesDual.mel line: 77
-	paddingToMayaAutoNum.mel line: 14
-	xcam01.mel line: 301
-	xcam01.mel line: 305
-	xcam01.mel line: 316
-	xcam01.mel line: 362
-	xcam02.mel line: 29
-	xcam02.mel line: 41
-	xcam02.mel line: 45
-	xcam02.mel line: 112
-	xcam02.mel line: 116
-	xcam02.mel line: 355
-	xcam02.mel line: 359
-	xcam02.mel line: 370
-	xcam02.mel line: 417
-	xcamImageChange.mel line: 31
-	xcamTrials.mel line: 18
-	xcamTrials.mel line: 26
-	xcamTrials.mel line: 34
 animPanScan.mel
 	animPanScanShaderChange.mel line: 1
 	animPanScanShaderChange.mel line: 2
@@ -40,8 +9,8 @@ animPanScan.mel
 animPanScanShaderChange.mel
 anyBoneSpace.mel
 axesAdjUI.mel
-	xrommWorkflow.mel line: 58
-	xrommWorkflow.mel line: 130
+	xrommWorkflow.mel line: 59
+	xrommWorkflow.mel line: 158
 axesCams.mel
 axesCreate.mel
 	axesAdjUI.mel line: 199
@@ -56,14 +25,12 @@ axesCreate.mel
 	axesShaderMake.mel line: 3
 	axisCreate.mel line: 1
 	axisCreate.mel line: 16
-	impdata2.mel line: 1062
+	impdata2.mel line: 1095
 	impInertias.mel line: 38
-	jointAxesDual.mel line: 165
-	jointAxesDual.mel line: 215
-	xrommWorkflow.mel line: 54
+	xrommWorkflow.mel line: 55
 axesCreateUI.mel
 	axesRemakeUI.mel line: 1
-	xrommWorkflow.mel line: 54
+	xrommWorkflow.mel line: 55
 axesRemakeUI.mel
 axesRotd.mel
 	axesAdjUI.mel line: 179
@@ -74,56 +41,50 @@ axisCreate.mel
 batchRenameSelected.mel
 	axesAdjUI.mel line: 52
 	CTMexport2.mel line: 43
-	CTMexport2tmp.mel line: 43
 changeRotKeepAnim2.mel
 cleanStrForObjectName.mel
 	axesAdjUI.mel line: 141
 	axesCreateUI.mel line: 43
 	batchRenameSelected.mel line: 59
 	CTMexport.mel line: 203
-	CTMexport2.mel line: 175
-	CTMexport2tmp.mel line: 175
-	impdata2.mel line: 1029
-	impdata2.mel line: 1227
+	CTMexport2.mel line: 181
+	impdata2.mel line: 1062
+	impdata2.mel line: 1260
 	impInertias.mel line: 36
 	impObjs.mel line: 43
 	objShaderOptions.mel line: 104
-	quickVisTool.mel line: 172
+	quickVisTool.mel line: 164
 closestMeshToPoint.mel
 	CTMexport2.mel line: 69
-	CTMexport2tmp.mel line: 69
 CoMcalc.mel
 	CoMpoly.mel line: 6
-	CoMpoly.mel line: 86
-	CoMpoly.mel line: 97
+	CoMpoly.mel line: 67
+	CoMpoly.mel line: 78
 CoMpoly.mel
-	xrommWorkflow.mel line: 43
+	CoMpolyUI.mel line: 1
+	CoMpolyUI.mel line: 2
+	CoMpolyUI.mel line: 4
+	CoMpolyUI.mel line: 8
+	CoMpolyUI.mel line: 14
+	xrommWorkflow.mel line: 42
+CoMpolyUI.mel
 CoMvolume.mel
-	CoMcalc.mel line: 93
+	CoMcalc.mel line: 108
 CTMexport.mel
-	batchRenameSelected.mel line: 69
-	batchRenameSelected.mel line: 70
-	CoMpoly.mel line: 104
-	CoMpoly.mel line: 105
-	CoMpoly.mel line: 106
+	batchRenameSelected.mel line: 74
+	batchRenameSelected.mel line: 75
+	CoMpoly.mel line: 85
 	CTMexport2.mel line: 1
 	CTMexport2.mel line: 57
-	CTMexport2tmp.mel line: 1
-	CTMexport2tmp.mel line: 57
-	vertAvg2.mel line: 89
-	vertAvg2.mel line: 90
+	vertAvg2.mel line: 66
+	vertAvg2.mel line: 67
 	xrommWorkflow.mel line: 47
 CTMexport2.mel
-	batchRenameSelected.mel line: 69
-	CoMpoly.mel line: 104
-	CoMpoly.mel line: 105
-	CTMexport2tmp.mel line: 1
-	CTMexport2tmp.mel line: 57
-	vertAvg2.mel line: 89
+	batchRenameSelected.mel line: 74
+	CoMpoly.mel line: 85
+	vertAvg2.mel line: 66
 	xrommWorkflow.mel line: 47
-CTMexport2tmp.mel
 det.mel
-	adj.mel line: 39
 	adj.mel line: 44
 	adj.mel line: 45
 	adj.mel line: 46
@@ -140,19 +101,14 @@ det.mel
 	adj.mel line: 68
 	adj.mel line: 69
 	adj.mel line: 70
-	CoMvolume.mel line: 77
-	expdata.mel line: 8
-	expdata2.mel line: 8
-	impdata2.mel line: 16
 	inv.mel line: 12
-	inv.mel line: 14
 	inv.mel line: 16
 editMayaEnv.mel
 expdata.mel
 	expdata2.mel line: 1
 	expdata2.mel line: 2
-	impdata2.mel line: 912
-	xrommWorkflow.mel line: 76
+	impdata2.mel line: 945
+	xrommWorkflow.mel line: 80
 expdata2.mel
 expObj.mel
 	expdata.mel line: 396
@@ -169,36 +125,37 @@ fileread.mel
 	filereadSample.mel line: 11
 	getMayaEnvPythonPaths.mel line: 6
 	getMayaEnvScriptPaths.mel line: 6
-	impdata2.mel line: 300
-	impdata2.mel line: 315
-	impdata2.mel line: 351
-	impdata2.mel line: 379
-	impdata2.mel line: 678
-	impdata2.mel line: 729
-	impdata2.mel line: 1125
-	scriptCalls.mel line: 20
+	impdata2.mel line: 333
+	impdata2.mel line: 348
+	impdata2.mel line: 384
+	impdata2.mel line: 412
+	impdata2.mel line: 711
+	impdata2.mel line: 762
+	impdata2.mel line: 1158
+	scriptCalls.mel line: 21
 	setpaths2.mel line: 6
 	setpaths2.mel line: 90
 	xcam01.mel line: 231
 	xcam02.mel line: 281
 filereadSample.mel
-	impdata2.mel line: 300
-	impdata2.mel line: 315
+	impdata2.mel line: 333
+	impdata2.mel line: 348
 filterListByAttr.mel
 	getNonMarkerMeshList.mel line: 5
-	quickVisTool.mel line: 78
-	quickVisTool.mel line: 79
+	quickVisTool.mel line: 84
+	quickVisTool.mel line: 85
 	quickVisTool.mel line: 90
-	quickVisTool.mel line: 102
-	quickVisTool.mel line: 103
-	quickVisTool.mel line: 116
+	quickVisTool.mel line: 91
+	quickVisTool.mel line: 96
+	quickVisTool.mel line: 100
+	quickVisTool.mel line: 106
 freezeBone.mel
 getAnimTformCtrlList.mel
 	expdata2.mel line: 463
 	expdata2.mel line: 706
 	expdata2.mel line: 741
-	oRelFast.mel line: 72
 	oRelFast.mel line: 73
+	oRelFast.mel line: 74
 getMayaEnvPythonPaths.mel
 	setpaths2.mel line: 74
 	setpaths2.mel line: 193
@@ -208,64 +165,178 @@ getMayaEnvScriptPaths.mel
 	setpaths2.mel line: 162
 	setpaths2.mel line: 225
 getNonMarkerMeshList.mel
-	CoMpoly.mel line: 103
+	CoMpoly.mel line: 84
 	CTMexport.mel line: 60
 	CTMexport2.mel line: 3
 	CTMexport2.mel line: 54
-	CTMexport2tmp.mel line: 3
-	CTMexport2tmp.mel line: 54
-	vertAvg2.mel line: 88
+	vertAvg2.mel line: 65
 getXrommPointfiles.mel
-	CTMexport.mel line: 257
-	CTMexport2.mel line: 246
-	CTMexport2.mel line: 299
-	CTMexport2tmp.mel line: 245
-	CTMexport2tmp.mel line: 252
-	expdata.mel line: 151
-	expdata.mel line: 159
-	expdata.mel line: 179
-	expdata.mel line: 187
-	expdata.mel line: 252
-	expdata.mel line: 260
-	expdata.mel line: 557
-	expdata.mel line: 560
-	expdata2.mel line: 152
-	expdata2.mel line: 160
-	expdata2.mel line: 180
-	expdata2.mel line: 188
-	expdata2.mel line: 253
-	expdata2.mel line: 261
-	expdata2.mel line: 566
-	expdata2.mel line: 569
-	expObj.mel line: 12
-	fileread.mel line: 13
-	filereadSample.mel line: 11
-	getXrommPointfiles2.mel line: 1
-	getXrommPointfiles2.mel line: 2
-	getXrommPointfiles2.mel line: 24
-	impdata2.mel line: 328
-	impdata2.mel line: 635
-	impInertias.mel line: 16
-	impObjs.mel line: 20
-	scriptCalls.mel line: 7
-	setpaths2.mel line: 12
-	setpaths2.mel line: 142
-	xcam01.mel line: 106
-	xcam02.mel line: 140
-	xcam02.mel line: 148
 	xcamImageChange.mel line: 72
-	xcamTrials.mel line: 188
-	xcamTrials.mel line: 217
-	xmaCreateTrial.mel line: 4
-	xrommWorkflow.mel line: 108
-	xrommWorkflow.mel line: 142
-	xrommWorkflow.mel line: 157
-getXrommPointfiles2.mel
+impdata2.mel
+	xcamTrials.mel line: 44
+	xrommWorkflow.mel line: 70
+impInertias.mel
+	impdata2.mel line: 468
+	impObjsUI.mel line: 21
+impObjs.mel
+	impdata2.mel line: 467
+	impObjsUI.mel line: 1
+	impObjsUI.mel line: 3
+	impObjsUI.mel line: 10
+	impObjsUI.mel line: 27
+	impObjsUI.mel line: 28
+	impObjsUI.mel line: 34
+	impObjsUI.mel line: 45
+	impObjsUI.mel line: 54
+	newObjShader.mel line: 3
+	xrommWorkflow.mel line: 38
+impObjsUI.mel
+	xrommWorkflow.mel line: 38
+installNumpySympy.py
+inv.mel
+	relativeMm.mel line: 17
+	relativeTm.mel line: 11
+	xcam01.mel line: 387
+	xcam02.mel line: 442
+isKeyed.mel
+	expdata.mel line: 848
+	expdata.mel line: 849
+	expdata.mel line: 855
+	expdata.mel line: 980
+	expdata.mel line: 1017
+	expdata2.mel line: 711
+	expdata2.mel line: 712
+	expdata2.mel line: 718
+	expdata2.mel line: 843
+	expdata2.mel line: 880
+mmTor.mel
+	wsCoordinateAlongAxis.mel line: 13
+	wsCoordinateAlongAxis.mel line: 20
+mmTot.mel
+	freezeBone.mel line: 217
+	freezeBone.mel line: 220
+	freezeBone.mel line: 221
+	freezeBone.mel line: 251
+	freezeBone.mel line: 252
+	freezeBone.mel line: 254
+	mmTotm.mel line: 1
+	outputRelMotion.mel line: 187
+	outputRelMotion.mel line: 188
+	relativeMm.mel line: 14
+	relativeMm.mel line: 15
+mmTotm.mel
+	freezeBone.mel line: 217
+	freezeBone.mel line: 220
+	freezeBone.mel line: 221
+	freezeBone.mel line: 251
+	freezeBone.mel line: 252
+	freezeBone.mel line: 254
+	outputRelMotion.mel line: 187
+	outputRelMotion.mel line: 188
+	relativeMm.mel line: 14
+	relativeMm.mel line: 15
+newObjShader.mel
+	impObjsUI.mel line: 50
+nextEndIntWithPadding.mel
+	xcamTrials.mel line: 123
+nodeHasKeys.mel
+nodeHasTformKeys.mel
+	getAnimTformCtrlList.mel line: 21
+	getAnimTformCtrlList.mel line: 26
+	getAnimTformCtrlList.mel line: 33
+	getAnimTformCtrlList.mel line: 57
+	getAnimTformCtrlList.mel line: 62
+	getAnimTformCtrlList.mel line: 70
+nodeIsVisible2.mel
+	outputRelMotion.mel line: 180
+	outputRelMotion.mel line: 181
+objShaderOptions.mel
+	impObjsUI.mel line: 51
+	xrommWorkflow.mel line: 39
+oRelFast.mel
+	xrommWorkflow.mel line: 75
+outputRelMotion.mel
+	oRelFast.mel line: 4
+	oRelFast.mel line: 38
+	oRelFast.mel line: 62
+paddingToMayaAutoNum.mel
+	CoMpoly.mel line: 62
+	vertAvg2.mel line: 43
+pointConnectSegmentKeyframe2.mel
+polyCheckForHoles.mel
+	CoMcalc.mel line: 110
+quickVisTool.mel
+	xrommWorkflow.mel line: 21
+relativeMm.mel
+	relativeTm.mel line: 1
+relativeTm.mel
+	freezeBone.mel line: 222
+	freezeBone.mel line: 253
+	outputRelMotion.mel line: 189
+scaleAndBakeKeys.mel
+	extractSubsetAnimUI.mel line: 53
+scriptCalls.mel
+seeKeysOnly2.mel
+	impdata2.mel line: 1243
+	impdata2.mel line: 1313
+setpaths2.mel
+	editMayaEnv.mel line: 5
+	xrommWorkflow.mel line: 29
+tmTomm.mel
+	freezeBone.mel line: 224
+	freezeBone.mel line: 234
+	freezeBone.mel line: 256
+	outputRelMotion.mel line: 192
+	relativeMm.mel line: 18
+	xcam01.mel line: 393
+	xcam02.mel line: 448
+tmTor.mel
+	tmTorm.mel line: 1
+tmTorm.mel
+transp.mel
+	adj.mel line: 74
+vAvg.mel
+	vertAvg.mel line: 39
+	vertAvg.mel line: 46
+	vertAvg.mel line: 47
+	vertAvg2.mel line: 48
+	vertAvg2.mel line: 59
+	vertAvg2.mel line: 72
+vertAvg.mel
+	vertAvg2.mel line: 1
+	vertAvg2.mel line: 68
+	vertAvg2UI.mel line: 1
+	vertAvg2UI.mel line: 2
+	vertAvg2UI.mel line: 4
+	vertAvg2UI.mel line: 8
+	xrommWorkflow.mel line: 44
+vertAvg2.mel
+	vertAvg2UI.mel line: 1
+	vertAvg2UI.mel line: 2
+	xrommWorkflow.mel line: 44
+vertAvg2UI.mel
+wft.mel
+wsCoordinateAlongAxis.mel
+	xcamAngle.mel line: 20
+	xcamAngle.mel line: 21
+xcam01.mel
+	xrommWorkflow.mel line: 172
+	xrommWorkflow.mel line: 178
+xcam02.mel
+xcamAngle.mel
+	wsCoordinateAlongAxis.mel line: 10
+xcamFourPanels.mel
+	xrommWorkflow.mel line: 68
+xcamImageChange.mel
+xcamTrials.mel
+	xcam01.mel line: 51
+	xrommWorkflow.mel line: 66
+xcamTwoPanels.mel
+	xrommWorkflow.mel line: 67
+xrmFileDlg.mel
 	CTMexport.mel line: 257
-	CTMexport2.mel line: 246
-	CTMexport2.mel line: 299
-	CTMexport2tmp.mel line: 245
-	CTMexport2tmp.mel line: 252
+	CTMexport2.mel line: 252
+	CTMexport2.mel line: 305
 	expdata.mel line: 151
 	expdata.mel line: 159
 	expdata.mel line: 179
@@ -288,8 +359,8 @@ getXrommPointfiles2.mel
 	getXrommPointfiles.mel line: 1
 	getXrommPointfiles.mel line: 2
 	getXrommPointfiles.mel line: 23
-	impdata2.mel line: 328
-	impdata2.mel line: 635
+	impdata2.mel line: 361
+	impdata2.mel line: 668
 	impInertias.mel line: 16
 	impObjs.mel line: 20
 	scriptCalls.mel line: 7
@@ -298,228 +369,23 @@ getXrommPointfiles2.mel
 	xcam01.mel line: 106
 	xcam02.mel line: 140
 	xcam02.mel line: 148
-	xcamTrials.mel line: 188
-	xcamTrials.mel line: 217
-	xmaCreateTrial.mel line: 4
-	xrommWorkflow.mel line: 108
-	xrommWorkflow.mel line: 142
-	xrommWorkflow.mel line: 157
-impdata2.mel
-	xcamTrials.mel line: 43
-	xmaCreateTrial.mel line: 28
-impInertias.mel
-	impdata2.mel line: 435
-	impObjsUI.mel line: 21
-impObjs.mel
-	impdata2.mel line: 434
-	impObjsUI.mel line: 1
-	impObjsUI.mel line: 3
-	impObjsUI.mel line: 10
-	impObjsUI.mel line: 27
-	impObjsUI.mel line: 28
-	impObjsUI.mel line: 34
-	impObjsUI.mel line: 45
-	impObjsUI.mel line: 54
-	initialXROMMShaderMake.mel line: 3
-	newObjShader.mel line: 3
-	xrommWorkflow.mel line: 39
-impObjsUI.mel
-	xrommWorkflow.mel line: 39
-installNumpySympy.py
-inv.mel
-	anyBoneSpace.mel line: 6
-	anyBoneSpace.mel line: 21
-	anyBoneSpace.mel line: 36
-	anyBoneSpace.mel line: 43
-	anyBoneSpace.mel line: 50
-	cleanStrForObjectName.mel line: 34
-	fileread.mel line: 31
-	filereadSample.mel line: 30
-	impdata2.mel line: 38
-	impdata2.mel line: 771
-	jcs.mel line: 76
-	relativeMm.mel line: 17
-	relativeTm.mel line: 11
-	xcam01.mel line: 387
-	xcam02.mel line: 442
-isKeyed.mel
-	expdata.mel line: 848
-	expdata.mel line: 849
-	expdata.mel line: 855
-	expdata.mel line: 980
-	expdata.mel line: 1017
-	expdata2.mel line: 711
-	expdata2.mel line: 712
-	expdata2.mel line: 718
-	expdata2.mel line: 843
-	expdata2.mel line: 880
-matrixAbbreviations.rtf
-mmTor.mel
-	wsCoordinateAlongAxis.mel line: 13
-	wsCoordinateAlongAxis.mel line: 20
-mmTot.mel
-	freezeBone.mel line: 217
-	freezeBone.mel line: 220
-	freezeBone.mel line: 221
-	freezeBone.mel line: 251
-	freezeBone.mel line: 252
-	freezeBone.mel line: 254
-	jointAxesDual.mel line: 346
-	jointAxesDual.mel line: 347
-	mmTotm.mel line: 1
-	outputRelMotion.mel line: 187
-	outputRelMotion.mel line: 188
-	relativeMm.mel line: 14
-	relativeMm.mel line: 15
-mmTotm.mel
-	freezeBone.mel line: 217
-	freezeBone.mel line: 220
-	freezeBone.mel line: 221
-	freezeBone.mel line: 251
-	freezeBone.mel line: 252
-	freezeBone.mel line: 254
-	jointAxesDual.mel line: 346
-	jointAxesDual.mel line: 347
-	outputRelMotion.mel line: 187
-	outputRelMotion.mel line: 188
-	relativeMm.mel line: 14
-	relativeMm.mel line: 15
-newObjShader.mel
-	impObjsUI.mel line: 50
-nextEndIntWithPadding.mel
-	xcamTrials.mel line: 106
-nodeHasKeys.mel
-nodeHasTformKeys.mel
-	getAnimTformCtrlList.mel line: 21
-	getAnimTformCtrlList.mel line: 26
-	getAnimTformCtrlList.mel line: 33
-	getAnimTformCtrlList.mel line: 57
-	getAnimTformCtrlList.mel line: 62
-	getAnimTformCtrlList.mel line: 70
-nodeIsVisible2.mel
-	outputRelMotion.mel line: 180
-	outputRelMotion.mel line: 181
-objShaderOptions.mel
-	impObjsUI.mel line: 51
-	xrommWorkflow.mel line: 40
-oRelFast.mel
-	xrommWorkflow.mel line: 71
-outputRelMotion.mel
-	oRelFast.mel line: 4
-	oRelFast.mel line: 38
-	oRelFast.mel line: 62
-paddingToMayaAutoNum.mel
-	CoMpoly.mel line: 81
-	vertAvg2.mel line: 66
-pointConnectSegmentKeyframe2.mel
-polyCheckForHoles.mel
-	CoMcalc.mel line: 95
-quickVisTool.mel
-	xrommWorkflow.mel line: 15
-relativeMm.mel
-	relativeTm.mel line: 1
-relativeTm.mel
-	freezeBone.mel line: 222
-	freezeBone.mel line: 253
-	jointAxesDual.mel line: 348
-	outputRelMotion.mel line: 189
-scaleAndBakeKeys.mel
-	extractSubsetAnimUI.mel line: 53
-scriptCalls.mel
-seeKeysOnly2.mel
-	impdata2.mel line: 1210
-	impdata2.mel line: 1280
-setpaths2.mel
-	editMayaEnv.mel line: 5
-	xrommWorkflow.mel line: 23
-tmTomm.mel
-	freezeBone.mel line: 224
-	freezeBone.mel line: 234
-	freezeBone.mel line: 256
-	jointAxesDual.mel line: 351
-	outputRelMotion.mel line: 192
-	relativeMm.mel line: 18
-	xcam01.mel line: 393
-	xcam02.mel line: 448
-tmTor.mel
-	tmTorm.mel line: 1
-tmTorm.mel
-transp.mel
-	adj.mel line: 74
-	animPanScan.mel line: 10
-	animPanScan.mel line: 11
-	animPanScan.mel line: 63
-	animPanScan.mel line: 64
-	animPanScan.mel line: 124
-	animPanScan.mel line: 130
-	animPanScan.mel line: 134
-	animPanScan.mel line: 135
-	animPanScan.mel line: 136
-	animPanScan.mel line: 140
-	animPanScan.mel line: 141
-	animPanScan.mel line: 142
-	animPanScan.mel line: 146
-	animPanScan.mel line: 147
-	animPanScan.mel line: 148
-	animPanScanShaderChange.mel line: 2
-	newObjShader.mel line: 9
-	newObjShader.mel line: 10
-	newObjShader.mel line: 11
-	objShaderOptions.mel line: 4
-	objShaderOptions.mel line: 124
-	objShaderOptions.mel line: 180
-	objShaderOptions.mel line: 190
-	objShaderOptions.mel line: 191
-	objShaderOptions.mel line: 192
-	objShaderOptions.mel line: 193
-	wsCoordinateAlongAxis.mel line: 24
-vAvg.mel
-	vertAvg.mel line: 39
-	vertAvg.mel line: 46
-	vertAvg.mel line: 47
-	vertAvg2.mel line: 71
-	vertAvg2.mel line: 82
-	vertAvg2.mel line: 95
-vertAvg.mel
-	vertAvg2.mel line: 1
-	vertAvg2.mel line: 6
-	vertAvg2.mel line: 8
-	vertAvg2.mel line: 12
-	vertAvg2.mel line: 91
-	xrommWorkflow.mel line: 45
-vertAvg2.mel
-	xrommWorkflow.mel line: 45
-wft.mel
-	objShaderOptions.mel line: 5
-wsCoordinateAlongAxis.mel
-	xcamAngle.mel line: 20
-	xcamAngle.mel line: 21
-xcam01.mel
-	xrommWorkflow.mel line: 151
-xcam02.mel
-xcamAngle.mel
-	wsCoordinateAlongAxis.mel line: 10
-xcamFourPanels.mel
-	xrommWorkflow.mel line: 66
-xcamImageChange.mel
-xcamTrials.mel
-	xcam01.mel line: 51
-	xrommWorkflow.mel line: 64
-xcamTwoPanels.mel
-	xrommWorkflow.mel line: 65
+	xcamTrials.mel line: 215
+	xcamTrials.mel line: 246
+	xrommWorkflow.mel line: 128
+	xrommWorkflow.mel line: 191
+xrmworkspace.mel
 XROMMmayaConfig.mel
 	XROMMmayaConfigReverse.mel line: 2
 	XROMMmayaConfigReverse.mel line: 9
 	XROMMmayaConfigUI.mel line: 1
-	XROMMmayaConfigUI.mel line: 12
-	XROMMmayaConfigUI.mel line: 14
-	XROMMmayaConfigUI.mel line: 21
-	xrommWorkflow.mel line: 26
+	XROMMmayaConfigUI.mel line: 3
+	XROMMmayaConfigUI.mel line: 10
+	xrommWorkflow.mel line: 32
 XROMMmayaConfigReverse.mel
 XROMMmayaConfigUI.mel
 	XROMMmayaConfig.mel line: 1
-	XROMMmayaConfig.mel line: 13
+	XROMMmayaConfig.mel line: 6
+	XROMMmayaConfig.mel line: 8
 	XROMMmayaConfig.mel line: 15
-	XROMMmayaConfig.mel line: 22
-	xrommWorkflow.mel line: 26
+	xrommWorkflow.mel line: 32
 xrommWorkflow.mel

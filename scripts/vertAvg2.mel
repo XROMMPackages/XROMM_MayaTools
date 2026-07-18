@@ -1,29 +1,6 @@
-/* global proc vertAvg2()
-dir
-   Separates polygon into unconnected components and calculates the centroid of each isolated object.  
-   Written by David Baier 6/2015
-*/
 global proc vertAvg2()
-{
-	if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;  
-	int $w = 240; int $h = 75;
-	string $win = `window -title "Vertex Average" -menuBar true
-		-maximizeButton false -minimizeButton true -sizeable false
-		-resizeToFitChildren true vertAvgWindow`;
-		
-	frameLayout -label "Separate Mesh and Calculate Vertex Averages" -mw 30 -mh 10 vaFRL1;
-		columnLayout va2CL1;
-			button -label "Calculate Vertex Average Centroid(s)"
-			-ann "Splits polygon into multiple objects for each disconnected set of vertices/faces and then calculates a centroid for each using vertex average "
-			-command splitMarkers vavSplitMarkersBtn;
-		setParent..;
-	setParent..;
-	showWindow $win;
-	window -e -wh $w $h $win;
-	
-}
-
-global proc splitMarkers()
+// Separates polygon into unconnected components and calculates the centroid of each isolated object.  
+// Written by David Baier 6/2015
 {
 	if (size(`ls -sl`) == 0)
 	{confirmDialog -t "Nothing selected" -m "Select the Marker Mesh" -b "OK";}

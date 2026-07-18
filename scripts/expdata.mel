@@ -133,7 +133,7 @@ global proc processBasicExpInput()
 	if(`checkBox -q -v expChk1`)
 		{stringArrayCatenate($atts,{"rx","ry","rz"});}
 
-	string $pointfiles[];
+	string $pths[];
 	if(`radioButtonGrp -q -sl exprbgrp4` == 2)//animation
 	{
 		float $first = 1;
@@ -148,22 +148,22 @@ global proc processBasicExpInput()
 			// if single files, send one at a time, if combined send all at once
 			if (`radioButtonGrp -q -sl exprbgrp1` == 2)
 			{
-				string $pointfiles[] = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");
-				if (size($pointfiles) > 0)
-					{expdataBasic($pointfiles[0], $objs, $atts, $first, $last);}
+				string $pths[] = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");
+				if (size($pths) > 0)
+					{expdataBasic($pths[0], $objs, $atts, $first, $last);}
 				else
 					{confirmDialog -message "Export Cancelled";}
 			}
 			else
 			{
-				string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
+				string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
 				if (size($savedir) > 0)
 				{
 					for ($o in $objs)
 						{
 							string $fname = substituteAllString($o, ":", "");
-							string $pointfile = ($savedir[0]+"/"+$fname+".csv");
-							expdataBasic($pointfile, {$o}, $atts, $first, $last);
+							string $pth = ($savedir[0]+"/"+$fname+".csv");
+							expdataBasic($pth, {$o}, $atts, $first, $last);
 						}
 				}
 				else
@@ -176,22 +176,22 @@ global proc processBasicExpInput()
 		// if single files, send one at a time, if combined send all at once
 		if (`radioButtonGrp -q -sl exprbgrp1` == 2)
 		{
-			string $pointfiles[] = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");
-			if (size($pointfiles) > 0)
-				{expCurrentValues($pointfiles[0], $objs, $atts);}
+			string $pths[] = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");
+			if (size($pths) > 0)
+				{expCurrentValues($pths[0], $objs, $atts);}
 			else
 				{confirmDialog -message "Export Cancelled";}
 		}
 		else
 		{
-			string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
+			string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
 			if (size($savedir) > 0)
 			{
 				for ($o in $objs)
 					{
 						string $fname = substituteAllString($o, ":", "");
-						string $pointfile = ($savedir[0]+"/"+$fname+".csv");
-						expCurrentValues($pointfile, {$o}, $atts);
+						string $pth = ($savedir[0]+"/"+$fname+".csv");
+						expCurrentValues($pth, {$o}, $atts);
 					}
 			}
 			else
@@ -249,31 +249,31 @@ global proc continueProcessExport()
 	// if single files, send one at a time, if combined send all at once
 	if (`radioButtonGrp -q -sl exprbgrp1` == 2)
 	{
-		string $pointfiles[] = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");
-		if (size($pointfiles) > 0)
-			{expdataBasic($pointfiles[0], $objs, $atts, $first, $last);}
+		string $pths[] = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");
+		if (size($pths) > 0)
+			{expdataBasic($pths[0], $objs, $atts, $first, $last);}
 		else
 			{confirmDialog -message "Export Cancelled";}
 	}
 	else
 	{
-		string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
+		string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
 		if (size($savedir) > 0)
 		{	
 			for ($o in $objs)
 			{
 				string $fname = substituteAllString($o, ":", "");
-				string $pointfile = ($savedir[0]+"/"+$fname+".csv");
-				expdataBasic($pointfile, {$o}, $atts, $first, $last);
+				string $pth = ($savedir[0]+"/"+$fname+".csv");
+				expdataBasic($pth, {$o}, $atts, $first, $last);
 			}
 		}
 		else
 			{confirmDialog -message "Export Cancelled";}
 	}	
 }
-global proc expdataBasic(string $pointfile, string $objs[], string $atts[], float $first, float $last)
+global proc expdataBasic(string $pth, string $objs[], string $atts[], float $first, float $last)
 {	
-	int $fileId = `fopen ($pointfile) "w"`;
+	int $fileId = `fopen ($pth) "w"`;
 
 	// print headers if needed
 	if (`radioButtonGrp -q -sl exprbgrp2` == 2)
@@ -329,11 +329,11 @@ global proc expdataBasic(string $pointfile, string $objs[], string $atts[], floa
 			{fprint $fileId "\n";}
 	}
 	fclose $fileId;
-	print ("exported" + $pointfile + "\n");
+	print ("exported" + $pth + "\n");
 }
-global proc expCurrentValues(string $pointfile, string $objs[], string $atts[])
+global proc expCurrentValues(string $pth, string $objs[], string $atts[])
 {	
-	int $fileId = `fopen ($pointfile) "w"`;
+	int $fileId = `fopen ($pth) "w"`;
 
 	// write headers if needed
 	if (`radioButtonGrp -q -sl exprbgrp2` == 2)
@@ -367,7 +367,7 @@ global proc expCurrentValues(string $pointfile, string $objs[], string $atts[])
 	}
 	fprint $fileId (stringArrayToString($svals,","));
 	fclose $fileId;
-	print ("exported" + $pointfile + "\n");
+	print ("exported" + $pth + "\n");
 }
 global proc expdataAdvanced()
 {
@@ -546,30 +546,30 @@ global proc restoreExpAdvUserPrefs()
 /************************************************************
 ******************* BUTTON CLICK PROCS **********************
 *************************************************************/
-global proc exportType(string $pointfiles[],string $atts[])
+global proc exportType(string $pths[],string $atts[])
 {
     string $objs[] = `ls -sl`;
 	// get file or directory
-	if (size($pointfiles) == 0)
+	if (size($pths) == 0)
 	{  
 		// Single (all objects in one file) vs multiple files (one file per object)
 	    if (`radioButtonGrp -q -sl fileNumRadio` == 1)
-	        {$pointfiles = getXrommPointfiles2("Save as",0,"CSV files (*.csv)",1,"");}
+	        {$pths = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");}
 	    else
 		{
-			string $savedir[] = getXrommPointfiles2("Select directory",2,"CSV files (*.csv)",1,"");
+			string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
 			if (size($savedir) > 0)
 			{
 				for ($o in $objs)
 				{
 					$o = substituteAllString($o, ":", "");
-					$pointfiles[size($pointfiles)] = ($savedir[0]+"/"+$o+".csv");
+					$pths[size($pths)] = ($savedir[0]+"/"+$o+".csv");
 				}
 			}
 		}       
 	}
 	// if cancel button was pressed on file dialog
-	if(size($pointfiles) == 0){print "Export Cancelled";} 
+	if(size($pths) == 0){print "Export Cancelled";} 
 	else
 	{
 		// if using selected attributes and names of atts aren't passed to script, get from channelbox
@@ -583,36 +583,36 @@ global proc exportType(string $pointfiles[],string $atts[])
 		int $counter = 0;  
 			
 		// loop through files
-		for ($pointfile in $pointfiles)
+		for ($pth in $pths)
 		{
-			string $fileNcheck = (dirname($pointfile));
+			string $fileNcheck = (dirname($pth));
 			
 			if (`filetest -d $fileNcheck`)
 			{
-				$pointfile = `substituteAllString $pointfile ".csv" ""`;
-				$pointfile = $pointfile +".csv"; 
-				print ("Beginning export "+$pointfile+"\n");
+				$pth = `substituteAllString $pth ".csv" ""`;
+				$pth = $pth +".csv"; 
+				print ("Beginning export "+$pth+"\n");
 				
 				// if multiple files, select the current object
 				if (`radioButtonGrp -q -sl fileNumRadio` == 2)
 					 {select -r $objs[$counter]; $counter++; updateFramesCommand;}
 				
 				if (`radioButton -q -sl rbtrans1`)
-					{expGetAttr($pointfile, {"tx","ty","tz"});}
+					{expGetAttr($pth, {"tx","ty","tz"});}
 				else if(`radioButton -q -sl rbrot2`)
-					{expGetAttr($pointfile, {"rx","ry","rz"});}
+					{expGetAttr($pth, {"rx","ry","rz"});}
 				else if(`radioButton -q -sl rbtransrot3`)
-					{expGetAttr($pointfile, {"tx","ty","tz","rx","ry","rz"});}
+					{expGetAttr($pth, {"tx","ty","tz","rx","ry","rz"});}
 				else if(`radioButton -q -sl rbselattr5`)
-						{expGetAttr($pointfile,($atts));}
+						{expGetAttr($pth,($atts));}
 				else if(`radioButton -q -sl rbdist6`)
-						{expdist2($pointfile);}
+						{expdist2($pth);}
 				else if(`radioButton -q -sl rbmatrix4`)
 				{
 					if (`radioButtonGrp -q -sl coordTypeRadio` == 1)
-						{expGetAttr($pointfile, {"worldMatrix"}) ;}
+						{expGetAttr($pth, {"worldMatrix"}) ;}
 					else
-						{expGetAttr($pointfile, {"matrix"}) ;}
+						{expGetAttr($pth, {"matrix"}) ;}
 				}
 				else
 					{confirmDialog 	-title "Need More Info" -message "You must select a data type" 
@@ -911,13 +911,13 @@ proc string getDecomposeOutput(string $decomposeNode)
 /***************************************************************************
 ************************ Export PROCS **************************************
 ***************************************************************************/
-global proc expGetAttr(string $pointfile, string $atts[])
+global proc expGetAttr(string $pth, string $atts[])
 {
    	//list selected objs
 	string $objs[] = `ls -selection`;
 		
 	// open file for writing
-	$fileId = `fopen $pointfile "w"`;
+	$fileId = `fopen $pth "w"`;
 
 	// print headers
 	if ((`checkBox -q -v rheaderCheck`) && (`checkBox -q -v cheaderCheck`))
@@ -1046,7 +1046,7 @@ global proc expGetAttr(string $pointfile, string $atts[])
 		clear($sVals);
 	}	
 	fclose $fileId;
-	print ("\/\/Export "+$pointfile+" complete.\n");
+	print ("\/\/Export "+$pth+" complete.\n");
 }
 /*************** Export Distance Helper Procs ***********************/
 proc string[] wireFrameSwitch()
@@ -1070,12 +1070,12 @@ proc wireFrameReturnOrig(string $origDisp[])
 	}
 }
 /************************ Export Distance ***********************/
-global proc expdist2(string $pointfile)
+global proc expdist2(string $pth)
 {
-	/* expdist2(string $pointfile)
+	/* expdist2(string $pth)
 		Exports data from a distance tool in maya
 		
-		$pointfile: full path and file name for output		
+		$pth: full path and file name for output		
 	*/
 	string $origDisp[] = wireFrameSwitch();
     string $objs[] = `ls -selection`;
@@ -1087,7 +1087,7 @@ global proc expdist2(string $pointfile)
     float $frame = `floatField -q -value expAdvStartFr`;
 	float $lastframe = `floatField -q -value expAdvEndFr`;
 	
-	$fileId = `fopen $pointfile "w"`;
+	$fileId = `fopen $pth "w"`;
 
 	// create nans to first frame 
 	if(`checkBox -q -v nanSpacingCheck`)

@@ -32,7 +32,11 @@ global proc string cleanStrForObjectName(string $input)
 	}
 	
 	// if still invalid object name
-	if (!isValidObjectName($output)){ $output = "obj";}
+	if (!isValidObjectName($output))
+	{ 
+		$output = "obj";
+		print "Resulted in invalid Object name: substituting obj instead\n";
+	}
 	
 	return $output;
 }

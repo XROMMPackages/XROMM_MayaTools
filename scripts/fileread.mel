@@ -1,24 +1,24 @@
-/*	global proc string[] fileread(string $pointfile)
+/*	global proc string[] fileread(string $pth)
 
-    Input: $pointfile = path and file name to read
+    Input: $pth = path and file name to read
 	
 	Read any file into a an array of strings. One line per row
 	Written by David Baier	
 */
-global proc string[] fileread(string $pointfile)
+global proc string[] fileread(string $pth)
 
 {
-    // if pointfile is not a proper filename get file name
-    if (!`filetest -f $pointfile`)
-        {string $pointfiles[] = getXrommPointfiles2("fileread", 1, "CSV files (*.csv)" , 1,"");
-        $pointfile = $pointfiles[0];}
+    // if pth is not a proper filename get file name
+    if (!`filetest -f $pth`)
+        {string $pths[] = xrmFileDlg("fileread", 1, "CSV files (*.csv)" , 1,"");
+        $pth = $pths[0];}
 
     string $datalines[];
     
     // make sure the file exists
-	if (`filetest -e $pointfile`)
+	if (`filetest -e $pth`)
 	{
-	    $fileId = fopen($pointfile, "r");
+	    $fileId = fopen($pth, "r");
 	    string $line;
 	    while (!`feof $fileId`)
             {

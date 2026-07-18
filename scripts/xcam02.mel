@@ -137,17 +137,17 @@ global proc updateCamNumCommand()
 global proc xsetFileCommand(string $textField)
 {
 	// get file
-	string $pointfiles[] = 	getXrommPointfiles2("import Xcam", 1, "MayaCam files (*.csv *.txt)",1,"");
-    string $pointfile = $pointfiles[0];	
-	textFieldButtonGrp -e -text $pointfile $textField;
+	string $pths[] = 	xrmFileDlg("import Xcam", 1, "MayaCam files (*.csv *.txt)",1,"");
+    string $pth = $pths[0];	
+	textFieldButtonGrp -e -text $pth $textField;
 }
 
 global proc ximageFileCommand(string $textField)
 {
 	// get file
-	string $pointfiles[] = 	getXrommPointfiles2("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1,"");
-	$pointfile = $pointfiles[0];	
-	textFieldButtonGrp -e -text $pointfile $textField;
+	string $pths[] = 	xrmFileDlg("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1,"");
+	$pth = $pths[0];	
+	textFieldButtonGrp -e -text $pth $textField;
 }
 
 proc file2shader(string $shaderName, string $shadergroup)
@@ -177,13 +177,13 @@ proc file2shader(string $shaderName, string $shadergroup)
 	connectAttr -force ($fname+".outColor") ($shaderName+".color");
 }
 
-proc int checkInputs(string $cn, string $pointfile)
+proc int checkInputs(string $cn, string $pth)
 {
     int $output;
     
     // file name and path have character limits - need to add a check here
      //check if camera name is already used
-	if( `objExists $cn` || !`isValidObjectName $cn` || !`file -q -exists $pointfile`)
+	if( `objExists $cn` || !`isValidObjectName $cn` || !`file -q -exists $pth`)
 	{ 
 		string $errTitle; string $errMessage;
 		if( `objExists $cn`)
@@ -198,11 +198,11 @@ proc int checkInputs(string $cn, string $pointfile)
 			$errMessage = "Chosen camera name is not a valid object name in maya";				
 			setFocus $cn;
 		}
-		if (!`file -q -exists $pointfile`)
+		if (!`file -q -exists $pth`)
 		{
 			$errTitle = "File doesn't exist";
 			$errMessage = "The file path or filename were not found";				
-			setFocus $pointfile;
+			setFocus $pth;
 		}
 		confirmDialog -title $errTitle -message $errMessage -button "OK" 
 			-defaultButton "OK" -cancelButton "OK" -dismissString "OK";
@@ -231,10 +231,10 @@ global proc makeXcam()
         string $cn = strip(`textFieldGrp -q -text ($defaultCamCtrl+$i)`);
         
         //get the file
-        string $pointfile = `textFieldButtonGrp -q -text ($defMCamCtrl+$i)`; 
+        string $pth = `textFieldButtonGrp -q -text ($defMCamCtrl+$i)`; 
         
         // only proceed if filename and cameraname are valid
-        if (checkInputs($cn,$pointfile))
+        if (checkInputs($cn,$pth))
         {
              // Create Camera
             string $cameracreatedname[] = `camera -n $cn`;
@@ -278,7 +278,7 @@ global proc makeXcam()
             sets -e -forceElement $shadergroup ($pn+"Shape");
                        
             // read the camera file
-            string $imp[] = `fileread($pointfile)`;
+            string $imp[] = `fileread($pth)`;
             if (size($imp) == 5)
             // old mayacam
                 {oldXcamPos($cn,$pn,$pnI,$imp,$cnLoc);} 

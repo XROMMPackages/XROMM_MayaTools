@@ -1,5 +1,5 @@
-global proc string[] getXrommPointfiles2(string $caption, int $filemode, string $filt, int $style)
-/* global proc string[] getXrommPointfiles2(string $caption, int $filemode, string $filt, int $style)
+global proc string[] xrmFileDlg(string $caption, int $filemode, string $filt, int $style)
+/* global proc string[] xrmFileDlg(string $caption, int $filemode, string $filt, int $style)
 
    Inputs:  $caption = caption for the browser.
             $filemode =  type of return   
@@ -17,10 +17,10 @@ global proc string[] getXrommPointfiles2(string $caption, int $filemode, string 
 		int $filemode = 2;
 		string $filt = "CSV files (*.csv)";
 		int $style = 1;
-		string $pointfiles[] = `fileDialog2 -cap $caption -dir $startPath 
+		string $pths[] = `fileDialog2 -cap $caption -dir $startPath 
  	                      -fm $filemode -ff $filt -ds $style`;
  	    //example2                  
-        string $dir[] = getXrommPointfiles2("get directory", 3, "", 1);
+        string $dir[] = xrmFileDlg("get directory", 3, "", 1);
 	
 	 Returns an array of path names from fileDialog2 and stores the most recently chosen path 
 	 as the default for the next time this script is called. (optionVar "xrommWorkingDirectory")
@@ -36,17 +36,17 @@ global proc string[] getXrommPointfiles2(string $caption, int $filemode, string 
 		{$startPath = `workspace -q -o`;}
 
 	// get the file(s) or folder
-	string $pointfiles[] = `fileDialog2 -cap $caption -dir $startPath 
+	string $pths[] = `fileDialog2 -cap $caption -dir $startPath 
  	                      -fm $filemode -ff $filt -ds $style`;
  	// adjust path slashes
- 	for ($i = 0; $i < size($pointfiles); $i++)
- 	     {$pointfiles[$i] =  fromNativePath($pointfiles[$i]);}
+ 	for ($i = 0; $i < size($pths); $i++)
+ 	     {$pths[$i] =  fromNativePath($pths[$i]);}
 	
- 	string $newStartDir = fromNativePath(`dirname $pointfiles[0]`);
+ 	string $newStartDir = fromNativePath(`dirname $pths[0]`);
  	
  	// set the new working directory
  	if (`filetest -e $newStartDir`)
  		{optionVar -sv "xrommWorkingDirectory" $newStartDir;}
 
- 	return $pointfiles;
+ 	return $pths;
 }

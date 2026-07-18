@@ -1,4 +1,4 @@
-global proc expObj(string $objs[], string $pointfiles[])
+global proc expObj(string $objs[], string $pths[])
 {
 	/* exports xyz global coordinates of selected vertices 
 	to do = single export for vertices and connections don't make the user 
@@ -8,14 +8,14 @@ global proc expObj(string $objs[], string $pointfiles[])
 	if (size($objs) == 0){$objs = `ls -sl`;}
 	
 	// get directory
-	if (size($pointfiles) == 0)
-		{$pointfiles = getXrommPointfiles2("Choose directory",3,"OBJ files (*.obj)",1,"");}
+	if (size($pths) == 0)
+		{$pths = xrmFileDlg("Choose directory",3,"OBJ files (*.obj)",1,"");}
 	
 	string $curfile; float $curvtx[]; string $curface[]; string $curIdx[]; int $fileId; string $vtxStr; int $count[];
 	
 	for ($obj in $objs)
 	{
-		$curfile = ($pointfiles[0]+"/"+$obj+".obj");
+		$curfile = ($pths[0]+"/"+$obj+".obj");
 		print ("exporting "+$curfile+"\n");
 		$fileId = `fopen $curfile "w"`;
 		//count the vertices and export

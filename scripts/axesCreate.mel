@@ -17,6 +17,10 @@ global proc string axesCreate(string $name, float $unitLength, string $style, in
 { 
     string $output;
     axesShaderMake;
+    // if remaking an axis, get parent to reparent newly built axis
+    string $parent[]; int $hasparent = `objExists $name`;
+    if($hasparent){$parent = `listRelatives -p $name`;}
+    
     float $cylLen = $unitLength*0.9; 
     float $coneLen = $unitLength*0.1;
     float $cylRad = $unitLength*0.01;
@@ -83,6 +87,9 @@ global proc string axesCreate(string $name, float $unitLength, string $style, in
 	setAttr -e -keyable true -lock true ($output+".unitLenCM");
 	addAttr -ln "style" -sn "style" -at enum -enumName "hemi:full" -dv $styleInt $output;
 	addAttr -ln "singleObject" -sn "sob" -at bool -dv $singleObject $output;
+	
+	 if(($hasparent)&&(size($parent)>0))
+	 {parent $output $parent;}
 	
     return $output;
 }

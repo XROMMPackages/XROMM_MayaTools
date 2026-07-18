@@ -22,21 +22,25 @@ global proc impdata2()
 	if (`window -exists impDataWindow` == true) deleteUI impDataWindow;
 	
 	int $width = 265;
-	int $height = 125;
+	int $height = 220;
 	
 	window -title "Import Data" -maximizeButton false 
 	-minimizeButton true -sizeable false -bgc 0.8 0.8 0.8 
-	-resizeToFitChildren false -closeCommand rememberImpWinPrefs impDataWindow;
+	-resizeToFitChildren true -closeCommand impSavePrefs impDataWindow;
 		
 	columnLayout -rs 5 imp2CL1;			
 		frameLayout -l "Import XMAlab data" -gsp 5 -w ($width-2) -bv 1 -lv 1 -bgc 0.7 0.7 0.7 imp2FL2;
 			columnLayout -co "left" 5 -gsp 5 imp2CL2;
 				separator -h 3;
-				radioButtonGrp  -numberOfRadioButtons 2 -sl 2 
+				radioButtonGrp  -numberOfRadioButtons 2 -sl 2 -cc impRBCmd
 				-labelArray2 "3d Points" "Rigid Body" imprbgrp1;
 				checkBox -label "Hide object on frames with no data" 
 					-ann "Keys visibility. Objects are invisible during unkeyed frames"
 					-v 0 -en 1 seeKeyCheck2;
+				columnLayout;
+					text -l "Order of Selected Objects for Rigid Body import" -vis 0 selListText;
+					textScrollList -ams 1 -nr 5 -w ($width-25) -vis 0 impSelTSL;
+				setParent..;
 				separator -h 3;
 			setParent..;
 		setParent..;
@@ -63,30 +67,59 @@ global proc impdata2()
 	setParent..;
 	showWindow impDataWindow;
 	window -e -width $width -height $height impDataWindow;
-	restoreImpWinPrefs;	
+	scriptJob -p impDataWindow -e "SelectionChanged" impUpdateSel;
+	impLoadPrefs;	
+	impUpdateSel;
 }
 /************************************************************
 ******************* Save User input PROCS **********************
 *************************************************************/
-global proc rememberImpWinPrefs()
+global proc impSavePrefs()
 {
 	int $imp3DorRigid = `radioButtonGrp -q -sl imprbgrp1`;
 	optionVar -cat "impWinPrefs" -iv "imp3DorRigid" $imp3DorRigid;
 	int $impSeeKeys = `checkBox -q -v seeKeyCheck2`;
 	optionVar -cat "impWinPrefs" -iv "impSeeKeys" $impSeeKeys;
 }
-global proc restoreImpWinPrefs()
+global proc impLoadPrefs()
 {
 	int $int;
 	if (`optionVar -ex "imp3DorRigid"`)
 		{$int = `optionVar -q "imp3DorRigid"`;}
 	else{$int = 2;}                 
 	radioButtonGrp -e -sl $int imprbgrp1;
+	if($int==2)
+	{
+		text -e -vis 1 selListText;
+		textScrollList -e -vis 1 impSelTSL;
+	}
 	
 	if (`optionVar -ex "impSeeKeys"`)
 		{$int = `optionVar -q "impSeeKeys"`;}
 	else{$int = 2;}                 
 	checkBox -e -v $int seeKeyCheck2;
+}
+global proc impRBCmd()
+{
+	int $int = `radioButtonGrp -q -sl imprbgrp1`;
+	if($int==2)
+	{
+		text -e -vis 1 selListText;
+		textScrollList -e -vis 1 impSelTSL;
+	}
+	else
+	{
+		text -e -vis 0 selListText;
+		textScrollList -e -vis 0 impSelTSL;
+	}
+}
+
+global proc impUpdateSel()
+{
+	string $sel[] = `ls -sl`;
+	textScrollList -e -ra impSelTSL;
+	for ($s in $sel)
+		{textScrollList -e -append $s impSelTSL;}
 }
 global proc rememberImpWinAdvPrefs()
 {
@@ -290,12 +323,12 @@ proc string[] cropColHeaders(string $fileRows[])
 	if (size($colHeaders)>0){stringArrayRemoveAtIndex(0,$output);}
 	return $output;	
 }
-proc int selFileSizeCompare(string $pointfiles[], string $objs[], int $attSize)
+proc int selFileSizeCompare(string $pths[], string $objs[], int $attSize)
 {
-	//#objects*attSize = #columns in pointfiles
+	//#objects*attSize = #columns in pths
 	int $selFileSizeMatch = 0;
 	string $fileRows[]; int $totalColNum; int $curCols;
-	for ($pfile in $pointfiles)
+	for ($pfile in $pths)
 	{
 		$fileRows = filereadSample($pfile,1);
 		$fileRows = `cropRowHeaders($fileRows)`;
@@ -306,11 +339,11 @@ proc int selFileSizeCompare(string $pointfiles[], string $objs[], int $attSize)
 		{$selFileSizeMatch = 1;}
 	return $selFileSizeMatch;
 }
-proc int[] numObjsPerFile(string $pointfiles[], int $attSize)
+proc int[] numObjsPerFile(string $pths[], int $attSize)
 {
 	int $numObjsPerFile[];
 	string $fileRows[]; int $curCols;
-	for ($pfile in $pointfiles)
+	for ($pfile in $pths)
 	{
 		$fileRows = filereadSample($pfile,1);
 		$fileRows = `cropRowHeaders($fileRows)`;
@@ -325,10 +358,10 @@ proc int[] numObjsPerFile(string $pointfiles[], int $attSize)
 global proc impXMAdata()
 {
 	// select file(s) 
-	string $pointfiles[] = getXrommPointfiles2("Select File(s)", 4, "CSV files (*.csv)",1,"");
+	string $pths[] = xrmFileDlg("Select File(s)", 4, "CSV files (*.csv)",1,"");
 	
 	// file selection cancelled
-	if (size($pointfiles)==0){print "Import Cancelled\n";}
+	if (size($pths)==0){print "Import Cancelled\n";}
 	else // run the import
 	{
 		string $fileRows[]; int $maxRows; 
@@ -337,8 +370,8 @@ global proc impXMAdata()
 		{
 			string $objs[] = `ls -sl -tr`; int $attSize = 16;
 			// how many objects go with each selected file?
-			int $numObjsPerfile[] = numObjsPerFile($pointfiles,$attSize);
-			int $selFileSizeMatch = selFileSizeCompare($pointfiles, $objs, 16);
+			int $numObjsPerfile[] = numObjsPerFile($pths,$attSize);
+			int $selFileSizeMatch = selFileSizeCompare($pths, $objs, 16);
 			
 			if ($selFileSizeMatch)
 			{
@@ -346,9 +379,9 @@ global proc impXMAdata()
 				cutKey -cl;
 				//loop through the selected files
 				string $curObjs[]; int $startIdx = 0; int $endIdx;
-				for ($i = 0; $i < size($pointfiles); $i++)
+				for ($i = 0; $i < size($pths); $i++)
 				{
-					$fileRows = `fileread($pointfiles[$i])`;
+					$fileRows = `fileread($pths[$i])`;
 					// keep track of frame number to set the timeslider
 					if (size($fileRows)>$maxRows){$maxRows = size($fileRows);}
 					
@@ -374,9 +407,9 @@ global proc impXMAdata()
 		else 
 		{
 			string $objs[]; string $curObjs[];
-			for ($i = 0; $i < size($pointfiles); $i++)
+			for ($i = 0; $i < size($pths); $i++)
 			{
-				$fileRows = `fileread($pointfiles[$i])`;
+				$fileRows = `fileread($pths[$i])`;
 				if (size($fileRows)>$maxRows){$maxRows = size($fileRows);}
 				$curObjs = `impXMAGlobal3dpts($fileRows)`;
 				appendStringArray($objs, $curObjs, size($curObjs));
@@ -632,11 +665,11 @@ global proc objNameFromCommand()
 global proc setFileName()
 {
 	// Browse to Select Files Button command; Choose file(s)
-	string $pointfiles[] = 	getXrommPointfiles2("import", 4, "CSV files (*.csv)",1,"");
+	string $pths[] = 	xrmFileDlg("import", 4, "CSV files (*.csv)",1,"");
 	//if files are chosen, print file names in textScrollList and enable import and preview buttons
-	if (size($pointfiles)>0)
+	if (size($pths)>0)
 	{
-        for ($p in $pointfiles){textScrollList -e -append $p fileList;}
+        for ($p in $pths){textScrollList -e -append $p fileList;}
     
         button -edit -enable 1 origPrevButton;
         button -edit -enable 1 impPrevButton;
@@ -671,11 +704,11 @@ global proc clearFileName()
 global proc setSelRowCol()
 {
 	// Count and Display Rows and Columns for currently selected filename in textScrollList
-    string $pointfiles[] = `textScrollList -q -si fileList`;
-    if (`filetest -e $pointfiles[0]`)
+    string $pths[] = `textScrollList -q -si fileList`;
+    if (`filetest -e $pths[0]`)
 	{
 		//get the size of the file and enter into file start and end
-		string $impFileLines[] = `fileread($pointfiles[0])`;
+		string $impFileLines[] = `fileread($pths[0])`;
 		int $rowNum = size($impFileLines);
 		int $colNum = size(stringToStringArray($impFileLines[0],","));
 		intFieldGrp -edit -en 1 -v1 $rowNum -v2 $colNum matSizeIntGrp;
@@ -684,7 +717,7 @@ global proc setSelRowCol()
 global proc processOptions()
 {
 	// Import Button Command
-	string $pointfiles[] = 	`textScrollList -q -ai fileList`;
+	string $pths[] = 	`textScrollList -q -ai fileList`;
 	
 	// if applying to selected objects, get them
 	string $selObjs[];
@@ -704,10 +737,10 @@ global proc processOptions()
 	    	if (`size $selAttr` == 0){error "No attribures selected in channelBox";}
 		}
 	
-	for ($pointfile in $pointfiles)
+	for ($pth in $pths)
 	{
 	    // point to the current file and get its index
-	    textScrollList -e -si $pointfile fileList;
+	    textScrollList -e -si $pth fileList;
 	    refresh -f;
 	    int $curfileIdx[] = `textScrollList -q -sii fileList`; 
 	    // update row and column numbers
@@ -719,14 +752,14 @@ global proc processOptions()
 	    if (`radioButton -q -sl iselob`)
 	    {
 	        select -cl;
-	        float $numObjPerFile = (size($selObjs)/size($pointfiles));
+	        float $numObjPerFile = (size($selObjs)/size($pths));
 			for ($j = $numObjPerFile; $j > 0; $j--)
 				{select -tgl $selObjs[int(($curfileIdx[0]*$numObjPerFile)-$j)];}
 	    }
 	    // if file exists and is greater than zero size
-	    if (`filetest -s $pointfile`)
+	    if (`filetest -s $pth`)
         {
-            string $dataRows[] = `fileread($pointfile)`;
+            string $dataRows[] = `fileread($pth)`;
             // if the last row is blank (carriage return issue) then get rid of it
             int $maxIndex = (size($dataRows))-1;
             if (size($dataRows[$maxIndex]) == 0){stringArrayRemoveAtIndex($maxIndex, $dataRows);}           
@@ -1121,8 +1154,8 @@ global proc string[] getflagatts(string $curflag)
 global proc setpreview(int $previewType)
 {
      
-	string $pointfiles[] = `textScrollList -q -si fileList`;
-	string $dataRows[] = `fileread($pointfiles[0])`;
+	string $pths[] = `textScrollList -q -si fileList`;
+	string $dataRows[] = `fileread($pths[0])`;
 	string $preview;
 	if ($previewType == 1)
 		{$dataRows = `getSubsetData($dataRows)`;}
@@ -1142,7 +1175,7 @@ global proc previewButtonC(int $previewType)
 	string $subtextStr;
 	if (!$previewType){$subtextStr = "original file";}else{$subtextStr = "with current import options";}
 	//get name of currently selected
-	string $pointfiles[] = `textScrollList -q -si fileList`;
+	string $pths[] = `textScrollList -q -si fileList`;
 	
 	string $mainWindow = `window
 		-title ("Import Data Preview - "+$subtextStr)
@@ -1151,7 +1184,7 @@ global proc previewButtonC(int $previewType)
 		-sizeable true
 		-resizeToFitChildren false
 		impPreviewWindow`;
-		frameLayout -label $pointfiles[0]
+		frameLayout -label $pths[0]
 			columnLayout;
 				scrollField -width ($width - 10) -height ($height-100) previewTextField;
 			setParent ..;
