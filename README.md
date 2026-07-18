@@ -8,15 +8,15 @@ XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XRO
 ***
 # Installation of MEL scripts and XROMM Shelf #
 
-Download the zip folder, unzip and place the XROMM_MayaTools_2.2.5 folder in a storage location of your choosing.
+Download the zip folder, unzip and place the XROMM_MayaTools_v2.2.6 folder in a storage location of your choosing.
 
 Open maya, click the gear icon next to the shelves, and select load shelf
 
-Navigate to the location that you saved the files and select shelf_XROMM_tools_2_2_5.mel
+Navigate to the location that you saved the files and select shelf_XROMM_tools_v2.2.6.mel
 
 Click the setpath button on the newly loaded shelf
 
-Choose the "scripts" directory from the XROMM_MayaTools_2.2.5 Folder
+Choose the "scripts" directory from the XROMM_MayaTools_v2.2.6 Folder
 
 You should see a Set Path window that shows your chosen path in the user defined MAYA_SCRIPT_PATHS as well as lists of locations where maya looks for 
 
