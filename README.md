@@ -1,13 +1,12 @@
 # README #
 
-XROMM_MayaTools are a set of maya-embedded-language (.mel) scripts and a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer and should be acknowledged in all publications using XROMM MayaTools.
+XROMM_MayaTools are a set of maya-embedded-language (.mel) and python scripts along with a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer, with substantial contributions from Steve Gatesy and Armita Manafzadeh who should be acknowledged in all publications using XROMM MayaTools. Inertial axes and center of mass calculations were adopted from Matlab scripts from Joseph J. Crisco's lab. Please see xromm.py script header for citations if you use these tools. 
 
 XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XROMM data, import X-ray camera reconstructions, create joint coordinate systems and export XROMM data.
 ***
-# Download [XROMM_MayaTools_2.2.5](https://github.com/XROMMPackages/xromm_mayatools/releases/) #
+# Download [XROMM_MayaTools_v2.2.6.zip](https://github.com/user-attachments/files/30157275/XROMM_MayaTools_v2.2.6.zip) #
 ***
 # Installation of MEL scripts and XROMM Shelf #
-v. 2.2.5 has a new installation method
 
 Download the zip folder, unzip and place the XROMM_MayaTools_2.2.5 folder in a storage location of your choosing.
 
@@ -36,16 +35,6 @@ Move the .mel files from the XROMM scripts folder into the following directory:
 
 as above, move the scripts, not the folder
  
-## Windows XP ##
-Move shelf_XROMM_tools.mel to the following directory: 
-
-* C:\Documents and Settings\User_Account\My Documents\maya\mayaVersion(e.g. 2012)\prefs\shelves
-
-Move the .mel files from the XROMM scripts folder into the following directory: 
-
-* C:\Documents and Settings\User_Account\My Documents\maya\scripts
-
-MOVE THE SCRIPTS NOT THE FOLDER. Maya does not look in the subfolders of this directory.
 
 ## Mac OS X ##
 Move shelf_XROMM_tools.mel to the following directory: 
