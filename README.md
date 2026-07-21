@@ -1,6 +1,6 @@
 # README #
 
-XROMM_MayaTools are a set of maya-embedded-language (.mel) and python scripts along with a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer, with substantial contributions from Steve Gatesy and Armita Manafzadeh who should be acknowledged in all publications using XROMM MayaTools. Inertial axes and center of mass calculations were adopted from Matlab scripts from Joseph J. Crisco's lab. Please see xromm.py script header for citations if you use these tools. 
+XROMM_MayaTools are a set of maya-embedded-language (.mel) and python scripts along with a Maya shelf toolbar for XROMM workflow processes. David Baier, Professor of Biology at Providence College is the primary developer, with substantial contributions from Steve Gatesy and Armita Manafzadeh. All three should be acknowledged in all publications using XROMM MayaTools. Inertial axes and center of mass calculations were adopted from Matlab scripts from Joseph J. Crisco's lab. Please see xromm.py script header for citations if you use these tools. 
 
 XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XROMM data, import X-ray camera reconstructions, create joint coordinate systems and export XROMM data.
 ***
