@@ -4,7 +4,7 @@ XROMM_MayaTools are a set of maya-embedded-language (.mel) and python scripts a
 
 XROMM_MayaTools are used to calculate marker centroids from CTscans, animate XROMM data, import X-ray camera reconstructions, create joint coordinate systems and export XROMM data.
 ***
-# Download [XROMM_MayaTools_v2.2.6.zip](https://github.com/user-attachments/files/30157275/XROMM_MayaTools_v2.2.6.zip) #
+# Download [XROMM_MayaTools_v3.0.0.zip](https://github.com/user-attachments/files/30157275/XROMM_MayaTools_v2.2.6.zip) #
 ***
 # Installation of MEL scripts and XROMM Shelf #
 
