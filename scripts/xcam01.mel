@@ -37,8 +37,8 @@ global proc xcam01()
                     for ($i = 1; $i < ($numCams+1); $i++)
                     {
                     frameLayout -label ("Camera" + ($i)) -bv 1 -w ($width-10) ("xCamScriptFrameLayout"+$i);
-                        textFieldButtonGrp -label "MayaCam File" -text "" -w ($width) -buttonLabel "..." 
-                        -columnWidth3 ($width/10*1.5) ($width/10*7.5) ($width/10*0.5)
+                        textFieldButtonGrp -label "MayaCam File" -text "" -w ($width) -buttonLabel ". . ." 
+                        -columnWidth3 90 460 40
                         -buttonCommand ("xsetFileCommand(\""+$defMCamCtrl+$i+"\")") ($defMCamCtrl+$i);
                         textFieldGrp -label "Camera Name"  -en 1 -text ($defaultCam+($i)) 
                         -cl2 "center" "left" ($defaultCamCtrl+($i));
