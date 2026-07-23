@@ -13,12 +13,14 @@
 
 global proc vertAvg()
 {
+	// maybe switch to lasso tool here?
+	LassoTool;
 	if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;  
 	int $w = 250; int $h = 160;
 
 	string $win = `window -title "Vertex Average" -menuBar true
 		-maximizeButton false -minimizeButton true -sizeable true
-		-resizeToFitChildren false -cc  "selectMode -o" vertAvgWindow`;
+		-resizeToFitChildren false -cc  "selectMode -o;SelectTool;" vertAvgWindow`;
 		
 	frameLayout -label "Marker Name Input" -height $h -width $w -mw 10 -mh 5;	
 		columnLayout -rs 10 vaCL1;
@@ -32,7 +34,7 @@ global proc vertAvg()
 				text -l "    and select Vertex from Marking Menu." -font $font vaT2;
 			setParent..;
 			columnLayout vaCL3;
-				text -l " 2) Drag to select vertices." -font $font vaT3;
+				text -l " 2) Left click drag to select vertices." -font $font vaT3;
 			setParent..;
 			columnLayout vaCL4;
 				textField -width ($w-20) -text  "vtxAvg" markerNameField;			
