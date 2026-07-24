@@ -1,0 +1,67 @@
+global proc xcamImageChange()
+{
+// UI for changing the image sequence associated with shaders in a maya scene
+    
+    // get the list of xcams
+	string $fileNodes[] = `ls -type "file"`;
+	string $curPaths[];
+    int $height = (100*size($fileNodes));
+    if ($height > 800){$height = 800;}
+	int $width = 600;
+   
+	for ($f in $fileNodes)
+		{$curPaths[size($curPaths)] = `getAttr ($f+".fileTextureName")`;}
+	
+	// make ui only if we have a fileNode
+	if (size($fileNodes)>0)
+	{
+		if (`window -exists changeXimageWindow` == true) deleteUI changeXimageWindow;
+		string $mainWindow = `window -title "Choose new image files" 
+			-maximizeButton false -minimizeButton true -sizeable true 
+			-resizeToFitChildren false changeXimageWindow`;
+		columnLayout -co "left" 10 -gsp 5 xctCL1;
+		scrollLayout -w ($width-20) -cr 1;	
+		for ($i = 0; $i < (size($fileNodes)); $i++)
+		{
+			frameLayout -label ($fileNodes[$i]) -bv 1 -w ($width-30) ("chngXimageFL"+$i);
+				textFieldButtonGrp -adj 2 -cat 1 "left" 0 -label "Image path:" 
+					-text $curPaths[$i] -w ($width-30) -buttonLabel ". . ." 
+					-columnWidth3 60 440 50
+					-buttonCommand ("chngXimFileCmd("+$i+",\""+$fileNodes[$i]+"\")")
+					-cc ("manChngXimCmd("+$i+",\""+$fileNodes[$i]+"\")")("chngXimagePath"+$i);					
+				checkBox -label "image sequence" -value 1 -enable 1 ("imSeqChk"+($i));
+				text " ";
+			setParent..;
+		}
+		setParent..;
+	showWindow $mainWindow;
+	window -e -width $width -height $height changeXimageWindow;	
+   }
+   else
+   {
+       print "No file nodes in scene";
+   }  
+}
+
+global proc chngXimFileCmd(int $i, string $fileNode)
+{
+    string $newPath[] = xrmFileDlg("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1,"");
+	if (`filetest -s $newPath[0]`)
+	{
+		textFieldButtonGrp -e -text $newPath[0] ("chngXimagePath"+$i);
+		setAttr -type "string" ($fileNode+".fileTextureName")  $newPath[0];
+		setAttr ($fileNode+".useFrameExtension") `checkBox -q -value ("imSeqChk"+$i)`;
+		expression -s ($fileNode+".frameExtension = frame") -n "expression1";
+	}
+}
+
+global proc manChngXimCmd(int $i, string $fileNode)
+{
+    string $newPath = `textFieldButtonGrp -q -text ("chngXimagePath"+$i)`;
+    if (`filetest -s $newPath`)
+	{
+		setAttr -type "string" ($fileNode+".fileTextureName")  $newPath;
+		setAttr ($fileNode+".useFrameExtension") `checkBox -q -value ("imSeqChk"+$i)`;
+		expression -s ($fileNode+".frameExtension = frame") -n "expression1";
+	}
+}

@@ -1,0 +1,1001 @@
+global proc expdata2()
+/* global proc expdata()
+
+    GUI for exporting a variety of data types
+
+	Data type: currently supported types of data for export
+	Coordinate system: local or global
+	Frame start and end: determines which frames will be exported
+	
+	Options
+	***user is forced to keep track of frame number either by leading NaNs for 
+	 frames prior to startframe or by keeping the frame number in the first row
+ 	Column Headers: will include the name of the object and attribute as the 
+ 	    header in each column.
+	Frame# in first row: the first column will include the frame number
+	
+	Advanced options 
+	    User can populate start and end frames based on current object keys, keyframes
+	        on any object in the selected objects hierarchy, all keyframes in the scene,
+	        or directly from the time slider.
+	    
+	    spline interpolation. If Yes - spline data will fill all values between start
+	        and end frames. If No - and frame numbers are not checked, NaN values will
+	        fill non-keyed frames. If No - Nan's fill non-keyed frames
+	    		
+        Written by David Baier  08/03/2013 
+        Last Modified 			08/16/2025
+ */
+{
+	int $width = 380;
+	int $h = 225;
+	int $indent = 10;
+	
+	if (`window -exists ex2DataWindow` == true) deleteUI ex2DataWindow;  
+	window -title "Export Data" 
+		-maximizeButton false -minimizeButton true -sizeable false -resizeToFitChildren false 
+		-bgc 0.8 0.8 0.8 -closeCommand ex2SaveBasicPrefs ex2DataWindow;
+		
+	columnLayout ex2CL;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 ex2FRL1;
+			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 2 -h ($width/10) 
+			-labelArray2 "Single files" "Combined File" ex2RBG1;
+			setParent..;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 ex2FRL2;
+			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 2 -h ($width/10) 
+			-labelArray2 "No column headers" "Column headers" ex2RBG2;
+			setParent..;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 ex2FRL3;
+			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 1 -h ($width/10) 
+			-labelArray2 "No frame numbers" "Frame numbers (allows subset of frames)" ex2RBG3;
+			setParent..;
+		setParent..;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 ex2FRL4;
+			radioButtonGrp  -numberOfRadioButtons 2 -cat 1 "left" $indent 
+			-cw2 ($width/2-40) ($width/2) -enable 1 -sl 1 -h ($width/10) 
+			-labelArray2 "Current values" "Animation" ex2RBG4;
+			setParent..;
+		setParent..;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 ex2FRL5;
+			rowLayout -nc 2 -cw2 100 40 -ct2 "left" "left" -co2 10 0 ex2RL1;
+				checkBox -l "Translations" -v 1 ex2Chk1;
+				checkBox -l "Rotations" -v 1 ex2Chk2;
+			setParent..;
+		setParent..;
+		rowLayout -nc 3 -gsp 5 ex2RL2;			
+			button -label "Advanced Export Options" -w ($width/3+10) -bgc 0.9 0.9 0.9 
+			-command "ex2dataAdvanced" ex2AdvButton;
+			button -label "Cancel" -w ($width/3-12) -bgc 0.9 0.9 0.9 ExpCloseButton;
+			button -label "Export" -w ($width/3-12) -bgc 0.9 0.9 0.9 -command "ex2processBasicInput" ex2Button;
+			button -edit -command "deleteUI ex2DataWindow" ExpCloseButton;
+		setParent..;
+	setParent..;			
+	showWindow ex2DataWindow;
+	window -e -width $width -height $h ex2DataWindow;
+	ex2RestoreBasicPrefs;
+}
+global proc ex2SaveBasicPrefs()
+{
+	int $ex2SingleCombined = `radioButtonGrp -q -sl ex2RBG1`;
+	optionVar -cat "ex2WinPrefs" -iv "ex2SingleCombined" $ex2SingleCombined;
+	int $ex2ColHeaders = `radioButtonGrp -q -sl ex2RBG2`;
+	optionVar -cat "ex2WinPrefs" -iv "ex2ColHeaders" $ex2ColHeaders;
+	int $ex2FrameHeaders = `radioButtonGrp -q -sl ex2RBG3`;
+	optionVar -cat "ex2WinPrefs" -iv "ex2FrameHeaders" $ex2FrameHeaders;
+	int $ex2Anim = `radioButtonGrp -q -sl ex2RBG4`;
+	optionVar -cat "ex2WinPrefs" -iv "ex2Anim" $ex2Anim;
+	int $ex2TransChk = `checkBox -q -v ex2Chk1`;
+	optionVar -cat "ex2WinPrefs" -iv "ex2TransChk" $ex2TransChk;
+	int $ex2RotChk = `checkBox -q -v ex2Chk2`;
+	optionVar -cat "ex2WinPrefs" -iv "ex2RotChk" $ex2RotChk;
+}
+global proc ex2RestoreBasicPrefs()
+{
+	int $int;
+	if (`optionVar -ex "ex2SingleCombined"`)
+		{$int = `optionVar -q "ex2SingleCombined"`;}
+	else{$int = 2;}                 
+	radioButtonGrp -e -sl $int ex2RBG1;
+	
+	if (`optionVar -ex "ex2ColHeaders"`)
+		{$int = `optionVar -q "ex2ColHeaders"`;}
+	else{$int = 2;}                 
+	radioButtonGrp -e -sl $int ex2RBG2;
+	
+	if (`optionVar -ex "ex2FrameHeaders"`)
+		{$int = `optionVar -q "ex2FrameHeaders"`;}
+	else{$int = 1;}                 
+	radioButtonGrp -e -sl $int ex2RBG3;
+	
+	if (`optionVar -ex "ex2Anim"`)
+		{$int = `optionVar -q "ex2Anim"`;}
+	else{$int = 1;}                 
+	radioButtonGrp -e -sl $int ex2RBG4;
+	
+	if (`optionVar -ex "ex2TransChk"`)
+		{$int = `optionVar -q "ex2TransChk"`;}
+	else{$int = 1;}                 
+	checkBox -e -v $int ex2Chk1;
+	
+	if (`optionVar -ex "ex2RotChk"`)
+		{$int = `optionVar -q "ex2RotChk"`;}
+	else{$int = 1;}                 
+	checkBox -e -v $int ex2Chk2;
+}
+global proc ex2processBasicInput()
+{
+	string $objs[] = `ls -sl -tr`;
+	string $atts[];
+	if(`checkBox -q -v ex2Chk1`)
+		{$atts = {"tx","ty","tz"};}
+	if(`checkBox -q -v ex2Chk2`)
+		{$atts = stringArrayCatenate($atts,{"rx","ry","rz"});}
+
+	string $pths[];
+	if(`radioButtonGrp -q -sl ex2RBG4` == 2)//animation
+	{
+		float $first = 1;
+		float $last = `findKeyframe -hi above -which last $objs`;
+		
+		// if we need to get frame numbers
+		if (`radioButtonGrp -q -sl ex2RBG3` == 2)
+			{subsetUI($objs, $atts);}
+		// no frame numbers we'll ex2ort frames 1 to last keyframe
+		else
+		{
+			// if single files, send one at a time, if combined send all at once
+			if (`radioButtonGrp -q -sl ex2RBG1` == 2)
+			{
+				string $pths[] = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");
+				if (size($pths) > 0)
+					{ex2dataBasic($pths[0], $objs, $atts, $first, $last);}
+				else
+					{confirmDialog -message "Export Cancelled";}
+			}
+			else
+			{
+				string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
+				if (size($savedir) > 0)
+				{
+					for ($o in $objs)
+						{
+							string $fname = substituteAllString($o, ":", "");
+							string $pth = ($savedir[0]+"/"+$fname+".csv");
+							ex2dataBasic($pth, {$o}, $atts, $first, $last);
+						}
+				}
+				else
+					{confirmDialog -message "Export Cancelled";}
+			}
+		}
+	}
+	else //Just current values
+	{
+		// if single files, send one at a time, if combined send all at once
+		if (`radioButtonGrp -q -sl ex2RBG1` == 2)
+		{
+			string $pths[] = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");
+			if (size($pths) > 0)
+				{ex2CurrentValues($pths[0], $objs, $atts);}
+			else
+				{confirmDialog -message "Export Cancelled";}
+		}
+		else
+		{
+			string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
+			if (size($savedir) > 0)
+			{
+				for ($o in $objs)
+					{
+						string $fname = substituteAllString($o, ":", "");
+						string $pth = ($savedir[0]+"/"+$fname+".csv");
+						ex2CurrentValues($pth, {$o}, $atts);
+					}
+			}
+			else
+				{confirmDialog -message "Export Cancelled";}
+		}
+	}
+}
+global proc subsetUI(string $objs[], string $atts[])
+{
+	float $first = `findKeyframe -hi above -which first $objs`;
+	float $last = `findKeyframe -hi above -which last $objs`;
+	
+	if (`window -exists subsetUIWindow` == true) deleteUI subsetUIWindow;  
+
+	global string $gMainWindow; // holds the name of the main Maya window
+	int $widthHeight[] = `window -query -widthHeight $gMainWindow`;
+	int $width = ($widthHeight[0]/4);           
+  
+	string $mainWindow = `window -title "Select Range" 
+		-maximizeButton false -minimizeButton true -sizeable false -resizeToFitChildren false 
+		-bgc 0.8 0.8 0.8 subsetUIWindow`;
+	columnLayout subsetUICL;
+		frameLayout -w $width -h ($width/10) -bv 1 -lv 0 subsetUIFRL1;
+			rowColumnLayout -w $width -nc 4 subsetUIRCLayout1;
+			rowColumnLayout -e -cw 1 ($width/4) -cw 2 ($width/8) -co 3 "left"  ($width/8) -cw 3 ($width/4) -cw 4 ($width/8) subsetUIRCLayout1;
+			text -l ""; text -l ""; text -l ""; text -l "";
+			text "Start frame"; floatField -bgc 1.0 1.0 1.0 -pre 0 -en 1 -v $first subsetUIStartFr; text "End frame" ; floatField -bgc 1.0 1.0 1.0 -pre 0 -en 1 -v $last subsetUIEndFr;
+			setParent..;
+		setParent..;
+		text " ";
+		rowColumnLayout -numberOfColumns 4 -cw 1 ($width*0.05) -cw 2 ($width*0.40) -cw 3 ($width*0.10) -cw 4 ($width*0.40) subUIRC1;
+			frameLayout  -borderVisible 0 -lv 0 subUIFL1;
+			setParent..;
+			frameLayout  -borderVisible 0 -lv 0 subUIFL2;
+			string $b1 = `button -bgc 0.9 0.9 0.9	-label "Cancel" subsetUICloseButton`;
+			setParent..;
+			frameLayout  -borderVisible 0 -lv 0 subUIFL3;
+			setParent..;
+			frameLayout  -borderVisible 0 -lv 0 subUIFL4;
+			string $b2 = `button -bgc 0.9 0.9 0.9	-label "Export"  -command continueProcessExport subsetUIButton`;
+			setParent..;
+		setParent..;
+		button -edit -command "deleteUI subsetUIWindow" subsetUICloseButton;
+		showWindow $mainWindow;
+		window -e -width $width -height ($width/4) $mainWindow;
+}	
+global proc continueProcessExport()
+{
+	string $objs[] = `ls -sl -tr`;
+	string $atts[] = {"tx","ty","tz","rx","ry","rz"};
+	float $first = `floatField -q -value subsetUIStartFr`;
+	float $last = `floatField -q -value subsetUIEndFr`;
+	deleteUI subsetUIWindow;
+
+	// if single files, send one at a time, if combined send all at once
+	if (`radioButtonGrp -q -sl ex2RBG1` == 2)
+	{
+		string $pths[] = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");
+		if (size($pths) > 0)
+			{ex2dataBasic($pths[0], $objs, $atts, $first, $last);}
+		else
+			{confirmDialog -message "Export Cancelled";}
+	}
+	else
+	{
+		string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
+		if (size($savedir) > 0)
+		{	
+			for ($o in $objs)
+			{
+				string $fname = substituteAllString($o, ":", "");
+				string $pth = ($savedir[0]+"/"+$fname+".csv");
+				ex2dataBasic($pth, {$o}, $atts, $first, $last);
+			}
+		}
+		else
+			{confirmDialog -message "Export Cancelled";}
+	}	
+}
+global proc ex2dataBasic(string $pth, string $objs[], string $atts[], float $first, float $last)
+{	
+	int $fileId = `fopen ($pth) "w"`;
+
+	// print headers if needed
+	if (`radioButtonGrp -q -sl ex2RBG2` == 2)
+	{
+		string $headers[];
+		// if frames numbers in first column
+		if (`radioButtonGrp -q -sl ex2RBG3` == 2)
+		{
+			fprint $fileId "Frame,";
+		}
+		
+		for ($o in $objs)
+		{
+			for ($att in $atts)
+			{
+				$headers[size($headers)] = ($o + "_" + $att);
+			}
+		}
+		fprint $fileId (stringArrayToString($headers,","));
+		fprint $fileId "\n";
+	}
+	
+	float $fvals; string $svals[]; float $keys[];
+	// loop through the frames
+	for ($i = $first; $i < ($last+1); $i++)
+	{
+		// print frame number if user input
+		if (`radioButtonGrp -q -sl ex2RBG3` == 2)
+		{
+			fprint $fileId ($i+",");
+		}
+		for ($o in $objs)
+		{
+			// is this frame keyed
+			$keys = `keyframe -hi "none" -t $i -q -tc ($o+".tx")`;
+			for ($att in $atts)
+			{
+				if (size($keys) > 0)
+				{
+					$fval = `getAttr -t $i ($o+"."+$att)`;
+					$svals[size($svals)]  = string($fval);	
+				}
+				else
+				{
+					$svals[size($svals)] = "NaN";	
+				}
+			}
+		}
+		fprint $fileId (stringArrayToString($svals,","));
+		clear $svals;
+		//print carriage return unless on last keyframe
+		if ($i != ($last))
+			{fprint $fileId "\n";}
+	}
+	fclose $fileId;
+	print ("exported " + $pth + "\n");
+}
+global proc ex2CurrentValues(string $pth, string $objs[], string $atts[])
+{	
+	int $fileId = `fopen ($pth) "w"`;
+
+	// write headers if needed
+	if (`radioButtonGrp -q -sl ex2RBG2` == 2)
+	{
+		string $headers[];
+		// if frames numbers in first column
+		if (`radioButtonGrp -q -sl ex2RBG3` == 2)
+			{fprint $fileId "Frame,";}
+		
+		for ($o in $objs)
+		{
+			for ($att in $atts)
+				{$headers[size($headers)] = ($o + "_" + $att);}
+		}
+		fprint $fileId (stringArrayToString($headers,","));
+		fprint $fileId "\n";
+	}
+	
+	// write data
+	float $fvals; string $svals[]; 
+	// write frame number if user input
+	if (`radioButtonGrp -q -sl ex2RBG3` == 2)
+		{int $i = `currentTime -query`;fprint $fileId ($i+",");}
+	for ($o in $objs)
+	{
+		for ($att in $atts)
+		{
+			$fval = `getAttr ($o+"."+$att)`;
+			$svals[size($svals)]  = string($fval);	
+		}
+	}
+	fprint $fileId (stringArrayToString($svals,","));
+	fclose $fileId;
+	print ("exported" + $pth + "\n");
+}
+global proc ex2dataAdvanced()
+{
+	if (`window -exists ex2DataWindow` == true) deleteUI ex2DataWindow;
+	if (`window -exists ex2AdvWindow` == true) deleteUI ex2AdvWindow;  
+
+	int $height = 370;
+	int $width = 380;
+  
+	string $mainWindow = `window -title "Export Data" -maximizeButton false
+		-minimizeButton true -sizeable true -resizeToFitChildren false 
+		-closeCommand ex2AdvSavePrefs ex2AdvWindow`;
+	columnLayout -co "left" 10 -rs 10 ex2AdvCL1;
+		text -l "" -height 5;
+		optionMenu -l "Data type" -h 20 -cc ex2OMcCmd ex2OM1;
+			menuItem -label  "Translation" ex2transMI;
+			menuItem -label  "Rotation" ex2rotMI;
+			menuItem -label  "Translation/Rotation" ex2transrotMI;
+			menuItem -label  "Matrix (maya format)" ex2tmatrixMI;
+			menuItem -label  "Selected Attributes" ex2selattrMI;
+			menuItem -label  "Distance"ex2distMI;
+		frameLayout -bv 1 ex2AdvFL1;
+			rowColumnLayout -numberOfColumns 2 -cw 1 ($width/2) -cw 2 ($width/2 - 10) ex2AdvRC1;		
+				text -l "Selected Objects";
+				text -l "KeyFrames found on" ;
+				textScrollList -nr 5 -ams 0 -sc ex2AlignTSL2 ex2TSL1;
+				textScrollList -nr 5 -ams 0 -sc ex2AlignTSL1 ex2TSL2;
+			setParent..;
+		setParent..;
+		frameLayout -label "Options" -bv 1 ex2AdvFL2;
+		rowColumnLayout -nc 2 -cw 1 ($width/2) -cw 2 ($width/2 - 10) ex2AdvRC2;		
+			columnLayout -co "left" 10 -rs 10 ex2AdvCL2;								
+				columnLayout;
+					text -font "boldLabelFont" -label "Coordinate system";
+					radioButtonGrp 	-nrb 2 -labelArray2 "Global" "Local" -cw2 70 70 -sl 1 ex2AdvCordTypeRBG;
+				setParent..;
+				columnLayout;
+					rowColumnLayout -nc 2 -cw 1 ($width/4 - 30) -cw 2 ($width/4 - 30) ex2AdvRC1;
+						text -l "Start frame" -al "left";
+						text -l "End frame"-al "left";
+						floatField -pre 0 -v 1 ex2AdvStartFF;
+						floatField -pre 0 -v 1 ex2AdvEndFF;
+					setParent..;
+				setParent..;
+				columnLayout;
+					text -font "boldLabelFont" -label "Interpolate:" ex2interpT;
+					radioButtonGrp -nrb 2 -labelArray2 "Yes" "No" -cw2 70 70 -sl 2 ex2interpRBG;
+					text -l "" -h 10;
+				setParent..;
+			setParent ..;
+			columnLayout -co "left" 10 -rs 10 ex2AdvCL3;
+				columnLayout;
+					text -l "" -h 10;
+					checkBox -label "Column Headers" -value 1 
+					-ann "Column headers in first row" ex2colHChk;
+					checkBox -label "Row Headers (frame#)" -value 0 -cc ex2nanSpcChkCmd 
+					-ann "Frame number in first column" ex2rowHChk;
+					checkBox -label "Keep frame spacing" -value 1 -cc ex2nanSpcChkCmd 
+					-ann "Frames with no data are written as Nan (not a number)." ex2nanSpcChk;
+					text -label "       with NANs" ex2nanSpcChk2;
+					
+				setParent..;
+				columnLayout;
+					text -font "boldLabelFont" -label "File output:" ex2foutT;
+					radioButtonGrp 	-nrb 2 -labelArray2 "Combined" "Single" -sl 1 -cw2 70 70  ex2fNumRBG;
+					text -l "" -h 10;
+				setParent;					
+			setParent ..;
+		setParent ..;
+		setParent..;
+	setParent..;
+	rowLayout -nc 2 -gsp 5;
+		button	-label "Export" -w ($width/2) -command ("ex2AdvSendOptions({},{})") impButton;
+		button	-label "Close" -w ($width/2-20) -command "deleteUI ex2AdvWindow" closeButton;
+	setParent..;
+	
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+	ex2PopulateScrolls;
+	ex2AdvRestorePrefs;	
+	scriptJob -p $mainWindow -e "SelectionChanged" ex2PopulateScrolls;	
+}
+global proc ex2PopulateScrolls()
+{
+	string $sel[] = `ls -sl -tr`; string $anims[];
+	textScrollList -e -ra ex2TSL1;
+	textScrollList -e -ra ex2TSL2;
+	for ($s in $sel)
+	{
+		textScrollList -e -append $s ex2TSL1;
+		//now find its keyframe object
+		$anims = getAnimTformCtrlList($s);
+		if(size($anims)>0)
+			{textScrollList -e -append $anims[0] ex2TSL2;}
+		else
+			{textScrollList -e -append "noneFound" ex2TSL2;}
+	}
+	if(`textScrollList -q -ni ex2TSL1`>0)
+		{textScrollList -e -sii 1 ex2TSL1;
+		textScrollList -e -sii 1 ex2TSL2;}
+	ex2updateFramesCmd;
+}			
+global proc ex2OMcCmd()
+{
+    if(`optionMenu -q -v ex2OM1` == "Distance")
+		{radioButtonGrp -edit -sl 1 -en 0 ex2AdvCordTypeRBG;
+        checkBox -edit -value 0 -enable 0 ex2nanSpcChk;
+        radioButtonGrp -edit -sl 1 -en 0 ex2AdvCordTypeRBG;
+        }
+	else
+		{radioButtonGrp -edit -sl 1 -en 1 ex2AdvCordTypeRBG;
+        checkBox -edit -value 1 -enable 1 ex2nanSpcChk;
+        radioButtonGrp -edit -sl 1 -en 1 ex2AdvCordTypeRBG;}
+}
+global proc ex2AlignTSL2()
+{
+	int $idx[] = `textScrollList -q -sii ex2TSL1`;
+	textScrollList -e -sii $idx[0] ex2TSL2;
+}
+global proc ex2AlignTSL1()
+{
+	int $idx[] = `textScrollList -q -sii ex2TSL2`;
+	textScrollList -e -sii $idx[0] ex2TSL1;
+}
+global proc exChooseDiffAnim()
+{
+}
+global proc ex2AdvSavePrefs()
+{
+	string $typeButton = `optionMenu -q -v ex2OM1`;
+	optionVar -cat "expWinPrefs" -sv "dataTypeSel" $typeButton;
+	int $coord = `radioButtonGrp -q -sl ex2AdvCordTypeRBG`;
+	optionVar -cat "expWinPrefs" -iv "coord" $coord;
+	int $ch = `checkBox -q -v ex2colHChk`;
+	optionVar -cat "expWinPrefs" -iv "ch" $ch;
+	int $rh = `checkBox -q -v ex2rowHChk`;
+	optionVar -cat "expWinPrefs" -iv "rh" $rh;
+	int $nan = `checkBox -q -v ex2nanSpcChk`;
+	optionVar -cat "expWinPrefs" -iv "nan" $nan;
+	int $fnum = `radioButtonGrp -q -sl ex2fNumRBG`;
+	optionVar -cat "expWinPrefs" -iv "fnum" $fnum;
+	int $interp = `radioButtonGrp -q -sl ex2interpRBG`;
+	optionVar -cat "expWinPrefs" -iv "interp" $interp;
+}
+global proc ex2AdvRestorePrefs()
+{
+	string $str;
+	if (`optionVar -ex "dataTypeSel"`)
+		{$str = `optionVar -q "dataTypeSel"`;}
+	else{$str = "Translation";}
+	optionMenu -e -v $str ex2OM1;
+	 
+	int $int;
+	if (`optionVar -ex "coord"`)
+		{$int = `optionVar -q "coord"`;}
+	else{$int = 1;}
+	radioButtonGrp -e -sl $int ex2AdvCordTypeRBG;
+
+	if (`optionVar -ex "ch"`)
+		{$int = `optionVar -q "ch"`;}
+	else{$int = 1;}
+	checkBox -e -v $int ex2colHChk;
+	
+	if (`optionVar -ex "rh"`)
+		{$int = `optionVar -q "rh"`;}
+	else{$int = 0;}
+	checkBox -e -v $int ex2rowHChk;
+	
+	if (`optionVar -ex "nan"`)
+		{$int = `optionVar -q "nan"`;}
+	else{$int = 1;}
+	checkBox -e -v $int ex2nanSpcChk;
+
+	if (`optionVar -ex "fnum"`)
+		{$int = `optionVar -q "fnum"`;}
+	else{$int = 1;}
+	radioButtonGrp -e -sl $int ex2fNumRBG;
+	
+	if (`optionVar -ex "interp"`)
+		{$int = `optionVar -q "interp"`;}
+	else{$int = 2;}
+	radioButtonGrp -e -sl $int ex2interpRBG;
+}
+/************************************************************
+******************* BUTTON CLICK PROCS **********************
+*************************************************************/
+global proc ex2AdvSendOptions(string $pths[],string $atts[])
+{
+    string $objs[] = `textScrollList -q -ai ex2TSL1`;
+	// get file or directory
+	if (size($pths) == 0)
+	{  
+		// Single (all objects in one file) vs multiple files (one file per object)
+	    if (`radioButtonGrp -q -sl ex2fNumRBG` == 1)
+	        {$pths = xrmFileDlg("Save as",0,"CSV files (*.csv)",1,"");}
+	    else
+		{
+			string $savedir[] = xrmFileDlg("Select directory",2,"CSV files (*.csv)",1,"");
+			if (size($savedir) > 0)
+			{
+				for ($o in $objs)
+				{
+					$o = substituteAllString($o, ":", "");
+					$pths[size($pths)] = ($savedir[0]+"/"+$o+".csv");
+				}
+			}
+		}       
+	}
+	// if cancel button was pressed on file dialog
+	if(size($pths) == 0){print "Export Cancelled";} 
+	else
+	{
+		// if using selected attributes and names of atts aren't passed to script, get from channelbox
+		if(`optionMenu -q -v ex2OM1`=="Selected Attributes")
+		{
+			if (size($atts) == 0)
+				{$atts = `channelBox -q -sma "mainChannelBox"`;}
+		}
+		
+		// counter for multiple file export - unused if single file   
+		int $counter = 0;  
+			
+		// loop through files
+		for ($pth in $pths)
+		{
+			string $fileNcheck = (dirname($pth));
+			
+			if (`filetest -d $fileNcheck`)
+			{
+				$pth = `substituteAllString $pth ".csv" ""`;
+				$pth = $pth +".csv"; 
+				print ("Beginning export "+$pth+"\n");
+				
+				// if multiple files, select the current object
+				if (`radioButtonGrp -q -sl ex2fNumRBG` == 2)
+					 {select -r $objs[$counter]; $counter++; ex2updateFramesCmd;}
+				
+				if (`optionMenu -q -sl ex2OM1`==1)
+					{ex2GetAttr($pth, {"tx","ty","tz"});}
+				else if(`optionMenu -q -sl ex2OM1`==2)
+					{ex2GetAttr($pth, {"rx","ry","rz"});}
+				else if(`optionMenu -q -sl ex2OM1`==3)
+					{ex2GetAttr($pth, {"tx","ty","tz","rx","ry","rz"});}
+				else if(`optionMenu -q -sl ex2OM1`==5)
+						{ex2GetAttr($pth,($atts));}
+				else if(`optionMenu -q -sl ex2OM1`==6)
+						{ex2dist($pth);}
+				else if(`optionMenu -q -sl ex2OM1`==4)
+				{
+					if (`radioButtonGrp -q -sl ex2AdvCordTypeRBG`)
+						{ex2GetAttr($pth, {"worldMatrix"}) ;}
+					else
+						{ex2GetAttr($pth, {"matrix"}) ;}
+				}
+				else
+					{confirmDialog 	-title "Need More Info" -message "You must select a data type" 
+						-button "OK" -defaultButton "OK";} 
+			}
+			else{print "Export Cancelled";}
+		}
+    }
+}
+global proc ex2nanSpcChkCmd()
+{
+	if(`checkBox -q -v ex2nanSpcChk`)
+		{checkBox -e -en 1 ex2rowHChk;}
+	else
+		{checkBox -e -v 1 -en 0 ex2rowHChk;}
+}
+global proc ex2IgnoreKeysChkCommand()
+{
+	if (`checkBox -q -v ex2IgnoreKeysChk`)
+	{
+		text -e -enable 0 ex2kfoT;
+		radioButton -e -en 0 rbsel1;
+		radioButton -e -en 0 rbhier2;
+		radioButton -e -en 0 rbpar3;
+		radioButton-e -en 0 rbconn4;
+		radioButton -e -en 0 rbtime5;
+		text -e -enable 0 ex2interpT;
+		radioButtonGrp -e -enable 0 ex2interpRBG;
+    }
+    else
+    {
+    	text -e -enable 1 ex2kfoT;
+    	radioButton -e -en 1 rbsel1;
+		radioButton -e -en 1 rbhier2;
+		radioButton -e -en 1 rbpar3;
+		radioButton -e -en 1 rbconn4;
+		radioButton -e -en 1 rbtime5;
+		text -e -enable 1 ex2interpT;
+		radioButtonGrp -e -enable 1 ex2interpRBG;
+    }
+    ex2updateFramesCmd;
+}
+global proc ex2updateFramesCmd()
+{
+	float $firstframe =`currentTime -q`;
+	float $lastframe =`currentTime -q`;
+	string $animObj[] = `textScrollList -q -si ex2TSL2`;
+	if(size($animObj)>0)
+	{
+		if($animObj[0]!="noneFound")
+		{
+			$firstframe = `findKeyframe -hi none -which first $animObj[0]`;
+			$lastframe = `findKeyframe -hi none -which last $animObj[0]`;
+		}
+	}	
+	//update the gui
+	floatField -e -value $firstframe ex2AdvStartFF;
+	floatField -e -value $lastframe ex2AdvEndFF;
+}
+/************************************************************
+************************ HelperPROCS ***********************
+*************************************************************/
+proc string ex2getHeaderRowStr(string $objs[], string $hatts[])
+{
+	string $sVals[];
+	if (($hatts[0] == "worldMatrix") || ($hatts[0] == "matrix"))
+		{$hatts = {"rxx","rxy","rxz","rx0","ryx","ryy","ryz","ry0","rzx","rzy","rzz","rz0","tx","ty","tz","t1"};}
+
+	for ($i = 0; $i < (size($objs)); $i++)
+		{
+			for ($j = 0; $j < (size($hatts)); $j++)
+				{$sVals[size($sVals)] = ($objs[$i] + "." + $hatts[$j]);}
+		}
+    string $ex2getHeaderRowStr = stringArrayToString($sVals, ",");
+    return $ex2getHeaderRowStr;
+}
+proc int anyKeysOnThisFrame(string $objs[], string $atts[], float $frame)
+{
+	int $anyKeys = 0; string $animCtrlObjs[];
+	for ($obj in $objs)
+	{
+		$animCtrlObjs = getAnimTformCtrlList($obj);
+		for ($co in $animCtrlObjs)
+		{
+		for ($att in $atts)
+			{
+				$isKeyed = ex2isKeyed($co, $att, $frame);
+				if ($isKeyed){$anyKeys = 1;}
+			}
+		}
+	}
+	return $anyKeys;
+}
+global proc int ex2isKeyed(string $obj, string $att, float $frame)
+{
+	int $iskeyed;
+	string $objatt = ($obj + "." + $att);
+
+	float $k[];
+	
+	// selected objects only
+	if (`radioButton-q -sl rbsel1`)
+	{
+		if (`radioButton -q -sl ex2tmatrixMI`)
+			{$k = `keyframe -hi "none" -t $frame -q -tc $obj`;}
+		else
+			{$k = `keyframe -hi "none" -t $frame -q -tc $objatt`;}
+	}
+	else
+	// keyframes from another object
+	{	
+		//string $driver[] = {"test"};
+		//if (`radioButton -q -sl rbconn4`)
+		//	{$driver = `listConnections -d 0 -s 1 ($objatt)`;}
+		//if (size($driver)>0)
+		//{
+			string $keyedObjs[] = getAnimTformCtrlList($obj); string $keyedObjsAtt[];
+			for ($i = 0; $i < size($keyedObjs); $i++)
+				{{$keyedObjsAtt[$i] = ($keyedObjs[$i]+"."+$att);}}
+			if (`radioButton -q -sl ex2tmatrixMI`)
+				{$k = `keyframe -hi "none" -t $frame -q -tc $keyedObjs`;}
+			else
+				{$k = `keyframe -hi "none" -t $frame -q -tc $keyedObjsAtt`;}
+		//}
+	}
+
+	if (size($k) == 0)
+		{$iskeyed = 0;}
+	else
+		{$iskeyed = 1;}
+
+	return $iskeyed;
+}
+proc string ex2getDecomposeNode(string $obj)
+{
+	//load matrix nodes plugin if not loaded already
+	if (!`pluginInfo -q -l  matrixNodes`){loadPlugin matrixNodes;}
+	// use decompose to read out translate and rotate in world space
+	string $decomposeNode = `createNode "decomposeMatrix" -n ($obj + "DecomposeNode")`;
+	connectAttr -f ($obj+".worldMatrix[0]") ($decomposeNode+".inputMatrix");
+	return $decomposeNode;
+}
+proc string ex2getDecomposeOutput(string $decomposeNode)
+{
+	string $tmpoutput[] = `spaceLocator -n ("tmpObj")`;
+	connectAttr -f ($decomposeNode+".outputTranslate") ($tmpoutput[0]+".translate");
+	connectAttr -f ($decomposeNode+".outputRotate") ($tmpoutput[0]+".rotate");
+	return $tmpoutput[0];
+}
+/***************************************************************************
+************************ Export PROCS **************************************
+***************************************************************************/
+global proc ex2GetAttr(string $pth, string $atts[])
+{
+   	//list selected objs
+	string $objs[] = `ls -selection`;
+		
+	// open file for writing
+	$fileId = `fopen $pth "w"`;
+
+	// print headers
+	if ((`checkBox -q -v ex2rowHChk`) && (`checkBox -q -v ex2colHChk`))
+		{fprint $fileId "frame,";}
+
+	if(`checkBox -q -v ex2colHChk`)
+	{string $ex2getHeaderRowStr = ex2getHeaderRowStr($objs,$atts);
+		fprint $fileId ($ex2getHeaderRowStr + "\n");}
+
+	// get first and last frame from gui
+	float $frame = `floatField -q -value ex2AdvStartFF`;
+	float $lastframe = `floatField -q -value ex2AdvEndFF`;
+	string $sVals[];
+	
+	// create nans until first frame		
+	if(`checkBox -q -v ex2nanSpcChk`)
+	{	
+		int $numatts = size($atts);
+		if (`radioButton -q -sl ex2tmatrixMI`){$numatts = 16;}
+		int $numColumns = (size($objs)*$numatts);
+		
+		for ($i = 1; $i<$frame;$i++)
+			{
+				if(`checkBox -q -v ex2rowHChk`){fprint $fileId ($i + ",");}
+				for ($j = 0; $j<$numColumns;$j++)
+					{
+						$sVals[size($sVals)] = "NaN";
+					}
+				fprint $fileId (stringArrayToString($sVals,","));
+				fprint $fileId "\n";
+				clear($sVals);
+			}
+	}
+
+	string $curobj;float $val; int $iskeyed; int $anyKeys;
+	for ($i = $frame; $i < $lastframe+1; $i++)
+	{  
+		// print frame number in first column if needed
+		if (`checkBox -q -v ex2rowHChk`)
+		{
+			if(`checkBox -q -v ex2nanSpcChk`){fprint $fileId ($i + ",");}
+			else
+			{	// only print framenumber if there are keyframes on any obj
+				if(`checkBox -q -v ex2IgnoreKeysChk`){$anyKeys = 1;}
+				else {$anyKeys = anyKeysOnThisFrame($objs, $atts, $i);}
+				if ($anyKeys){fprint $fileId ($i + ",");}
+			}
+		}
+		// for each selected object
+		for ($j = 0; $j < (size($objs)); $j++)
+		{
+			//if its a matrix
+			if (`radioButton -q -sl ex2tmatrixMI`)
+			{
+				float $fVals[];
+				// if not interpolating
+				if (`radioButtonGrp -q -sl ex2interpRBG` == 2)
+				{
+					if(`checkBox -q -v ex2IgnoreKeysChk`){$iskeyed = 1;}
+					else {$iskeyed = ex2isKeyed($objs[$j],$atts[0], $i);}
+					
+					if (!$iskeyed)
+					{
+						if(`checkBox -q -v ex2nanSpcChk`)
+						{$sVals = {"NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN","NaN"};}
+					}
+					else
+						{$fVals = `getAttr -t $i ($objs[$j] + "." + $atts[0])`;
+						for ($f in $fVals){$sVals[size($sVals)] = string($f);}}
+				}
+				// if interpolating
+				else
+				{
+					$fVals = `getAttr -t $i ($objs[$j] + "." + $atts[0])`;
+					for ($f in $fVals){$sVals[size($sVals)] = string($f);}
+				}
+			// not a matrix	
+			}
+			else
+			{
+				string $decomposeNode; string $tmpoutput;
+				//if global option and object has parent(s)
+				string $parent[] = `listRelatives -parent $objs[$j]`;
+				if ((`radioButtonGrp -q -sl ex2AdvCordTypeRBG` == 1)&&(size($parent)>0))
+				{
+					$decomposeNode = ex2getDecomposeNode($objs[$j]);
+					$tmpoutput = ex2getDecomposeOutput($decomposeNode);
+					select $objs;
+				}
+				// and for each attribute in the list
+				for ($k = 0; $k < (size($atts)); $k++)
+				{
+					// if not interpolating
+					if (`radioButtonGrp -q -sl ex2interpRBG` == 2)
+					{
+						if(`checkBox -q -v ex2IgnoreKeysChk`){$iskeyed = 1;}
+						else {$iskeyed = ex2isKeyed($objs[$j],$atts[0], $i);}
+					
+						if (!$iskeyed)
+							{$sVals[size($sVals)] = "NaN";}
+						else
+							{
+							if ((`radioButtonGrp -q -sl ex2AdvCordTypeRBG` == 1)&&(size($parent)>0))
+								{$val = `getAttr -t $i ($tmpoutput + "." + $atts[$k])`;}
+							else
+								{$val = `getAttr -t $i ($objs[$j] + "." + $atts[$k])`;}
+							$sVals[size($sVals)] = string($val);
+							}
+					}
+					// if interpolating
+					else
+					{
+						if ((`radioButtonGrp -q -sl ex2AdvCordTypeRBG` == 1)&&(size($parent)>0))
+							{$val = `getAttr -t $i ($tmpoutput + "." + $atts[$k])`;}
+						else
+							{$val = `getAttr -t $i ($objs[$j] + "." + $atts[$k])`;}
+						$sVals[size($sVals)] = string($val);
+					}
+				}
+				if (`objExists $tmpoutput`){delete $decomposeNode $tmpoutput;}
+			}
+		}
+		fprint $fileId (stringArrayToString($sVals,","));
+		if ($i != $lastframe)
+			{fprint $fileId "\n";}
+		clear($sVals);
+	}	
+	fclose $fileId;
+	print ("\/\/Export "+$pth+" complete.\n");
+}
+/*************** Export Distance Helper Procs ***********************/
+proc string[] ex2wfSwitch()
+{
+	string $cPanels[] = `getPanel -vis`;
+	string $origDisp[];
+	for ($cPanel in $cPanels)
+	{
+		if (`modelPanel -exists $cPanel`){
+		$origDisp[size($origDisp)] = `modelEditor -q -displayAppearance $cPanel`;
+		modelEditor -edit -displayAppearance wireframe $cPanel;}
+	}
+	return $origDisp;
+}
+proc ex2wfReturn(string $origDisp[])
+{
+	string $cPanels[] = `getPanel -vis`;
+	for ($i = 0;$i<size($cPanels);$i++)
+		{	if (`modelPanel -exists $cPanels[$i]`)	
+		{modelEditor -edit -displayAppearance $origDisp[$i] $cPanels[$i];}
+	}
+}
+/************************ Export Distance ***********************/
+global proc ex2dist(string $pth)
+{
+	/* ex2dist(string $pth)
+		Exports data from a distance tool in maya
+		
+		$pth: full path and file name for output		
+	*/
+	string $origDisp[] = ex2wfSwitch();
+    string $objs[] = `ls -selection`;
+    string $objShapes[] = `listRelatives -s -ni $objs`; 
+    
+    float $vals[]; string $sVals[];
+    string $atts[] = {"startPoint","endPoint"};
+    
+    float $frame = `floatField -q -value ex2AdvStartFF`;
+	float $lastframe = `floatField -q -value ex2AdvEndFF`;
+	
+	$fileId = `fopen $pth "w"`;
+
+	// create nans to first frame 
+	if(`checkBox -q -v ex2nanSpcChk`)
+	{		
+		int $numColumns = (size($objs)*size($atts));
+		string $nan[];
+		for ($i = 1; $i<$frame;$i++)
+			{
+				if(`checkBox -q -v ex2rowHChk`){fprint $fileId ($i + ",");}
+				for ($j = 0; $j<$numColumns;$j++)
+					{$nan[size($nan)] = "NaN";}
+				string $nanrow = stringArrayToString($nan,",");
+				fprint $fileId ($nanrow + "\n");
+				clear($nan);
+			}
+	}
+	
+	if(`checkBox -q -v ex2colHChk`)
+        {
+            fprint $fileId "frame,";
+            string $ex2getHeaderRowStr = ex2getHeaderRowStr($objs,{"dist"});
+            fprint $fileId ($ex2getHeaderRowStr + "\n");
+        }
+    for ($i = $frame; $i<= $lastframe; $i++)
+    {
+        currentTime -edit $i;
+        
+        if (`checkBox -q -v ex2rowHChk`)
+			{fprint $fileId ($i + ",");}
+       
+        for ($obj in $objShapes)
+        {
+            vector $a = `getAttr($obj+".startPoint")`;
+            vector $b = `getAttr($obj+".endPoint")`;
+            $vals[size($vals)] = mag($a - $b);
+        }
+        for ($val in $vals)
+            {$sVals[size($sVals)] = string($val);}
+        
+        fprint $fileId (stringArrayToString($sVals,",") + "\n");
+        clear($vals);
+		clear($sVals);
+    }
+    fclose $fileId;
+    ex2wfReturn($origDisp);
+}
+
+

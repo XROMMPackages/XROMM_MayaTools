@@ -1,0 +1,21 @@
+global proc string nextEndIntWithPadding(string $str, int $padsize)
+{
+	// padsize is the total number of digits. ex: 01 is padsize=2
+	string $endint = `match "[0-9]+$" $str`;
+	int $newnum = int($endint)+1;
+	string $newstr = string($newnum);
+	int $newstrsize = size($newstr);
+	while($newstrsize<$padsize)
+	{
+		$newstr = ("0"+$newstr);
+		$newstrsize = size($newstr);
+	}
+
+	$outstr = `substitute $endint $str $newstr`;
+	return $outstr;
+}
+	
+
+	
+	
+	

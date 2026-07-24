@@ -1,0 +1,300 @@
+/* setpaths2 
+    GUI to allow user to add and remove paths to the script path
+    The gui opens/reads or creates the Maya.env file and then rewrites 
+    with added or removed paths chosen by the user.
+    
+    requires fileread.mel
+    
+    User is not permitted to remove Maya default paths
+    
+    Currently only tested on Windows
+    Written by David Baier 7/31/2012 
+    7/29/2016 - updated to use xrmFileDlg instead of fileDialog. D. Baier
+    3/7/2019 - renamed setpath to setpaths2 accomodates python paths
+*/
+global proc setpaths2()
+{
+
+	// Make the window
+	if (`window -exists setpathWindow` == true) deleteUI setpathWindow;  
+	
+	int $height = 400;
+	int $width = 400;
+	
+	string $mainWindow = `window -title "Set Path" -maximizeButton false -minimizeButton true
+	-sizeable true -resizeToFitChildren false setpathWindow`;
+	
+	frameLayout -label "Current PATHS" -height $height -width $width -mw 5 -mh 5 spthFL1;
+	columnLayout -co "left" 10 -rs 5 spthCL1;
+		scrollLayout -width ($width - 20) -h 315 spthSL1;
+			text "User-defined MAYA_SCRIPT_PATHS";
+			textScrollList -numberOfRows 4 -width ($width + 150)
+				-allowMultiSelection 1 -showIndexedItem 1 
+				spthTSL1;
+			text "User-defined PYTHONPATHS";
+			textScrollList -numberOfRows 4 -width ($width + 150)
+				-allowMultiSelection 1 -showIndexedItem 1 spthTSL3;
+			text "default MAYA_SCRIPT_PATHS";
+			textScrollList -numberOfRows 4 -width ($width + 150)
+				-allowMultiSelection 1 -showIndexedItem 1 spthTSL2;		
+			text "default PYTHONPATHS";
+			textScrollList -numberOfRows 4 -width ($width + 150)
+				-allowMultiSelection 1 -showIndexedItem 1 spthTSL4;
+		setParent ..;
+		rowLayout -nc 2 -cw2 ($width/4+40) ($width/4*3-40)  spthRL1;
+			checkBox -label "include subfolders" -value 0 subfolderCheckBox;
+			button -label "add path to both MAYA and PYTHON" -w ($width/4*3-60) 
+			-c "spthAddBothCmd(1)" spthAddBothBtn;
+		setParent ..;
+		rowColumnLayout -nc 2 -rs 5 5 -cw 1 ($width/2-10) -cw 2 ($width/2-10);
+			button -label "add MAYA_SCRIPT_PATH" -c "spthAddBothCmd(2)" addmspButton;
+			button -label "add PYTHONPATH" -c "spthAddBothCmd(3)" addppButton;
+			button -label "remove selected  MAYA_SCRIPT_PATH(s)" -c removeMSPath removepathButton; 
+			button -label "remove selected  PYTHONPATH(s)" -c removePPath allScriptPathButtons;
+			text " ";
+		setParent ..; 
+	setParent ..;
+	setParent ..;
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+	spthPopulateCmd;
+}
+global proc spthPopulateCmd()
+{
+	// get all locations that maya is currently looking for scripts
+	string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+	string $curmsp = `getenv "MAYA_SCRIPT_PATH"`;
+	string $msp[] = stringToStringArray($curmsp,$spacer);
+	string $usermsp[] = `getMayaEnvScriptPaths`;
+	for ($i = 0;$i<size($usermsp);$i++){$usermsp[$i] = fromNativePath($usermsp[$i]);}
+	string $mayamsp[] = stringArrayRemove($usermsp,$msp);
+	
+	string $curpp = `getenv "PYTHONPATH"`;
+	string $pp[] = stringToStringArray($curpp,$spacer); 
+	string $userpp[] = `getMayaEnvPythonPaths`;
+	for ($i = 0;$i<size($userpp);$i++){$userpp[$i] = fromNativePath($userpp[$i]);}
+	string $mayapp[] = stringArrayRemove($userpp,$pp);
+	for($m in $usermsp)
+		{textScrollList -e -append $m spthTSL1;}
+	for($m in $mayamsp)
+		{textScrollList -e -append $m spthTSL2;}
+	for($p in $userpp)
+		{textScrollList -e -append $p spthTSL3;}
+	for($p in $mayapp)
+		{textScrollList -e -append $p spthTSL4;}
+}
+proc spthWriteNewEnv(string $newEnvStr,string $spacer,string $lineHeader)
+{	
+	// read env file
+	string $mayaEnv = `about -environmentFile`;
+	string $mayaEnvLines[] = `fileread($mayaEnv)`;
+	int $match = 0;
+
+	for ($i=0;$i<size($mayaEnvLines);$i++) 
+	{
+		// if the current line contains MAYA_SCRIPT_PATH 
+		if (`gmatch $mayaEnvLines[$i] ($lineHeader+"*")`)
+			{$mayaEnvLines[$i] = $newEnvStr; $match = 1;}
+	}
+	
+	// if there are no current MAYA_SCRIPT_PATH lines in env file, create one
+	if ($match == 0)
+		{$mayaEnvLines[size($mayaEnvLines)] = $newEnvStr;}
+	
+	// overwrite maya.env file
+	$fileId = `fopen $mayaEnv "w"`;
+	for($i=0;$i<size($mayaEnvLines)-1;$i++)
+		{fprint $fileId ($mayaEnvLines[$i]+"\n");}   
+	fprint $fileId ($mayaEnvLines[size($mayaEnvLines)-1]);
+	fclose $fileId;
+}
+proc spthUpdateList(string $newPathArr[],string $tsl)
+{
+	// Now append the display list
+	textScrollList -e -ra $tsl;
+	for($p in $newPathArr)
+	{
+		$p = fromNativePath($p);
+		textScrollList -e -append $p $tsl;
+	}       
+}
+/*proc spthSourceNew(string $directory)
+{
+	//works but crashes maya. learned this is due to memory overload
+	// wait to do in session update after switch to python
+	$directory = ($directory+"/");
+	string $melFiles[] = `getFileList -folder $directory -filespec "*.mel"`;
+	string $p;
+	for ($m in $melFiles)
+	{
+		$p = ($directory+$m);
+		if(catchQuiet(`eval(("source \""+$p+"\";"))`))
+		{print ("Error found in "+$m+"\n");}
+		else
+		{eval(("source \""+$p+"\";"));}
+	}
+
+}*/
+global proc spthAddBothCmd(int $int)
+{
+	string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};     
+	// Get the users input for new path directory(ies)
+	string $newPathArr[] = xrmFileDlg("Choose new path", 2, "", 1,"");
+	if(`filetest -d $newPathArr[0]`)
+	{	// get subfolders if needed
+        if (`checkBox -q -v subfolderCheckBox`)
+		{
+			string $insideFolder[] = `getFileList -folder ($newPathArr[0]+"\\") -filespec "*."`;
+			for ($a in $insideFolder)
+				{$newPathArr[(size($newPathArr))] = ($newPathArr[0]+"\\" + $a);}
+		}
+	}
+	if($int == 1)
+		{newMspDir($newPathArr,$spacer); newPpDir($newPathArr,$spacer);}
+	else if($int == 2)
+		{newMspDir($newPathArr,$spacer);}
+	else if($int == 3)
+		{newPpDir($newPathArr,$spacer);}
+}
+global proc newMspDir(string $newPathArr[], string $spacer)
+{ 
+	// add new paths to existing paths
+	string $msp[] = `getMayaEnvScriptPaths`;	
+	appendStringArray($newPathArr, $msp, (size($msp)));
+	for ($i = 0;$i<size($newPathArr);$i++){$newPathArr[$i] = toNativePath($newPathArr[$i]);}
+	
+	// elimate if already exists
+	$newPathArr = `stringArrayRemoveDuplicates($newPathArr)`;	
+	
+	// create a string of new paths
+	string $newPathStr = stringArrayToString ($newPathArr, $spacer);
+	string $newEnvStr = ("MAYA_SCRIPT_PATH = " + $newPathStr);
+	 
+	spthWriteNewEnv($newEnvStr,$spacer,"MAYA_SCRIPT_PATH");
+	
+	// This added the new path(s) to the File - but the actual environment 
+	// variable will not update until maya is restarted.
+	// So we'll add the path to the current session
+	string $curPathStr = `getenv "MAYA_SCRIPT_PATH"`;
+	putenv "MAYA_SCRIPT_PATH" ($curPathStr + $spacer + $newPathStr);
+	rehash;
+	
+	// Now append the display list and source top level folder
+	string $preUpdate[] = `textScrollList -q -ai "spthTSL1"`;
+	spthUpdateList($newPathArr,"spthTSL1");
+	string $postUpdate[] = `textScrollList -q -ai "spthTSL1"`;
+	if($postUpdate[0]!=$preUpdate[0])
+		{confirmDialog -title "Restart required"
+		-message "Must restart maya for new folder to take precedence";}
+}
+global proc newPpDir(string $newPathArr[], string $spacer)
+{    
+	// add new paths to existing paths
+	string $msp[] = `getMayaEnvPythonPaths`;
+	appendStringArray($newPathArr, $msp, (size($msp)));
+	for ($i = 0;$i<size($newPathArr);$i++){$newPathArr[$i] = toNativePath($newPathArr[$i]);}
+	
+	// elimate if already exists
+	$newPathArr = `stringArrayRemoveDuplicates($newPathArr)`; 
+	 
+	// create a string of new paths
+	string $newPathStr = stringArrayToString ($newPathArr, $spacer);
+	string $newEnvStr = ("PYTHONPATH = " + $newPathStr);
+	
+	spthWriteNewEnv($newEnvStr,$spacer,"PYTHONPATH");
+	
+	// This added the new path(s) to the File - but the actual environment variable will not update
+	// until maya is restarted. Now we'll add the path to the current session (this
+	// doesn't seem to work. We'll try using the python command below
+	string $curPathStr = `getenv "PYTHONPATH"`;
+	putenv "PYTHONPATH" ($curPathStr + $spacer + $newPathStr);
+	
+	// Now append the display list
+	spthUpdateList($newPathArr,"spthTSL3");
+}
+global proc removeMSPath()
+{
+    // paths to be removed
+    string $pathToBeRemoved[] = `textScrollList -q -si spthTSL1`; 
+    if (size($pathToBeRemoved)>0)
+    {
+    	// convert forward slash to backward slash
+    	for ($i = 0; $i<(size($pathToBeRemoved)); $i++)
+    		{$pathToBeRemoved[$i] = toNativePath($pathToBeRemoved[$i]);};
+    	
+       string $origEnvArr[] = `getMayaEnvScriptPaths`;   
+       string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+
+        // make new array removing paths
+        string $newPathArr[] = stringArrayRemove($pathToBeRemoved, $origEnvArr);
+        // new string for maya script path
+        string $newEnvStr;
+        if(size($newPathArr)>0)
+		{
+			$newEnvStr = stringArrayToString($newPathArr, $spacer);
+			$newEnvStr = ("MAYA_SCRIPT_PATH = " + $newEnvStr);
+		}
+        else
+		{$newEnvstr = ("");}
+	
+		spthWriteNewEnv($newEnvStr,$spacer,"MAYA_SCRIPT_PATH");
+		
+		// This added the new path(s) to the File - but the actual environment variable will not update
+		// until maya is restarted. Now we'll add the path to the current session
+		string $curPathStr = `getenv "MAYA_SCRIPT_PATH"`;
+		string $curPaths[] = stringToStringArray($curPathStr,$spacer);
+		string $newPaths[] = stringArrayRemove($pathToBeRemoved,$curPaths);
+		string $newStr = stringArrayToString($newPaths,$spacer);
+		putenv "MAYA_SCRIPT_PATH" ($newStr);
+		rehash;
+		
+		// Now append the display list
+		string $preUpdate[] = `textScrollList -q -ai "spthTSL1"`;
+		spthUpdateList($newPathArr,"spthTSL1");
+		string $postUpdate[] = `textScrollList -q -ai "spthTSL1"`;
+		if($postUpdate[0]!=$preUpdate[0])
+			{confirmDialog -title "Restart required"
+			-message "Must restart maya for new folder to take precedence";}
+	}
+}
+global proc removePPath()
+{
+    string $var = "PYTHONPATH";
+    // paths to be removed
+    string $pathToBeRemoved[] = `textScrollList -q -si spthTSL3`; 
+    if (size($pathToBeRemoved)>0)
+    {
+    	// convert forward slash to backward slash
+    	for ($i = 0; $i<(size($pathToBeRemoved)); $i++)
+    		{$pathToBeRemoved[$i] = toNativePath($pathToBeRemoved[$i]);};
+    	
+       string $origEnvArr[] = `getMayaEnvPythonPaths`;   
+       string $spacer; if (`about -win`== 1){$spacer = ";";}else{$spacer = ":";};
+
+        // make new array removing paths
+        string $newPathArr[] = stringArrayRemove($pathToBeRemoved, $origEnvArr);
+        // new string for maya script path
+        string $newEnvStr;
+        if(size($newPathArr)>0)
+		{
+			$newEnvStr = stringArrayToString($newPathArr, $spacer);
+			$newEnvStr = ($var + " = " + $newEnvStr);
+		}
+        else
+		{$newEnvstr = ("");}
+     
+	  	spthWriteNewEnv($newEnvStr,$spacer,"PYTHONPATH");
+		
+		// This added the new path(s) to the File - but the actual environment variable will not update
+		// until maya is restarted. Now we'll add the path to the current session
+		string $curPathStr = `getenv $var`;
+		string $curPaths[] = stringToStringArray($curPathStr,$spacer);
+		string $newPaths[] = stringArrayRemove($pathToBeRemoved,$curPaths);
+		string $newStr = stringArrayToString($newPaths,$spacer);
+		putenv $var ($newStr);
+		rehash;
+		
+		// Now append the display list
+		spthUpdateList($newPathArr,"spthTSL3");
+	}
+}

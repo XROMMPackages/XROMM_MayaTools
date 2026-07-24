@@ -1,0 +1,243 @@
+global proc objShaderOptions()
+{
+/* after importing objs provide option to create, import or apply shader
+	option to set transparency
+	option to toggle wft
+*/	
+if (`window -exists objShaderOptionsWindow` == true){deleteUI objShaderOptionsWindow;} 
+    
+    window -title "Object Shader Options" -maximizeButton false
+		-minimizeButton true -sizeable false -resizeToFitChildren true objShaderOptionsWindow;
+	int $height = 355; int $width = 245;
+		
+	columnLayout -co "left" 5 -rs 20 osoCL1;
+		frameLayout -label "Objects" -bv 1 -w ($width-15) osoFr2;
+			textScrollList -ams 1 -nr 10 -sc osoObjSelCmd -dkc "osoDeleteNodeCmd"
+			-ann "Double-click to rename objects" -dcc osoRenameObjCmd osoTSL1;
+			button -l "Apply New Material to Selected" -c "osoNewMaterialCmd" osoNewColorBtn;
+		setParent..; 
+		frameLayout -label "Current Object's Material" -bv 1 -w ($width-15) osoFr1;
+			textScrollList -ams 0 -nr 5 -dcc "osoRenameCurMatCmd" -dkc "osoDeleteShaderCmd"
+			-ann "Double-click to rename shader" -sc osoMatSelCmd osoTSL2;
+			button -l "Change Current Material Color" -c "osoChngColorCmd" osoChngColorBtn;			
+			floatSliderGrp  -label "Tranparency" -changeCommand "osoAdjObjTrans" -enable 1 
+			-field 1 -maxValue 1.0 -minValue 0.0 -fmx 1.0 -fmn 0.0 -step 0.001 -value 0.800
+			-cat 1 "left" 8 -cw3 70 40 100 osoTransFSG;
+			checkBox -l " Wireframe display" -v 0 -cc "ososWftCheckCmd" osoWfCheck;
+		setParent..;	
+        displayPref -wsa "none";
+	setParent..;
+	showWindow objShaderOptionsWindow;
+	window -e -width $width -height $height objShaderOptionsWindow;
+	scriptJob -p objShaderOptionsWindow -e "SelectionChanged" osoUpdateSel;	
+	scriptJob -p objShaderOptionsWindow -e "NameChanged" osoInitializeLists;
+	osoInitializeLists;
+	osoUpdateSel;
+}
+proc string osoGetObjMat(string $obj)
+{
+	string $shp[] = `listRelatives -s $obj`;
+	string $se[] = `listConnections -type "shadingEngine" $shp[0]`;
+	string $mats[] = `listConnections ($se[0] + ".surfaceShader")`;
+	return $mats[0];
+}
+global proc osoInitializeLists()
+{
+	// get shadable objects
+	string $shapes[] = `ls -type "mesh" -type "nurbsSurface" -type "subdiv"`;
+	string $shadable[] = `listRelatives -p $shapes`;
+	textScrollList -edit -ra osoTSL1;
+	// update scroll
+	for($s in $shadable)
+	{textScrollList -edit -append $s osoTSL1;}
+	
+	// get material list
+	string $mats[] = `ls -mat`;
+	string $unusableMats[];
+	for ($m in $mats)
+	{	
+		string $shadingGrp[] = `listConnections -d on -s off ($m+".outColor")`;
+		if (size($shadingGrp)==0){$unusableMats[size($unusableMats)]=$m;}
+	}
+	$mats = stringArrayRemove($unusableMats,$mats);
+	textScrollList -edit -ra osoTSL2;
+	// populate scroll
+	for($m in $mats){textScrollList -edit -append $m osoTSL2;}
+	//update selections
+	osoUpdateSel;
+}
+global proc osoUpdateSel()
+{
+	string $list[] = `textScrollList -q -ai osoTSL1`;
+	string $selObjs[] = `ls -sl`;
+	
+	textScrollList -edit -da osoTSL1;
+	for($l in $list)
+	{
+		if(stringArrayContains($l,$selObjs))
+			{textScrollList -edit -si $l osoTSL1;}
+	}
+	
+	$list = `textScrollList -q -ai osoTSL2`;
+	string $objListSel[] = `textScrollList -q -si osoTSL1`;
+
+	if (size($objListSel)>0)
+		{
+			string $curmat = osoGetObjMat($selObjs[0]);
+			textScrollList -edit -si $curmat osoTSL2;
+		}
+	else{textScrollList -edit -da osoTSL2;}	
+}
+global proc osoRenameObjCmd()
+{
+	// selected object in All Locators
+	string $curName[] = `textScrollList -q -si osoTSL1`;
+	
+	string $result = `promptDialog -title "Rename" -text $curName[0]
+        -button "OK" -button "Cancel" -defaultButton "OK" -cancelButton "Cancel"
+        -dismissString "Cancel"`;
+        
+    if ($result == "OK")
+    {
+        // rename the locator
+        string $newName = `promptDialog -query -text`;
+        $newName = cleanStrForObjectName($newName);
+		string $actualNewname = `rename $curName[0] $newName`;
+	
+		// update the list
+        int $idx[] = `textScrollList -q -sii osoTSL1`;
+        textScrollList -e -rii $idx[0] osoTSL1;
+        textScrollList -e -ap $idx[0] $actualNewname osoTSL1;
+	}
+}
+global proc osoObjSelCmd()
+{
+	string $name[] = `textScrollList -q -si osoTSL1`;
+	select $name;
+	//setFocus MayaWindow;
+}
+global proc osoMatSelCmd()
+{
+	string $objshader[] = `textScrollList -q -si osoTSL2`;
+	string $shadingGrp[] = `listConnections -d on -s off ($objshader[0]+".outColor")`;
+	sets -e -forceElement ($shadingGrp[0]);
+	float $trans = `getAttr ($objshader[0]+".transparencyR")`;
+	floatSliderGrp -e -v $trans osoTransFSG;
+}	
+global proc osoRenameCurMatCmd()
+{
+	string $newname; string $curmat[] = `textScrollList -q -si osoTSL2`;
+	string $result = `promptDialog -t "Rename Material" -m "Enter New Name:"
+    -b "OK" -b "Cancel" -db "OK" -cb "Cancel" -ds "Cancel"`;
+
+    if ($result == "OK") 
+	{
+		$newname = `promptDialog -query -text`;
+		string $SGs[] = `listConnections -d on -s off ($curmat[0] + ".outColor")`;
+		rename $curmat[0] $newname;
+		rename $SGs[0] ($newname+"SG");
+		//rebuild menu items
+		osoInitializeLists;
+	}
+}
+global proc osoChngColorCmd()
+{
+	string $mat[] = `textScrollList -q -si osoTSL2`;
+	// Open Maya's native color editor
+	float $cR = `getAttr ($mat[0]+".colorR")`;
+	float $cG = `getAttr ($mat[0]+".colorG")`;
+	float $cB = `getAttr ($mat[0]+".colorB")`;
+	colorEditor -rgb $cR $cG $cB;
+	
+	// Query if the user clicked 'Accept' or 'Cancel'
+	if (`colorEditor -query -result`) {
+		// Get the RGB values (returns an array of 3 floats between 0.0 and 1.0)
+		float $rgb[] = `colorEditor -query -rgb`;
+
+		// apply color
+		setAttr ($mat[0]+".colorR") $rgb[0];
+		setAttr ($mat[0]+".colorG") $rgb[1];
+		setAttr ($mat[0]+".colorB") $rgb[2];
+	} else {                                               
+		print("Cancelled color change.");
+	}
+}
+global proc osoNewMaterialCmd()
+{
+	string $objs[] = `ls -sl`; string $newname;
+	string $result = `promptDialog -t "New Material" -m "Enter Name:"
+    -b "OK" -b "Cancel" -db "OK" -cb "Cancel" -ds "Cancel"`;
+
+    if ($result == "OK") 
+    	{
+    		$newname = `promptDialog -query -text`;
+    		string $objshader = `shadingNode -asShader "lambert" -n $newname`;
+    		sets -renderable true -noSurfaceShader true -empty -name ($objshader+"SG");
+    		connectAttr -f ($objshader+".outColor") ($objshader+"SG.surfaceShader");
+    		setAttr ($objshader+".color") -type double3 0.584 0.544 0.396;
+    		select $objs;
+    		sets -e -forceElement ($objshader+"SG");
+    		float $trans = `getAttr ($objshader+".transparencyR")`;
+    		floatSliderGrp -e -v $trans osoTransFSG;
+    		osoInitializeLists;
+    		osoChngColorCmd;
+    	}
+}
+global proc osoAdjObjTrans()
+{
+	string $selShader[] = `textScrollList -q -si osoTSL2`;
+	float $val = `floatSliderGrp -q -v osoTransFSG`;
+	if(attributeExists ("transparencyR",$selShader[0]))
+	{setAttr ($selShader[0]+".transparencyR") $val;
+	setAttr ($selShader[0]+".transparencyG") $val;
+	setAttr ($selShader[0]+".transparencyB") $val;}
+}
+global proc ososWftCheckCmd()
+{
+	if (`checkBox -q -v osoWfCheck`)
+		{displayPref -wsa "full";}
+	else
+		{displayPref -wsa "none";}
+}
+global proc osoDeleteNodeCmd()
+{
+	string $names[] = `textScrollList -q -si osoTSL1`;
+	for($n in $names)
+	{
+		if(!`referenceQuery -isNodeReferenced $n`)
+			{textScrollList -e -ri ($n) "osoTSL1"; delete $n;}
+		else
+			{print "Can't delete referenced node\n";}
+	}
+}
+global proc osoDeleteShaderCmd()
+{
+	string $sel[] = `textScrollList -q -si osoTSL2`;
+	string $all[] = `textScrollList -q -ai osoTSL2`;
+	string $diff[] = stringArrayRemove($sel, $all);
+	string $switchShader[];
+	if (size($diff)<3)
+		{$switchShader[0] = "initialShadingGroup";}
+	else
+		{$switchShader = `listConnections -type "shadingEngine" $diff[2]`;}
+	
+	for($s in $sel)
+	{
+		string $objs[];
+		string $sgs[] = `listConnections -type "shadingEngine" $s`;
+		// find nodes with current shader
+		if (size($sgs) > 0) 
+			{$objs = `sets -q $sgs[0]`;}
+		// assign diff shader
+		for($o in $objs)
+			{sets -e -forceElement $switchShader $o;}
+		delete $s $sgs;
+		// update the list
+		textScrollList -e -ri ($s) osoTSL2;
+	}
+}
+
+	
+
+
+	

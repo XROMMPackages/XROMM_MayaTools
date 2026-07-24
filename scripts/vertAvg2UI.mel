@@ -1,0 +1,19 @@
+global proc vertAvg2UI()
+// no longer used call vertAvg2 - just a direct call
+{
+	if (`window -exists vertAvgWindow` == true) deleteUI vertAvgWindow;  
+	int $w = 240; int $h = 75;
+	string $win = `window -title "Vertex Average" -menuBar true
+		-maximizeButton false -minimizeButton true -sizeable false
+		-resizeToFitChildren true vertAvgWindow`;
+		
+	frameLayout -label "Separate Mesh and Calculate Vertex Averages" -mw 30 -mh 10 vaFRL1;
+		columnLayout va2CL1;
+			button -label "Calculate Vertex Average Centroid(s)"
+			-ann "Splits polygon into multiple objects for each disconnected set of vertices/faces and then calculates a centroid for each using vertex average "
+			-command splitMarkers vavSplitMarkersBtn;
+		setParent..;
+	setParent..;
+	showWindow $win;
+	window -e -wh $w $h $win;	
+}

@@ -1,0 +1,89 @@
+/* global proc CoMpoly()
+ 	Calculates center of mass for selected objects.
+ 	If an object is not a continuous mesh, it will separate the mesh and calculate
+ 	a center of mass for each subpart of the mesh.
+ 	
+ 	Calls CoMcalc which is Based on matlab script CoM_iv written by Anwar M. Upal 
+	following notes between << >> are from his matlab script
+		
+		<< Based on VTK method GetVolume in
+		vtkMassProperties.  Reference: D. Eberly, J. Lancaster, A. Alyassin, "On
+		gray scale image measurements, II. Surface area and volume", CVGIP:
+		Graphical Models and Image Processing, vol. 53, no.6, pp.550-562, 1991.
+		
+		Uses Divergence Theorem to convert volume integration to an area
+		integral over the boundary of the region formed by the triangular
+		mesh.  The function integrated to get centroid is (x^2,y^2,z^2)/2. >>
+		
+	Note: you only need to select the object if not choosing a subset of faces
+	Dave Baier 7/25/25
+*/
+global proc CoMpoly()
+{
+	if (size(`ls -sl`) == 0)
+	{confirmDialog -t "Nothing selected" -m "Select the Marker Mesh" -b "OK";}
+	else
+	{
+		// duplicate to keep original
+		string $selPolys[] = `ls -sl`; 
+
+		string $centroid; string $cents[]; string $newPolys[]; 
+		string $CoMGrp; int $pad; string $origFileName = "none";
+		
+		for ($s in $selPolys)
+		{
+			// get the original filename
+			if (`attributeExists "originalFile" $s`)
+				{$origFileName = `getAttr -asString ($s+".originalFile")`;}
+			
+			// create group to store markers
+			$CoMGrp = `group -em -n ($s+"CoMGrp")`;
+			
+			// If poly is made up of multiple continuous subpolys, split it
+			int $numPolys[] = `polyEvaluate -shell $s`;
+			if ($numPolys[0] > 1)
+			{
+				$newPolys = `polySeparate -ch 0 -n $s $s`;
+				// add attributes to identify source of new polys
+				for ($n in $newPolys)
+				{
+					addAttr -ln "mrkrMesh" -sn "psc" -at "bool" -dv 1 $n;
+					setAttr -e -channelBox true ($n+".psc");
+					addAttr -ln "originalFile" -sn "of" -at "enum" -en ($origFileName+":"+$origFileName) $n;
+					setAttr -e -channelBox true ($n+".of");
+				}
+				
+				//set marker numbering padding (allows proper sorting of object names)
+				if (size($newPolys) < 100){$pad = 1;}
+				else if (size($newPolys) >= 100 && size($newPolys) < 1000){$pad = 2;}
+				else if (size($newPolys) >= 1000 && size($newPolys) < 10000){$pad = 3;} 
+				
+				// rename so with padding in marker numbers
+				$newPolys = paddingToMayaAutoNum($newPolys, $pad);
+				
+				//get center of mass
+				for ($n in $newPolys)
+				{
+					$centroid = CoMcalc($n);
+					$cents[size($cents)] = $centroid;
+					parent $n $centroid;
+					rename $n ($n+"MrkrMesh");
+					parent $centroid $CoMGrp;
+				}
+				delete $s;
+			}
+			// if only one object there will only be one centroid so no need for separating
+			else
+			{
+				$centroid = CoMcalc($s);
+			}
+		}
+		select ($cents);
+		allViewFit(0);
+		// Now lets check for objects they are closest to each marker.
+		string $meshes[] = `getNonMarkerMeshList`;
+		CTMexport2;
+		if (`window -exists CoMpolyWindow` == true) deleteUI CoMpolyWindow;
+	}
+}
+				

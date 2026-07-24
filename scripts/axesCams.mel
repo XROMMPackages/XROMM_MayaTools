@@ -1,0 +1,54 @@
+global proc axesCams()
+//creates a set of axes with 3 orthogonal cameras that can be parented to each axis.
+// point and orient constrain (or parent and zero) to any bone coordinate system
+// when looking through the cameras this will appear to "freeze" the bone
+{
+	// create a group and axes for visualization
+	string $grp = `group -em -n "axCamGrp"`;
+	string $axes = axesCreate("axCamAx", 10, "full", 1);
+	parent $axes $grp;
+	
+	// create xcamera
+	string $xcam[] = `camera -centerOfInterest 5 -focalLength 120 -lensSqueezeRatio 1 
+	-cameraScale 1 -horizontalFilmAperture 1.4173 -horizontalFilmOffset 0 
+	-verticalFilmAperture 0.9449 -verticalFilmOffset 0 -filmFit "Fill" -overscan 1 
+	-motionBlur 0 -shutterAngle 144 -nearClipPlane 0.1 -farClipPlane 10000 -orthographic 0 
+	-orthographicWidth 30 -panZoomEnabled 0 -horizontalPan 0 -verticalPan 0 -zoom 1 -name "xCam"`;
+	
+	rotate -r -eu -fo 90 0 90;
+	setAttr ($xcam[0]+".translateX") 50; 
+	//string $lockAtts[] = {".tx", ".ty", ".tz", ".rx", ".ry", ".rz", ".sx", ".sy", ".sz"};
+	string $lockAtts[] = {".ty", ".tz", ".rx",".rz", ".sx", ".sy", ".sz"};
+	for ($att in $lockAtts)
+		{setAttr -lock true ($xcam[0] + $att);}
+	
+	// create ycamera
+	string $ycam[] = `camera -centerOfInterest 5 -focalLength 120 -lensSqueezeRatio 1 
+	-cameraScale 1 -horizontalFilmAperture 1.4173 -horizontalFilmOffset 0 
+	-verticalFilmAperture 0.9449 -verticalFilmOffset 0 -filmFit "Fill" -overscan 1 
+	-motionBlur 0 -shutterAngle 144 -nearClipPlane 0.1 -farClipPlane 10000 -orthographic 0 
+	-orthographicWidth 30 -panZoomEnabled 0 -horizontalPan 0 -verticalPan 0 -zoom 1 -name "yCam"`;
+	
+	rotate -r -eu -fo 90 0 -180;
+	setAttr ($ycam[0]+".translateY") 50; 
+
+	$lockAtts = {".tx", ".tz", ".rx",".rz", ".sx", ".sy", ".sz"};
+	for ($att in $lockAtts)
+		{setAttr -lock true ($ycam[0] + $att);}
+	
+	// create zcamera
+	string $zcam[] = `camera -centerOfInterest 5 -focalLength 120 -lensSqueezeRatio 1 
+	-cameraScale 1 -horizontalFilmAperture 1.4173 -horizontalFilmOffset 0 
+	-verticalFilmAperture 0.9449 -verticalFilmOffset 0 -filmFit "Fill" -overscan 1 
+	-motionBlur 0 -shutterAngle 144 -nearClipPlane 0.1 -farClipPlane 10000 -orthographic 0 
+	-orthographicWidth 30 -panZoomEnabled 0 -horizontalPan 0 -verticalPan 0 -zoom 1 -name "zCam"`;
+	
+	setAttr ($zcam[0]+".translateZ") 50; 
+
+	$lockAtts = {".tx", ".ty", ".rx", ".ry", ".sx", ".sy", ".sz"};
+	for ($att in $lockAtts)
+		{setAttr -lock true ($zcam[0] + $att);}
+	
+	parent $xcam[0] $ycam[0] $zcam[0] $grp;
+	
+}

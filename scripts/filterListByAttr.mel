@@ -1,0 +1,17 @@
+global proc string[] filterListByAttr(string $list[], string $att, int $int)
+{
+	string $filt[];
+	// all in list that HAVE attr
+	if ($int)
+	{
+		for ($l in $list){if(attributeExists($att,$l))
+		{$filt[size($filt)]=$l;}}
+	}
+	// all in list that DONT HAVE attr
+	else
+	{
+		for ($l in $list){if(!attributeExists($att,$l))
+		{$filt[size($filt)]=$l;}}
+	}
+	return $filt;
+}

@@ -1,0 +1,16 @@
+global proc int nodeHasKeys(string $node)
+{
+	int $hasKeys =0;
+	if(size($node)!>0){string $nodes[] = `ls -sl -tr`;$node = $nodes[0];}
+	
+	if (size($node))>0)
+	{
+		string $animCurves[] = `listConnections -type "animCurve" $obj`;
+		if(size($animCurves)>0){$hasKeys = 1;}
+	}
+	else
+	{
+		print "No input provided"; $hasKeys = -1;
+	}
+	return $hasKeys;
+}

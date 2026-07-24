@@ -1,0 +1,36 @@
+proc int minai(float $arr[])
+{
+    float $min = $arr[0];
+    int $minidx;
+    
+    int $idx = 0;
+    for ($a in $arr)
+    {
+        if ($a < $min){$min = $a; $minidx = $idx;}
+        $idx++;
+    }
+    return $minidx;
+}
+
+global proc string closestMeshToPoint(string $tform, string $meshes[])
+{
+	//find which mesh has a vertex closest to a the world xyz of $tform
+	vector $point = `xform -q -ws -t $tform`;
+	vector $vtxs[]; float $dist[]; float $mdist[]; string $closestMesh;  
+	for($m in $meshes)
+	{
+		$vtxs = `xform -q -ws -t ($m+".vtx[*]")`;
+		for($vtx in $vtxs)
+			{$dist[size($dist)] = mag(($vtx-$point));}
+		$dist = `sort($dist)`;
+		$mdist[size($mdist)] = $dist[0];
+		clear $dist;
+	}
+	int $minIdx = minai($mdist);
+	$closestMesh = $meshes[$minIdx];
+	return $closestMesh;
+}
+	
+		
+		
+

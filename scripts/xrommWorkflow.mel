@@ -1,0 +1,193 @@
+global proc xrommWorkflow()
+{
+	float $cw = 0.8; float $cf = 0.7; float $cb = 0.9;
+	int $w = 275; int $h = 520; int $flw = 255; int $bw = 253;
+	if (`window -exists xrommWorkflowWindow` == true) deleteUI xrommWorkflowWindow;
+	
+	window -bgc $cw  $cw  $cw  -closeCommand rememberXWFPrefs -maximizeButton true 
+	-minimizeButton true -resizeToFitChildren true -sizeable true 
+	-mb true -title "XROMM Workflow" xrommWorkflowWindow;
+	columnLayout;
+			menu -label "Maya file";
+	        menuItem -label "Open" -command "xrfOpen" xrfOpenBtn;
+	        menuItem -label "Save" -command "xwfSaveCmd" xrfSaveBtn;
+	        menuItem -label "SaveAs" -command "xwfSaveAsCmd(\"\")" xrfSaveAsBtn;
+	        menuItem -label "New" -command "xwfNewCmd" xrfNewBtn;
+	columnLayout -rs 3 xwfCL0;
+		rowLayout -nc 4 -gsp 10 -ct2 "left" "left" -co2 10 0 xwfRL11;
+			button -bgc $cb $cb $cb -label "Collapse all" -c "FRLcollapse(1)" xwfCollapseBtn;
+			button -bgc $cb $cb $cb -label "Expand all" -c "FRLcollapse(0)" xwfExpandBtn;
+			text -l "                 ";
+			button -bgc $cb $cb $cb -label "quickVisTool" -c "quickVisTool" xwfQVisBtn; 
+		setParent..;
+	setParent..;
+	columnLayout -co "left" 10 -rs 15  xwfCL1;		
+		frameLayout -l "Basic Maya Setup" -cll 1 -bv 1 -lv 1 -bgc $cf $cf $cf -w $flw xwfFL1;
+			rowLayout -numberOfColumns 2 xwfRL1;
+			    button -w ($bw/2-15)  -bgc $cb $cb $cb -label "Set/View Script paths" 
+			    -ann "Choose folder containg XROMM_Mayatools scripts" 
+			    -c "setpaths2;" xwfSetPathsBtn;
+			    button -w ($bw/2+15)  -bgc $cb $cb $cb -label "Configure Maya for XROMM" 
+			    -ann "Adjust Maya configuration to optimize for XROMM"
+			    -c "XROMMmayaConfigUI;" xwfConfigBtn;
+		    setParent..;
+		setParent..;
+	    frameLayout -l "Calculate/Export Marker Centroids" -cll 1 -bv 1 -lv 1 -bgc $cf $cf $cf -w $flw xwfFL2;
+	    	columnLayout;
+				rowLayout -nc 2 xwfRL2;
+					button -w ($bw/2)  -bgc $cb $cb $cb -label "Import Objs" -ann "Import Bone/Marker Objs" -c "impObjsUI" xwfImpMeshesBtn;
+					button -w ($bw/2)  -bgc $cb $cb $cb -label "Shader Options" -ann "Adjust shaders on objects (opens automatically following import)" -c "objShaderOptions" xwfShdOptBtn;
+				setParent..;
+				rowLayout -numberOfColumns 3 xwfRL3;
+					button -w ($bw/2-10)  -bgc $cb $cb $cb -label "Center of Mass" -ann "Split selected marker mesh into independent objects and Calculate COM" -c "CoMpoly;" xwfCoMBtn;
+					text -l " OR ";
+					button -w ($bw/2-10)  -bgc $cb $cb $cb -label "Vertex Average" -ann "Split selected marker mesh into independent objects and Calculate Vertex Average" -c "vertAvg2" xwfvertAvgBtn;
+				setParent..;
+				rowLayout -nc 1 xwfRLextra;
+					button -w ($bw+30) -bgc $cb $cb $cb -label "Export marker coordinates" -ann "CTMexp2" -c "CTMexport2" xwfCTE2Btn;
+					//button -w ($bw/2-30) -bgc $cb $cb $cb -label "Save Individual" -c "xwfSaveAsCmd(\"IndividualName.mb\")" xwfSaveInvdBtn;
+				setParent..;
+			setParent..;
+	    setParent..;
+		frameLayout -l "Create Coordinate Systems" -cll 1 -bv 1 -lv 1 -bgc $cf $cf $cf -w $flw xwfFL3;
+			columnLayout;
+			rowLayout -numberOfColumns 3 -gsp 5 xwfRCL2;
+			    button -w ($bw/2-15)  -bgc $cb $cb $cb -label "Create Axes" -c "axesCreateUI;" xwfSaveMarkerBtn;
+			    text -l " OR ";
+			    button -w ($bw/2-15)  -bgc $cb $cb $cb -label "Calculate Inertial Axes" -c xwfInertCmd xwfInertBtn;
+			setParent..;
+			button -w $bw  -bgc $cb $cb $cb -label "Adjust Axes" -c "axesAdjUI;" xwfAdjAxesBtn;			
+		    setParent..;
+	    setParent..;
+	    frameLayout -l "Create new XMA Calibrations scene" -cll 1 -bv 1 -lv 1 -bgc $cf $cf $cf -w $flw xwfFL4;
+	    	columnLayout;
+			rowColumnLayout -numberOfColumns 2 xwfRL7;
+			    button -w ($bw/2)  -bgc $cb $cb $cb -label "Import Cameras" -c "xwfImpCamCmd" xwfImpCamBtn;
+			    button -w ($bw/2)  -bgc $cb $cb $cb -label "Create/Manage Trials" -c "xcamTrials" xwfXcamImChBtn;
+			    button -w ($bw/2)  -bgc $cb $cb $cb -label "xcamTwoPanels view" -c "xcamTwoPanels" xwfTwoPanelBtn;			    
+			    button -w ($bw/2)  -bgc $cb $cb $cb -label "xcamFourPanels view" -c "xcamFourPanels" xwfSaveCalBtn;
+		    setParent..;
+		    button -w $bw -bgc $cb $cb $cb -label "Import XMA data" -c "impdata2" xwfSaveCalBtn;
+		    setParent..;
+	    setParent..;
+		frameLayout -l "Calculate Joint Coordinate System Data" -cll 1 -bv 1 -lv 1 -bgc $cf $cf $cf -w $flw xwfFL5;
+			rowLayout -numberOfColumns 1 -gsp 5 xwfRL9;
+			    button -w $bw  -bgc $cb $cb $cb -label "Calculate JCSs" -c "oRelFast;" xwfCalcJCSBtn;
+		    setParent..;
+	    setParent..;
+	    frameLayout -l "Export Data"-cll 1 -bv 1 -lv 1 -bgc $cf $cf $cf -w $flw xwfFL6;
+			rowLayout -numberOfColumns 1 -gsp 5 xwfRL10;
+			    button -w $bw  -bgc $cb $cb $cb -label "Export Data" -c "expdata2;" xwfExpDataBtn;
+		    setParent..;
+	    setParent..;
+	setParent..;
+	showWindow xrommWorkflowWindow;
+	window -e -w $w -h $h xrommWorkflowWindow;
+	restoreXWFPrefs;
+}
+global proc rememberXWFPrefs()
+{
+	string $frlayout; int $cl;
+	for ($i = 1; $i<7; $i++)
+	{
+		$frlayout = ("xwfFL"+$i);
+		$cl = `frameLayout -q -cl $frlayout`;
+		optionVar -cat "xwfWinPrefs" -iv $frlayout $cl;
+	}
+}
+global proc restoreXWFPrefs()
+{
+	string $frl; int $int;
+	for ($i = 1; $i<7; $i++)
+	{
+		$frlayout = ("xwfFL"+$i);
+		if (`optionVar -ex $frlayout`)
+			{$int = `optionVar -q $frlayout`;}
+		else{$int = 1;}                 
+		frameLayout -e -cl $int $frlayout;
+	}
+}
+proc string xwfFileChngDlg()
+{
+	$result = `confirmDialog -title "Confirm" 
+	-message "There are unsaved changes\n Do you want to continue?"
+	-messageAlign "center" -button "Continue" -button "Cancel" -defaultButton "Cancel"
+	-cancelButton "Cancel" -dismissString "Cancel"`;
+	return $result;
+}
+global proc xwfSaveCmd()
+{
+	string $sceneName = `file -q -sn -shn`;
+	if (size($sceneName) ==0)
+		{xwfSaveAsCmd("");}
+	else
+		{file -save;}
+}
+global proc xwfSaveAsCmd(string $fname)
+{
+	string $pths[]=xrmFileDlg("SaveAs",0, "Maya files (*.mb *.ma)",1,$fname);
+	string $dir = dirname($pths[0]);
+	if((size($pths)>0)&&(`filetest -d $dir`))
+	{
+		file -rename $pths[0];
+		if(`fileExtension $pths[0]`== "mb")
+			{file -force -save -type "mayaBinary";}
+		else
+			{file -force -save -type "mayaAscii";}
+	}
+}
+	
+global proc xwfNewCmd()
+{
+	if (`file -q -modified`)
+	{
+		string $result = xwfFileChngDlg();
+		if($result=="Continue"){file -f -new;}
+	}
+	else{file -f -new;}
+}
+global proc xwfInertCmd()
+{
+	string $shapes[] = `ls -type "mesh"`;
+	string $objs[] = `listRelatives -p $shapes`;
+	$objs = `ls -sl $objs`;
+	if(size($objs)>0)
+	{
+		python("import maya.cmds as mc\nimport xromm\nobjs = mc.ls( selection=True )\nfor obj in objs:\n	xromm.inertialAxes(obj)");
+		string $newAxes[] = `ls -sl`;
+		axesAdjUI;
+		floatFieldGrp -e -value1 `getAttr ($newAxes[0]+".unitLenCM")` axadScaleFFG;
+	}
+	else{print "No meshes selected\n";}
+}
+global proc xwfImpCamCmd()
+{	
+	//create and save New Scene
+	if (`file -q -modified`)
+	{
+		string $result = xwfFileChngDlg();	
+		if($result=="Continue")
+		{
+			file -f -new;
+			xcam01;
+		}
+	}
+	else
+	{
+		file -f -new;
+		xcam01;
+	}
+}
+global proc FRLcollapse(int $cl)
+{
+	int $num = 1;
+	do{
+		frameLayout -e -cl $cl ("xwfFL"+$num);
+		$num++;
+	} while (`control -exists ("xwfFL"+$num)`); 
+}
+global proc xrfOpen()
+{
+	string $pths[]=xrmFileDlg("Save Calibration File",1, "Maya Files (*.mb *.ma)",1,"");
+	if(`filetest -f $pths[0]`){file -open $pths[0];}
+}

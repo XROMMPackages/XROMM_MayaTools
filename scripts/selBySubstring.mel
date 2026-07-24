@@ -1,0 +1,40 @@
+global proc selBySubstring()
+{
+	if (`window -exists sbsWindow` == true) deleteUI sbsWindow;  
+	string $mainWindow = `window -title "Select by Substring" -menuBar true 
+	-maximizeButton false -minimizeButton true -sizeable false 
+	-resizeToFitChildren true sbsWindow`;
+	int $w = 270;
+	
+	columnLayout -co "left" 10 -rs 5;
+		separator -h 5;
+		textFieldGrp -label "Search String: " -cw2 65 185 -text "*:*JCSdata" sbsTFG1;
+		radioButtonGrp -nrb 3 -enable 1 -cw3 70 70 100 
+		-ct3 "left" "left" "left" -sl 3 
+		-labelArray3 "add" "remove" "replace selection" sbsRBG1;
+		button -l "Apply" -w 250 -c sbsSelectCmd sbsRenameTFBGrp1;	
+		textScrollList -allowMultiSelection 1 -w 250 -nr 10 -sc seedReplaceCmd sbsTSL1;
+		separator -h 10;
+	setParent..;
+	showWindow $mainWindow;
+	window -e -w $w sbsWindow;
+	scriptJob -p $mainWindow -e "SelectionChanged" sbsUpdateOnSelCmd;	
+}
+global proc sbsUpdateOnSelCmd()
+{
+	textScrollList -e -ra sbsTSL1;
+	string $sel[] = `ls -sl`;
+	for ($s in $sel){textScrollList -e -append $s sbsTSL1;}
+}
+global proc sbsSelectCmd()
+{
+	string $str = `textFieldGrp -q -text sbsTFG1`;
+	
+	if(`radioButtonGrp -q -sl sbsRBG1`==1)
+		{select -add $str;}
+	else if(`radioButtonGrp -q -sl sbsRBG1`==2)
+		{select -d $str;}
+	else
+		{select -r $str;}
+	sbsUpdateOnSelCmd;
+}

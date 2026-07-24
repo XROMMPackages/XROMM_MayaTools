@@ -1,0 +1,19 @@
+global proc CoMpolyUI()
+// no longer used - CoMpoly called directly
+{
+	if (`window -exists CoMpolyWindow` == true) deleteUI CoMpolyWindow;  
+	int $w = 200; int $h = 75;
+	string $mainWindow = `window -title "Center of Mass" -menuBar true
+		-maximizeButton false -minimizeButton true -sizeable false
+		-resizeToFitChildren true CoMpolyWindow`;
+		
+	frameLayout -label "Separate Mesh and Calculate CoM" -mw 35 -mh 10 CoMFRL1;
+		columnLayout CoMCL1;
+			button	-label "Calculate CoM Centroid" 
+			-ann "Splits polygon into multiple objects for each disconnected set of vertices/faces and then calculates a centroid for each using Center of Mass"
+			-command CoMpolyCalc CoMSplitMarkersBtn;
+		setParent..;
+	setParent..;
+	showWindow $mainWindow;
+	window -e -wh $w $h $mainWindow;
+}

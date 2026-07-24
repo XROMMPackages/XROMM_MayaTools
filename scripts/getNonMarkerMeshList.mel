@@ -1,0 +1,7 @@
+global proc string[] getNonMarkerMeshList()
+{
+	string $shapes[] = `ls -type "mesh"`;
+	string $transforms[] = `listRelatives -parent $shapes`;
+	string $list[] = filterListByAttr($transforms, "mrkrMesh", 0);
+	return $list;
+}

@@ -1,0 +1,90 @@
+proc string[] getAnimTformConnections(string $obj)
+{
+	// driver can be many node types (connected attr, constraint, expression)
+	string $anCtrlObjs[];
+	string $driver[] = `listConnections -d 0 -s 1 $obj`;
+	$driver = stringArrayRemoveDuplicates($driver);
+	
+	string $nodeTypes[];
+	for ($d in $driver)
+	{
+		$nodeTypes[size($nodeTypes)] = `nodeType $d`;
+		$nodeTypes = stringArrayRemoveDuplicates($nodeTypes);
+		for ($n in $nodeTypes)
+		{
+			// if its a constraint
+			if (`gmatch  $n "*Constraint"`)
+			{
+				$tmp = `eval($n + " -q -targetList " + $d)`;
+				for ($t in $tmp)
+				{
+					if(`nodeHasTformKeys($t)`){$anCtrlObjs[size($anCtrlObjs)] = $t;}
+				}
+			}
+			// if its a connection
+			if ($n == "transform")
+				if(`nodeHasTformKeys($n)`){$anCtrlObjs[size($anCtrlObjs)] = $n;}
+			// if its an expression
+			if ($n == "expression")
+			{
+				$tmp = `listConnections -d 0 -s 1 $d`;
+				for ($t in $tmp)
+				{
+					if(`nodeHasTformKeys($t)`){$anCtrlObjs[size($anCtrlObjs)] = $t;}
+				}
+			}
+		}		
+	}
+	return $anCtrlObjs;
+}
+global proc string[] getAnimTformCtrlList(string $obj)
+{
+	/* provides a list of objects containing animation that affect $obj
+	   Order of finding object with animation
+	   1. the object 2. its direct parent 3. its hierarchy above 4. other control
+	   other control could be constraints, connections, expressions
+	   
+	   For all nodes above in hierarchy
+
+	   $list = getAnimTformCtrlList($obj)
+	*/
+	string $anCtrlObjs[]; 
+	if(size($obj)==0){string $objs[] = `ls -sl -tr`;$obj = $objs[0];}
+	if (size($obj)>0)
+	{
+		string $tmp[];
+		// the object
+		if(`nodeHasTformKeys($obj)`){$anCtrlObjs[size($anCtrlObjs)] = $obj;}
+		
+		// the parent
+		$tmp = `listRelatives -ap $obj`;
+	
+		if(`nodeHasTformKeys($tmp[0])`){$anCtrlObjs[size($anCtrlObjs)] = $tmp[0];}
+		
+		// hierarchy above
+		string $fullPath[] = `listRelatives -f $obj`;
+		string $hierAboveAll[] = stringToStringArray($fullPath[0], "|");
+		$hierAboveTform = `ls -type "transform" $hierAboveAll`;
+		for($h in $hierAboveTform)
+		{
+			if(`nodeHasTformKeys($h)`){$anCtrlObjs[size($anCtrlObjs)] = $h;}
+		}
+		$anCtrlObjs = stringArrayRemoveDuplicates($anCtrlObjs);
+		
+		// for each node in hier above - lets check for anim via connections
+		string $connWithAnim[];
+		for ($h in $hierAboveTform)
+		{
+			$tmp = `getAnimTformConnections($h)`;
+			$connWithAnim = stringArrayCatenate($connWithAnim,$tmp);
+		}
+		$anCtrlObjs = stringArrayCatenate($anCtrlObjs,$connWithAnim);
+					
+		$anCtrlObjs = stringArrayRemoveDuplicates($anCtrlObjs);
+	}
+	else
+	{
+		print "No input provided.select a node and type getAnimTformCtrlList(\"\")";
+	}
+	return $anCtrlObjs;
+}

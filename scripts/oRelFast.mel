@@ -1,0 +1,155 @@
+global proc oRelFast()
+
+/*
+created 2020 May 10 by AR Manafzadeh based on outputRelMotion.mel (oRel) by SM Gatesy and D Baier
+last updated 2022 Aug 12 to auto-load matrixNodes plugin
+speeds up oRel XROMM shelf tool substantially by using nodes and getAttr command
+*/
+
+
+//***********************USER INTERFACE***********************
+
+//modify Gatesy & Baier's XROMM_tools oRel UI
+{
+  int $height = 210;
+	int $width = 380;
+
+	if (`window -exists oRelFastWindow` == true) deleteUI oRelFastWindow;
+
+	string $mainWindow = `window -title "Output Relative Motion Faster"-menuBar true
+	    -maximizeButton false -minimizeButton true -sizeable true -resizeToFitChildren false
+		oRelFastWindow`;
+
+	frameLayout -label "Output Relative Motion Faster" -height $height -width $width -mw 5 -mh 5;
+	    columnLayout;
+	        menu -label "File";
+	        menuItem -label "Reset" -command cRec resetButton;
+	        menuItem -label "Close" -command "deleteUI oRelFastWindow" closeButton;
+	    columnLayout;
+	        separator -h 5;
+	        textFieldButtonGrp -label "Fixed ACS" -cat 1 "left" 5 -cw3 60 220 90
+	        	-text "Select fixed ACS and click Insert Selection"
+	            -buttonLabel "Insert Selection" -buttonCommand proxSelectButton proxFieldGroup;
+	        textFieldButtonGrp -label "Mobile ACS" -cat 1 "left" 5 -cw3 60 220 90
+	        	-text "Select mobile ACS and click Insert Selection"
+	            -buttonLabel "Insert Selection" -buttonCommand distSelectButton distFieldGroup;
+	        separator -h 5;
+	        text "Output Node Name";
+	        textField -width $width -text  "dataNodeNameHere" outputNameField;
+	        separator -h 5;
+	setParent..;
+	    text " ";
+	    button	-label "Output Relative Motion" -enable 1 -w ($width) -command outputRelMotionFast;
+	    button	-label "Close" -w ($width) closeButton;
+	    button -edit -command "deleteUI oRelFastWindow" closeButton;
+
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+}
+
+global proc proxSelectButton()
+{
+	string $objs[] = `ls -sl`;
+	textFieldButtonGrp -e -text $objs[0] proxFieldGroup;
+}
+
+
+global proc distSelectButton()
+{
+	string $objs[] = `ls -sl`;
+	textFieldButtonGrp -e -text $objs[0] distFieldGroup;
+}
+
+//*********************RELATIVE MOTION CALCULATION*********************
+
+//use info from UI and create nodes to calculate relative motion
+global proc outputRelMotionFast()
+{
+
+	//load matrix nodes plugin
+	if(!`pluginInfo -query -loaded "matrixNodes"`)
+		{loadPlugin matrixNodes;}
+
+	string $axesP = `textFieldButtonGrp -q -text proxFieldGroup`;
+	string $axesD = `textFieldButtonGrp -q -text distFieldGroup`;
+    	string $holder = `textField -q -text outputNameField`;
+    
+    string $axesPnodes[] = getAnimTformCtrlList($axesP);
+    string $axesDnodes[] = getAnimTformCtrlList($axesD);
+	int $frame = `findKeyframe -hi both -which first $axesPnodes[0]` ;
+	int $lastframe = `findKeyframe -hi both -which last $axesDnodes[0]`;
+
+	string $multiplyNode = ($holder + "MultiplyNode");
+	string $decomposeNode = ($holder + "DecomposeNode");
+
+	string $output = $holder + "data";
+	spaceLocator -n $output;
+
+
+	shadingNode -asUtility multMatrix -n $multiplyNode;
+	createNode "decomposeMatrix" -n $decomposeNode;
+	connectAttr -f ($axesD+".worldMatrix[0]") ($multiplyNode+".matrixIn[0]");
+	connectAttr -f ($axesP+".worldInverseMatrix[0]") ($multiplyNode+".matrixIn[1]");
+	connectAttr -f ($multiplyNode+".matrixSum") ($decomposeNode+".inputMatrix");
+	connectAttr -f ($decomposeNode+".outputRotate") ($output+".rotate");
+
+	//store node transforms in an array
+	float $transXVals[];
+	float $transYVals[];
+	float $transZVals[];
+	float $rotXVals[];
+	float $rotYVals[];
+	float $rotZVals[];
+
+
+	for ($i = $frame; $i < $lastframe+1; $i++)
+
+		{
+		$transXVals[$i] = `getAttr -t $i $decomposeNode.outputTranslateX`;
+		$transYVals[$i] = `getAttr -t $i $decomposeNode.outputTranslateY`;
+		$transZVals[$i] = `getAttr -t $i $decomposeNode.outputTranslateZ`;
+		$rotXVals[$i] = `getAttr -t $i $decomposeNode.outputRotateX`;
+		$rotYVals[$i] = `getAttr -t $i $decomposeNode.outputRotateY`;
+		$rotZVals[$i] = `getAttr -t $i $decomposeNode.outputRotateZ`;
+
+		int $PVis = `getAttr -time $i ( $axesP + ".visibility" )`;
+		if ( $PVis)
+  		{
+    		string $pparents[] = `listRelatives -parent $axesP`;
+    		if ( `size $pparents` > 0 )
+    		{
+     		 $PVis = $PVis && `getAttr -time $i ( $pparents[0] + ".visibility")`;
+    		}
+  		}
+
+		int $DVis = `getAttr -time $i ( $axesD + ".visibility" )`;
+		if ( $DVis)
+  		{
+    		string $dparents[] = `listRelatives -parent $axesD`;
+    		if ( `size $dparents` > 0 )
+    		{
+     		 $DVis = $DVis && `getAttr -time $i ( $dparents[0] + ".visibility")`;
+    		}
+  		}
+
+
+
+		if (($PVis == 1) && ($DVis== 1)) 
+			
+	{
+		//use the array to set keyframes on the holder locator
+		setKeyframe -t $i -at tx -ott "step" -v $transXVals[$i] $output;
+		setKeyframe -t $i -at ty -ott "step" -v $transYVals[$i] $output;
+		setKeyframe -t $i -at tz -ott "step" -v $transZVals[$i] $output;
+		setKeyframe -t $i -at rx -ott "step" -v $rotXVals[$i] $output;
+		setKeyframe -t $i -at ry -ott "step" -v $rotYVals[$i] $output;
+		setKeyframe -t $i -at rz -ott "step" -v $rotZVals[$i] $output;
+	}
+		}
+
+	//delete the utility nodes and select the holder locator
+	select $output;
+	delete $decomposeNode;
+	delete $multiplyNode;
+
+}

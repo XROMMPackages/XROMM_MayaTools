@@ -1,0 +1,25 @@
+global proc xcamFourPanels()
+{	
+	setNamedPanelLayout "Four View";
+
+	//reading from top left to bottom right
+	string $mpanels[];
+	$mpanels[0] = `getPanel -withLabel "Top View"`;
+	$mpanels[1] = `getPanel -withLabel "Persp View"`;
+	$mpanels[2] = `getPanel -withLabel "Front View"`;	
+	$mpanels[3] = `getPanel -withLabel "Side View"`;
+		
+	string $camShapes[] = `ls -type "camera"`;
+	string $cams[] = `listRelatives -p $camShapes`;
+	string $xcams[];
+	for ($cam in $cams) 
+	{if (`attributeExists "xcam" $cam`){$xcams[size($xcams)] = $cam;}}
+	
+	for ($i = 0;$i<size($xcams);$i++)
+		{modelPanel -edit -cam $xcams[$i]  $mpanels[$i];}
+	
+	for($mp in $mpanels)
+	{modelEditor -edit -grid false $mp;
+	 modelEditor -edit -da "smoothShaded" -displayTextures true $mp;
+	}
+}

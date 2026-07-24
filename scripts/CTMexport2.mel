@@ -1,0 +1,379 @@
+global proc CTMexport2()
+{
+	string $meshes[] = `getNonMarkerMeshList`; string $dummy[];
+	if(size($meshes)==0)
+		{$dummy=`polySphere -sx 3 -sy 3 -n "noMeshes" -r 0.3 `;
+		$meshes[0] = $dummy[0];}
+	
+	if (`window -exists CTMex2Window` == true) deleteUI CTMex2Window;  
+
+	int $height = 320; int $width = 215;
+
+	string $mainWindow = `window -title "CT Marker export2" -menuBar true 
+	-maximizeButton false -minimizeButton true -sizeable true 
+	-resizeToFitChildren false -closeCommand ("if(`objExists \"noMeshes\"`){delete \"noMeshes\";}") CTMex2Window`;
+		
+	columnLayout -co "left" 10 -rs 5 ctm2CL1;
+		text "Proposed Marker Correspondences";
+		intField -vis 0 -value (size($meshes)) numMeshesInt;
+		rowLayout -nc 2 -gsp 5 ctm2RL1;
+			button -l "Check All" -c ctm2ChkAllCmd ctm2ChkBtnl;
+			button -l "Uncheck All" -c ctm2UnChkAllCmd ctm2ChkBtn2;
+		setParent..;
+		scrollLayout -cr 1 sugParScrollLayout;
+		for ($i = 0; $i < (size($meshes)); $i++)
+		{
+			rowLayout -nc 2 ("ctm2RL"+$i);
+			checkBox -label ($meshes[($i)]) 
+			-cc ("meshCheckCmd(\"markerTSL"+$i+"\",\"meshCheck"+$i+"\")") ("meshCheck"+$i);
+			checkBox -label ("toggle Vis") 
+			-cc ("meshVisCmd(\""+$meshes[($i)]+"\",\"meshVisCheck"+$i+"\")") ("meshVisCheck"+$i);
+			if(`getAttr ($meshes[($i)]+".visibility")`){checkBox -e -v 1 ("meshVisCheck"+$i);}
+			setParent..;
+			textScrollList -allowMultiSelection 1 -nr 5
+			-ann "Double-click to rename"
+			-sc ("tslSelCmd(\"markerTSL"+$i+"\")") 
+			-dcc ("ctm2RenameLocCmd(\"markerTSL"+$i+"\")") 
+			-dkc ("ctm2DeleteNodeCmd")
+			-dragCallback ("ctm2Drag") 
+			-dropCallback ("ctm2Drop") ("markerTSL"+$i);
+		}
+		setParent..;
+		button -label "Parent markers to Objects" -w $width -command ctm2ParCmd ctm2ParBtn;
+		button -label "Batch rename selected" -w $width -command batchRenameSelected ctm2RenameBtn;
+		button -label "Export selected to .csv file" -w $width -command ctm2Exp ctm2ExpBtn;
+	setParent..;
+	showWindow $mainWindow;
+	window -e -width $width -height $height $mainWindow;
+	ctm2PopulateLists;
+	scriptJob -p $mainWindow -e "SelectionChanged" ctm2UpdateSel;	
+	scriptJob -p $mainWindow -e "NameChanged" ctm2PopulateLists;
+}
+global proc ctm2PopulateLists()
+{
+	string $meshes[] = `getNonMarkerMeshList`;
+	int $num = `intField -q -value numMeshesInt`;
+	if(size($meshes)!=$num)
+		{CTMexport2;}//restart
+	else
+	{
+		// get list of all locators
+		string $shapes[] = sort(`ls -et "locator"`);
+		string $cents[] = `listRelatives -parent $shapes`;
+		// get closest for each mesh
+		string $closest[];
+		// only build scrolls if we have objects
+		if(size($cents)>0)
+		{			
+			for ($c in $cents)
+				{$closest[size($closest)] = closestMeshToPoint($c, $meshes);}
+			
+			// update scrolls
+			for ($i = 0; $i < (size($meshes)); $i++)
+			{
+				textScrollList -e -ra ("markerTSL"+$i);
+				for ($j = 0; $j < size($closest);$j++)
+				{
+					if($closest[$j]==$meshes[$i])
+						{textScrollList -e -append $cents[$j]("markerTSL"+$i);}
+				}
+				// make it only one row if none are close
+				if(`textScrollList -q -ni ("markerTSL"+$i)`==0)
+					{textScrollList -e -nr 1 ("markerTSL"+$i);}
+			}
+		}
+	}
+	ctm2UpdateSel;
+}
+global proc ctm2UpdateSel()
+{
+	    // get what objects are selected
+	string $sel[] = `ls -sl`;
+	string $list[];
+	// lets go through all lists and see select
+	int $num = `intField -q -v numMeshesInt`;
+	for ($i = 0; $i < $num; $i++)
+	{	
+		string $allItems[] = `textScrollList -q -ai ("markerTSL"+$i)`;
+		// only if there are selected items
+		if (size($sel)>0)
+		{	
+			//only if the scroll has items
+			if (size($allItems)>0)
+			{
+				textScrollList -e -deselectAll ("markerTSL"+$i);
+				for ($s in $sel)
+				{
+					if (stringArrayContains($s, $allItems))
+						{textScrollList -e -si $s ("markerTSL"+$i);}
+				}
+				string $selitems[] = `textScrollList -q -si ("markerTSL"+$i)`;
+				//if all items are selected turn the checkbox on
+				if(size($selitems)==size($allItems))
+					{checkBox -e -v 1 ("meshCheck"+$i);}
+				else
+					{checkBox -e -v 0 ("meshCheck"+$i);}
+			}
+		}
+		else
+		{
+			textScrollList -e -deselectAll ("markerTSL"+$i);
+			checkBox -e -v 0 ("meshCheck"+$i);
+		}		
+	}
+}
+global proc ctm2ChkAllCmd()
+{
+	string $controls[] =`layout -q - ca sugParScrollLayout`;
+	int $num = (size($controls)/2);
+	for ($i=0;$i<$num;$i++)
+		{checkBox -e -v 1 ("meshCheck"+$i);
+		meshCheckCmd(("markerTSL"+$i),("meshCheck"+$i));}
+	
+}
+global proc ctm2UnChkAllCmd()
+{
+	string $controls[] =`layout -q - ca sugParScrollLayout`;
+	int $num = (size($controls)/2);
+	for ($i=0;$i<$num;$i++){checkBox -e -v 0 ("meshCheck"+$i);
+	meshCheckCmd(("markerTSL"+$i),("meshCheck"+$i));}
+}	
+global proc meshCheckCmd(string $markerTSL, string $meshCheck)
+{
+	string $all[] = `textScrollList -q -allItems $markerTSL`;
+	if(`checkBox -q -v $meshCheck`)
+		{for($a in $all){textScrollList -e -si $a $markerTSL;}
+		select -add $all;}
+	else
+	 	{textScrollList -e -da $markerTSL;
+	 	select -d $all;}
+	 setFocus $markerTSL;
+}
+global proc meshVisCmd(string $mesh, string $chk)
+{
+	if(`checkBox -q -v $chk`)
+		{setAttr ($mesh+".visibility") 1;}
+	else
+		{setAttr ($mesh+".visibility") 0;}
+}
+global proc tslSelCmd(string $markerTSL)
+{
+    // selects object(s) selected in the left list
+	string $name[] = `textScrollList -q -si $markerTSL`;
+	select -r $name;
+    //setFocus MayaWindow;	
+}
+global proc ctm2RenameLocCmd(string $listCtrl)
+{
+	// selected object in All Locators
+	string $curName[] = `textScrollList -q -si $listCtrl`;
+	
+	string $result = `promptDialog -title "Rename" -text $curName
+        -button "OK" -button "Cancel" -defaultButton "OK" -cancelButton "Cancel"
+        -dismissString "Cancel"`;
+        
+    if ($result == "OK")
+    {
+        // rename the locator
+        string $newName = `promptDialog -query -text`;
+        $newName = cleanStrForObjectName($newName);
+		string $actualNewname = `rename $curName[0] $newName`;
+                
+        // rename associated mesh -default suffix "vtxAvg" or "Mesh"
+        // previously renamed
+        if (`objExists ($curName[0]+"MrkrMesh")`)
+        	{rename ($curName[0]+"MrkrMesh") ($actualNewname+"MrkrMesh");}
+        // default naming
+		string $meshName = `substitute "vtxAvg" $curName[0] "MrkrMesh"`;
+		$meshName = `substitute "CoM" $meshName "MrkrMesh"`;
+		if (`objExists $meshName`)
+			{rename $meshName ($actualNewname+"MrkrMesh");}
+	}
+}
+global proc ctm2DeleteNodeCmd()
+{
+	// number of scroll lists
+	string $controls[] =`layout -q - ca sugParScrollLayout`;
+	int $num = (size($controls)/2);
+	string $names[];
+	for ($i=0; $i<$num; $i++)
+	{
+		$names = `textScrollList -q -si ("markerTSL"+$i)`;
+		for($n in $names)
+		{
+		if(!`referenceQuery -isNodeReferenced $n`)
+				{textScrollList -e -ri ($n) ("markerTSL"+$i);
+				delete $n;}
+			else
+				{print "Can't delete referenced node\n";}
+		}
+	}
+}	
+global proc string[] ctm2Drag(string $dragControl, int $x, int $y, int $mods)
+{
+    string $sel[] = `textScrollList -q -selectItem $dragControl`;
+    
+    // Pass a custom identifier as the first element in the array
+    string $payload[] ={"tslItemPayload"};
+    
+    // Append all selected items to the payload
+    for ($s in $sel) {$payload[size($payload)] = $s;}
+    
+    return $payload;
+}
+global proc ctm2Drop(string $dragControl, string $dropControl, string $msgs[],int $x, int $y, int $type)
+{
+    // Verify the payload originated from our specific drag procedure
+    if ($msgs[0] == "tslItemPayload") 
+    {
+		string $itemsToDrop[];			
+		// Extract the items from the payload (skipping the identifier)
+		for ($i = 1; $i < size($msgs); $i++) 
+			{$itemsToDrop[size($itemsToDrop)] = $msgs[$i];}
+		
+		// Add items to the destination textScrollList
+		for ($item in $itemsToDrop) 
+			{textScrollList -e -append $item $dropControl;}
+		
+		// Remove items from the source textScrollList
+		for ($item in $itemsToDrop) 
+			{textScrollList -e -removeItem $item $dragControl;}
+	}
+}
+global proc ctm2ParCmd()
+{
+	string $initiallySelected[] = `ls -sl`;
+	string $sel[]; string $mesh; string $grp;
+	select -cl;
+	int $num = `intField -q -v numMeshesInt`;
+	for ($i = 0; $i < $num; $i++)
+	{
+		$sel = `textScrollList -q -si ("markerTSL"+$i)`;
+		$mesh = `checkBox -q -l ("meshCheck"+$i)`;
+		$grp = `group -em -n ($mesh+"MarkerGrp")`;
+		parent $sel $grp;
+		parent $grp $mesh;
+	}
+	select $initiallySelected;
+}
+global proc ctm2Exp()
+{
+	//get folder name
+	string $pth[] = xrmFileDlg("Export Selected", 0, "CSV files (*.csv)",1,"MarkerCoordinates.csv");
+	if (size($pth)>0)
+	{
+		string $markers[]; string $curList[];
+		int $num = `intField -q -v numMeshesInt`;
+		for ($i = 0; $i < $num; $i++)
+		{
+			$curList = `textScrollList -q -si ("markerTSL"+$i)`;
+			$markers = stringArrayCatenate($markers,$curList);
+		}
+		
+		if (size($markers)>0)
+		{	
+			string $row[]; string $rowstr;
+			// print coordinates
+			$fileId = `fopen $pth[0] "w"`;
+				
+			// write headers
+			for ($j = 0; $j < (size($markers)); $j++)
+			{
+				$row[size($row)] = ($markers[$j] + "_tx");
+				$row[size($row)] = ($markers[$j] + "_ty");
+				$row[size($row)] = ($markers[$j] + "_tz");
+			}
+			$rowstr = stringArrayToString($row,",");
+			fprint $fileId $rowstr;
+			fprint $fileId "\n";
+			
+			// write xyz coordinates
+			for ($j = 0; $j < (size($markers)-1); $j++)
+			{
+				vector $xyz = `xform -q -ws -t ($markers[$j])`;
+				fprint $fileId (($xyz.x) + ",");
+				fprint $fileId (($xyz.y) + ",");
+				fprint $fileId (($xyz.z) + ",");
+			}
+		
+			vector $xyz = `xform -q -ws -t ($markers[$j])`;
+			fprint $fileId (($xyz.x) + ",");
+			fprint $fileId (($xyz.y) + ",");
+			fprint $fileId ($xyz.z);
+			
+			fclose $fileId;
+		}
+    }
+	else
+	{
+		print "Export cancelled";   
+	}
+}
+global proc ctm2ExpAlt()
+{
+	//get folder name
+	string $pth[] = xrmFileDlg("Export Selected", 2, "CSV files (*.csv)",1,"");
+	if (size($pth)>0)
+	{
+		string $markers[]; string $mesh; string $newfile;
+		// export file for each marker group
+		int $num = `intField -q -v numMeshesInt`;
+		string $pname = ($pth[0]+"/"); string $fname; string $outfile;
+		for ($i = 0; $i < $num; $i++)
+		{
+			$fname = `checkBox -q -l ("meshCheck"+$i)`;
+			$allMarkers = `textScrollList -q -ai ("markerTSL"+$i)`;
+			$markers = `textScrollList -q -si ("markerTSL"+$i)`;
+			if(size($allMarkers)==size($markers))
+				{$outfile = ($pname+$fname+"MarkerCentroids.csv");}
+			else
+				{$outfile = ($pname+$fname+"SubsetMarkerCentroids.csv");}
+			
+			if (size($markers)>0)
+			{	
+				string $row[]; string $rowstr;
+				// print coordinates
+				$fileId = `fopen $outfile "w"`;
+				fprint $fileId "";  
+				fclose $fileId;
+						   
+				//$markers = sort($markers);
+				$fileId = `fopen $outfile "a"`;
+				
+				// write headers
+				for ($j = 0; $j < (size($markers)); $j++)
+				{
+					$row[size($row)] = ($markers[$j] + "_tx");
+					$row[size($row)] = ($markers[$j] + "_ty");
+					$row[size($row)] = ($markers[$j] + "_tz");
+				}
+				$rowstr = stringArrayToString($row,",");
+				fprint $fileId $rowstr;
+				fprint $fileId "\n";
+				
+				// write xyz coordinates
+				for ($j = 0; $j < (size($markers)-1); $j++)
+				{
+					vector $xyz = `xform -q -ws -t ($markers[$j])`;
+					fprint $fileId (($xyz.x) + ",");
+					fprint $fileId (($xyz.y) + ",");
+					fprint $fileId (($xyz.z) + ",");
+				}
+			
+				vector $xyz = `xform -q -ws -t ($markers[$j])`;
+				fprint $fileId (($xyz.x) + ",");
+				fprint $fileId (($xyz.y) + ",");
+				fprint $fileId ($xyz.z);
+				
+				fclose $fileId;
+			}
+        }
+    }
+	else
+	{
+		print "Export cancelled";   
+	}
+}
+	
+
+

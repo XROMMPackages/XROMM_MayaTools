@@ -1,0 +1,13 @@
+global proc string newObjShader(string $objs[])
+{
+	string $objshader = `shadingNode -asShader "lambert" -n "impObjsLambert"`;
+	sets -renderable true -noSurfaceShader true -empty -name ($objshader+"SG");
+	connectAttr -f ($objshader+".outColor") ($objshader+"SG.surfaceShader");
+	setAttr ($objshader+".color") -type double3 0.584 0.544 0.396;
+	select $objs;
+	sets -e -forceElement ($objshader+"SG");
+	setAttr ($objshader+".transparencyR") 0.8;
+	setAttr ($objshader+".transparencyG") 0.8;
+	setAttr ($objshader+".transparencyB") 0.8;
+	return $objshader;
+}

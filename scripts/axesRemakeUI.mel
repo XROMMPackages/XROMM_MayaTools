@@ -1,0 +1,73 @@
+/*global proc axesCreateUI()
+    GUI for input of variables to send to axesCreate.
+    stores and remembers the users last input except for name
+    Written by David Baier 7/26/2016
+*/
+global proc axesRemakeUI()
+{  
+    if (`window -exists createCoordWindow` == true){deleteUI createCoordWindow;} 
+    
+    string $window = `window -title "Remake selected axes" -maximizeButton false
+		-minimizeButton true -sizeable true -resizeToFitChildren false createCoordWindow`;
+	int $height = 100; int $width = 300;
+		
+	columnLayout;     
+        floatFieldGrp -nf 1 -label "Size" -extraLabel "cm" -cw 1 40 
+            -cl3 "left" "left" "left" -value1 5.0 coordScaleUIRemake;
+        radioButtonGrp -nrb 2 -label "Style" -labelArray2 "Hemi" "Full" 
+            -cw 1 40 -cl3 "left" "left" "left" styleUIRemake;
+        radioButtonGrp -e -sl 1 styleUIRemake;
+        radioButtonGrp -nrb 2 -label "Output" -labelArray2 "Single Object" "Separate axes" 
+            -cw 1 40 -cl3 "left" "left" "left" singleObjectUIRemake;
+        radioButtonGrp -e -sl 1 singleObjectUIRemake; 
+        text " ";
+			rowColumnLayout -numberOfColumns 3 -cw 1 ($width*0.25) -cw 2 ($width*0.5) -cw 3 ($width*0.25) -cw 4 ($width*0.2) coordRCRemake;
+				frameLayout  -borderVisible 0 -lv 0;
+			setParent..;
+			frameLayout  -borderVisible 0 -lv 0;
+				button -l "Remake Axes"  -w ($width*0.5) -en 1 -c "remakeAxesCmd" remakeAxesButton;	         
+			setParent..;
+	    frameLayout  -borderVisible 0 -lv 0;
+	    setParent..;
+	    text " ";
+	showWindow $window;
+	window -e -width $width -height $height $window;
+	if (`optionVar -ex "xrommAxesCreateLastUsedInputs"`)
+	{
+		string $prevInputs[] = stringToStringArray(`optionVar -q "xrommAxesCreateLastUsedInputs"`,",");
+		//textFieldGrp -e -text $prevInputs[0] coordNameUI;
+		floatFieldGrp -e -value1 (float($prevInputs[1])) coordScaleUIRemake;
+		if($prevInputs[2]=="full"){radioButtonGrp -e -sl 2 styleUIRemake;}
+		if($prevInputs[3]=="0"){radioButtonGrp -e -sl 2 singleObjectUIRemake;}
+	}
+	
+}
+
+global proc remakeAxesCmd()
+{
+    //  get the user inputs
+    string $axes[]= `ls -sl`;
+    for ($ax in $axes)
+    {
+    	string $axnew = $ax;
+		float $tfm[] = `xform -q -ws -m $ax`;
+		delete $ax;
+		
+		float $scale = `floatFieldGrp -q -value1 coordScaleUIRemake`;
+		string $style = "hemi";
+		int $singleObject = 1;
+		if (`radioButtonGrp -q -sl styleUIRemake`==2){$style = "full";}
+		if (`radioButtonGrp -q -sl singleObjectUIRemake`==2){$singleObject = 0;}
+		
+		$axnew = axesCreate($axnew,$scale,$style,$singleObject);
+		xform -ws -m ($tfm[0]) ($tfm[1]) ($tfm[2]) ($tfm[3]) 
+		($tfm[4]) ($tfm[5]) ($tfm[6]) ($tfm[7]) 
+		($tfm[8]) ($tfm[9]) ($tfm[10]) ($tfm[11]) 
+		($tfm[12]) ($tfm[13]) ($tfm[14]) ($tfm[15]) $axnew;
+	}
+    
+    // lets create an option variable to store the users last used settings
+    //optionVar -sv "xrommAxesCreateLastUsedInputs" ($axnew+","+$scale+","+$style+","+$singleObject);
+}
+    
+	

@@ -1,0 +1,56 @@
+global proc impObjsUI()
+{
+	if (`window -exists impObjsUIWindow` == true) deleteUI impObjsUIWindow;
+	
+	int $width = 265;
+	int $height = 80;
+	
+	window -title "Import Objs/inertias" -maximizeButton false 
+	-minimizeButton true -sizeable false -bgc 0.8 0.8 0.8 
+	-resizeToFitChildren false impObjsUIWindow;
+		
+	
+	frameLayout -label "Import Options" -gsp 5 -w ($width-2) -bv 1 -lv 1 
+	-bgc 0.7 0.7 0.7 iou2FL1;
+		columnLayout -co "left" 5 iou2CL1;
+			separator -h 5;
+			rowLayout -nc 2 -gsp 5 iouRCL1;
+				button -l "Import .objs" -w 121 -bgc 0.9 0.9 0.9 
+				-c iouImpObjsCmd iouObjButton0;
+				button -l "Import inertial axes" -w 121 -bgc 0.9 0.9 0.9 
+				-c "impInertias({},10,\"full\",1,\"\")" iouInertiasButton;
+			setParent..;
+			checkBox -label "Apply new shader to imported Objs" -v 1 iouShdrChk;
+			separator -h 5;		
+		setParent..;
+	setParent..;
+	showWindow impObjsUIWindow;
+	window -e -width $width -height $height impObjsUIWindow;
+	iouLoadPrefs;
+}
+global proc iouSavePrefs()
+{
+	int $iouShdrChk = `checkBox -q -v iouShdrChk`;
+	optionVar -cat "impObjsUIPrefs" -iv "iouShdrChk" $iouShdrChk;
+}
+global proc iouLoadPrefs()
+{
+	int $int;
+	if (`optionVar -ex "iouShdrChk" `){$int = `optionVar -q "iouShdrChk"`;}
+	else{$int = 1;}                 
+	checkBox -e -v $int iouShdrChk;
+}
+global proc iouImpObjsCmd()
+{
+	string $createdObjs[]=impObjs({},"");
+	if(size($createdObjs)>0)
+	{
+		if (`checkBox -q -v iouShdrChk`)
+		{
+			string $createdShader = `newObjShader($createdObjs)`;
+			objShaderOptions;
+		}
+	}
+	if (`window -exists impObjsUIWindow` == true) deleteUI impObjsUIWindow;
+}
+		

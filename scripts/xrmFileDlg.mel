@@ -1,0 +1,55 @@
+global proc string[] xrmFileDlg(string $caption, int $filemode, string $filt, int $style, string $defaultFileName)
+/* global proc string[] xrmFileDlg(string $caption, int $filemode, string $filt, int $style)
+
+   Inputs:  $caption = caption for the browser.
+            $filemode =  type of return   
+                0 Any file, whether it exists or not.
+                1 A single existing file.
+                2 The name of a directory. Both directories and files are displayed in the dialog.
+                3 The name of a directory. Only directories are displayed in the dialog.
+                4 The names of one or more existing files.
+            $filt = filter for file types (e.g. "OBJ files (*.obj)").
+            $style = maya browser (0) or system default (1)
+            $defaultFileName = a filename to put in the filename window - only works in mode 0 or 1
+            
+     Examples:
+     	//example1
+     	string $caption = "Select directory";
+		int $filemode = 2;
+		string $filt = "CSV files (*.csv)";
+		int $style = 1;
+		string $pths[] = `fileDialog2 -cap $caption -dir $startPath 
+ 	                      -fm $filemode -ff $filt -ds $style`;
+ 	    //example2                  
+        string $dir[] = xrmFileDlg("get directory", 3, "", 1);
+	
+	 Returns an array of path names from fileDialog2 and stores the most recently chosen path 
+	 as the default for the next time this script is called. (optionVar "xrommWorkingDirectory")
+*/
+{
+	// get the starting directory
+	string $startPath;
+	// if this script was used before, the last path used was stored
+	if (`optionVar -ex "xrommWorkingDirectory"`)
+		{$startPath = `optionVar -q "xrommWorkingDirectory"`;}
+	else
+		{$startPath = `workspace -q -o`;}
+	
+ 	if((size($defaultFileName)>0)&&($filemode<2))
+ 		{$startPath = ($startPath+"/"+$defaultFileName);}
+ 		
+	// get the file(s) or folder
+	string $pths[] = `fileDialog2 -cap $caption -dir $startPath 
+ 	                      -fm $filemode -ff $filt -ds $style`;
+ 	// adjust path slashes
+ 	for ($i = 0; $i < size($pths); $i++)
+ 	     {$pths[$i] =  fromNativePath($pths[$i]);}
+	
+ 	string $newStartDir = fromNativePath(`dirname $pths[0]`);
+ 	
+ 	// set the new working directory
+ 	if (`filetest -e $newStartDir`)
+ 		{optionVar -sv "xrommWorkingDirectory" $newStartDir;}
+
+ 	return $pths;
+}

@@ -1,0 +1,41 @@
+global proc string[] filereadSample(string $pth, int $numRows)
+/*	global proc string[] filereadSample(string $pth, int $numRows)
+
+    Input: $pth = path and file name to read	
+	Read a subset of rows. Faster for checking number of columns
+	David Baier	8/15/2025
+*/
+{
+    // if pth is not a proper filename get file name
+    if (!`filetest -f $pth`)
+        {string $pths[] = xrmFileDlg("fileread", 1, "CSV files (*.csv)" , 1,"");
+        $pth = $pths[0];}
+
+    string $datalines[];
+    
+    // make sure the file exists
+	if (`filetest -e $pth`)
+	{
+	    $fileId = fopen($pth, "r");
+	    string $line;
+	    for ($i = 0; $i < $numRows; $i++)
+            {
+            	$line = `fgetline $fileId`;
+            	$datalines[size($datalines)] = strip($line);
+            	if (`feof $fileId`){break;}
+            }
+        fclose($fileId);
+    }
+    else
+        {print "invalid file/path";}
+    
+    return $datalines;
+}
+
+
+
+            
+
+
+
+	    

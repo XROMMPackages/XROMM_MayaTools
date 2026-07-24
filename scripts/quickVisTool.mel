@@ -1,0 +1,263 @@
+global proc quickVisTool()
+{
+	if (`window -exists quickVisWindow` == true){deleteUI quickVisWindow;} 
+    
+    window -title "Quick Visibility Toggle" -maximizeButton false
+	-minimizeButton true -sizeable true -resizeToFitChildren true quickVisWindow;
+		
+	int $height = 300; int $width = 270;
+	string $categories[] = {"NonMarker Meshes","Marker Locators","Marker Meshes","Axes","Xcams"};
+	columnLayout -co "left" 5 -rs 10 qvCL0;
+	//namespacefilter
+	optionMenu -label "NameSpace filter" -cc qvIntitializeLists qvNamesaceOM;
+		menuItem -l "" -p qvNamesaceOM;
+		string $defaultns[] = {"UI", "shared"};
+		string $namespaces[] = `namespaceInfo -listOnlyNamespaces ":"`;
+		$namespaces =stringArrayRemove($defaultns, $namespaces);
+		for($n in $namespaces){menuItem -l $n -p qvNamesaceOM;}
+	for($i = 0;$i<(size($categories));$i++)
+	{
+	columnLayout ("qvCL"+$i);
+		frameLayout -l $categories[$i] -cll 1 -cl 1 -bv 1 -lv 1 -w $width ("qvFL"+$i);
+			rowLayout -nc 3 ("qvRL"+$i);
+			checkBox -label "select all" -cc ("qvCheckCmd("+$i+")") ("qvChk"+$i);
+			checkBox -label "visibility" -cc ("qvVisChkCmd("+$i+")") ("qvVisChk"+$i);
+			checkBox -label "displayHandle" -cc ("qvDispHChkCmd("+$i+")") ("qvDispHChk"+$i);;
+			setParent..;
+			textScrollList -ams 1 -nr 3 -w ($width-25)
+			-ann "Double-click to rename" -dkc qvDeleteNodeCmd
+			-dcc ("qvRenameCmd("+$i+")") -sc ("qvSelCmd("+$i+")") ("qvTSL"+$i);
+		setParent..;
+	setParent..;
+	}
+	frameLayout -e -cl 0 qvFL0;
+	setParent..;
+	showWindow quickVisWindow;
+	window -e -width $width -height $height quickVisWindow;
+	scriptJob -p quickVisWindow -e "SelectionChanged" qvUpdateSel;	
+	scriptJob -p quickVisWindow -e "NameChanged" qvIntitializeLists;
+	qvIntitializeLists;
+}
+global proc qvSavePrefs()
+{
+	string $categories[] = {"NonMarker Meshes","Marker Locators","Marker Meshes","Axes","Xcams"};
+
+	string $frlayout; int $cl;
+	for ($i = 0; $i<size($categories); $i++)
+	{
+		$frlayout = ("qvFL"+$i);
+		$cl = `frameLayout -q -cl $frlayout`;
+		optionVar -cat "quickVisPrefs" -iv $frlayout $cl;
+	}	
+}
+global proc qvRestorePrefs()
+{
+	string $categories[] = {"NonMarker Meshes","Marker Locators","Marker Meshes","Axes","Xcams"};
+	string $frl; int $int;
+	for ($i = 0; $i < size($categories); $i++)
+	{
+		$frlayout = ("qvFL"+$i);
+		if (`optionVar -ex $frlayout`)
+			{$int = `optionVar -q $frlayout`;}
+		else{$int = 1;}                 
+		frameLayout -e -cl $int $frlayout;
+	}
+}
+proc string[] qvGetTformTypes(string $et[],string $namespace)
+{
+	//get namespace filter
+	string $allShapes[];string $curShapes[];
+	for($e in $et)
+	// loop through all types (ls takes multiple exactType flags)
+	{$curShapes = `ls -et $e`;
+	$allShapes = stringArrayCatenate($allShapes,$curShapes);}
+	string $alltforms[] = `listRelatives -p $allShapes`;
+	string $tforms[];
+	if (size($namespace)>0)
+	{
+	for($at in $alltforms)
+		{if(`gmatch $at ($namespace+":*")`){$tforms[size($tforms)]=$at;}}
+	}
+	else
+		{$tforms = $alltforms;}
+	
+	return $tforms;
+}
+proc qvPopulateScroll(string $nodes[], string $tsl)
+{
+	textScrollList -e -ra $tsl; string $lf; int $idx;
+	for($n in $nodes)
+	{
+		if(`getAttr ($n+".visibility")`)
+			{$lf = "plainLabelFont";}
+		else
+			{$lf = "obliqueLabelFont";}
+		textScrollList -e -append $n $tsl;
+		$idx = `textScrollList -q -ni $tsl`;
+		textScrollList -e -lf $idx $lf $tsl;
+	}
+}
+global proc qvIntitializeLists()
+{
+	string $categories[] = {"NonMarker Meshes","Marker Locators","Marker Meshes","Axes","Xcams"};
+	for($i=0;$i<size($categories);$i++)
+	{
+		string $namespace = `optionMenu -q -v qvNamesaceOM`;
+		string $meshes[] = qvGetTformTypes({"mesh"},$namespace);
+		string $list[];
+		
+		if($categories[$i] == "NonMarker Meshes")
+		{					
+			$list = filterListByAttr($meshes,"mrkrMesh",0);
+			$list = filterListByAttr($list,"unitLenCM",0);
+		}
+		else if($categories[$i] == "Marker Locators")
+		{
+			string $locs[] = qvGetTformTypes({"locator"},$namespace);
+			string $comlocs[] = filterListByAttr($locs,"CoM",1);
+			string $vtxlocs[] = filterListByAttr($locs,"vtxAvg",1);
+			$list = stringArrayCatenate($comlocs,$vtxlocs);
+		}
+		else if($categories[$i] == "Marker Meshes")
+		{
+			$list = filterListByAttr($meshes,"mrkrMesh",1);
+		}
+		else if($categories[$i] == "Axes")
+		{
+			$list = filterListByAttr($meshes,"unitLenCM",1);
+		}
+		else if($categories[$i] == "Xcams")
+		{
+			string $shapes[] = `ls -type "nurbsSurface"`;
+			string $nurbs[] = `listRelatives -p $shapes`;
+			$list = filterListByAttr($nurbs,"flx",1);
+		}
+			
+		if (size($list)>0)
+		{
+		if(`getAttr ($list[0]+".visibility")`)
+			{checkBox -e -v 1 ("qvVisChk"+$i);}
+		if(`getAttr ($list[0]+".displayHandle")`)
+			{checkBox -e -v 1 ("qvDispHChk"+$i);}
+		}
+		qvPopulateScroll($list,("qvTSL"+$i));	
+	}
+	qvUpdateSel;
+}
+global proc qvUpdateSel()
+{
+	string $sel[] = `ls -sl`; string $list[];string $selList[];
+	for ($i = 0; $i < 4; $i++)
+	{
+		$list = `textScrollList -q -ai ("qvTSL"+$i)`;
+		textScrollList -e -da ("qvTSL"+$i);
+		for ($s in $sel)
+		{
+			if(stringArrayContains($s,$list))
+			{
+				textScrollList -e -si $s ("qvTSL"+$i);
+			}
+		}
+		$selList = `textScrollList -q -si ("qvTSL"+$i)`;
+		if((size($list)==size($selList))&&(size($list)>0))
+			{checkBox -e -v 1 ("qvChk"+$i);}
+		else
+			{checkBox -e -v 0 ("qvChk"+$i);}
+	}	
+}
+global proc qvSelCmd(int $int)
+{
+	string $tsl = ("qvTSL"+$int);string $chk = ("qvChk"+$int);
+	string $name[] = `textScrollList -q -si $tsl`;
+	select -r $name;
+	if(`getAttr ($name[0]+".visibility")`){checkBox -e -v 1 ("qvVisChk"+$int);}
+	else{checkBox -e -v 0 ("qvVisChk"+$int);}
+	//setFocus MayaWindow;
+}
+global proc qvRenameCmd(int $int)
+{
+	string $tsl = ("qvTSL"+$int);
+	// selected object in All Locators
+	string $curName[] = `textScrollList -q -si $tsl`;
+	
+	string $result = `promptDialog -title "Rename" -text $curName[0]
+        -button "OK" -button "Cancel" -defaultButton "OK" -cancelButton "Cancel"
+        -dismissString "Cancel"`;
+        
+    if ($result == "OK")
+    {
+        // rename
+        string $newName = `promptDialog -query -text`;
+        $newName = cleanStrForObjectName($newName);
+		string $actualNewname = `rename $curName[0] $newName`;
+	
+		// update the list
+        int $idx[] = `textScrollList -q -sii $tsl`;
+        textScrollList -e -rii $idx[0] $tsl;
+        textScrollList -e -ap $idx[0] $actualNewname $tsl;
+	}
+}
+global proc qvCheckCmd(int $int)
+{
+	string $tsl = ("qvTSL"+$int); string $chk = ("qvChk"+$int);
+	string $all[] = `textScrollList -q -allItems $tsl`;
+	if(`checkBox -q -v $chk`)
+		{for($a in $all){textScrollList -e -si $a $tsl;}
+		select -add $all;}
+	 else
+	 	{textScrollList -e -da $tsl;
+	 	select -d $all;}
+	setFocus $tsl;
+	qvUpdateSel;
+}
+global proc qvVisChkCmd(int $int)
+{
+	string $sel[]=`textScrollList -q -si ("qvTSL"+$int)`;
+	int $selidx[]=`textScrollList -q -sii ("qvTSL"+$int)`;
+	if(`checkBox -q -v ("qvVisChk"+$int)`)
+	{
+		for ($s in $sel)
+		{setAttr ($s+".visibility") 1;}
+		for($i in $selidx)
+		{textScrollList -e -lineFont $i "plainLabelFont" ("qvTSL"+$int);}
+	}
+	else
+	{
+		for ($s in $sel)
+		{setAttr ($s+".visibility") 0;}
+		for($i in $selidx)
+		{textScrollList -e -lineFont $i "obliqueLabelFont" ("qvTSL"+$int);}
+	}	
+}
+global proc qvDispHChkCmd(int $int)
+{
+	string $sel[]=`textScrollList -q -si ("qvTSL"+$int)`;
+	if(`checkBox -q -v ("qvDispHChk"+$int)`)
+	{
+		for ($s in $sel)
+		{setAttr ($s+".displayHandle") 1;}
+	}
+	else
+	{
+		for ($s in $sel)
+		{setAttr ($s+".displayHandle") 0;}
+	}		
+}
+global proc qvDeleteNodeCmd()
+{
+	// number of scroll lists
+	int $num = 5;
+	string $names[];
+	for ($i=0; $i<$num; $i++)
+	{
+		$names = `textScrollList -q -si ("qvTSL"+$i)`;
+		for($n in $names)
+		{
+			if(!`referenceQuery -isNodeReferenced $n`)
+				{textScrollList -e -ri ($n) ("qvTSL"+$i);
+				delete $n;}
+			else
+				{print "Can't delete referenced node\n";}
+		}
+	}
+}

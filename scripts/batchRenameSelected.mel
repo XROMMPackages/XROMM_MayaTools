@@ -1,0 +1,76 @@
+global proc batchRenameSelected()
+{
+	// get variables
+	string $sel[] = `ls -sl`;
+
+	if (`window -exists batchRenameSelWindow` == true) deleteUI batchRenameSelWindow;  
+	string $mainWindow = `window -title "Batch Rename" -menuBar true -maximizeButton false -minimizeButton true
+		-sizeable false -resizeToFitChildren true batchRenameSelWindow`;		
+	columnLayout -co "left" 10 -rs 5 spCL1;
+		textScrollList -allowMultiSelection 1 -w 250 -nr 5 -sc seedReplaceCmd brsTSL1;
+		for ($s in $sel){textScrollList -e -append $s brsTSL1;}
+		radioButtonGrp -nrb 3 -enable 1 -cw3 80 80 80 -co3 0 20 20 -cc brsTypeCmd 
+			-sl 1 -labelArray3 "add prefix" "add suffix" "replace string" brsRBG1;
+		textFieldGrp -label "Replace:" -cw2 55 195 -text $sel[0] brsTFG1;
+		textFieldGrp -l "New string:" -cw2 55 195 -text "newString" brsTFG2;
+		button -l "Apply" -w 240 -c brsRenameCmd brsRenameTFBGrp1;	
+	setParent..;
+	showWindow $mainWindow;
+	//window -e -width $width -height $height $mainWindow;
+	brsUpdateOnSelCmd;
+	brsTypeCmd;
+	scriptJob -p $mainWindow -e "SelectionChanged" brsUpdateOnSelCmd;	
+	//scriptJob -p $mainWindow -e "NameChanged" SP_updateOnRenameCmd;
+}
+global proc brsUpdateOnSelCmd()
+{
+	textScrollList -e -ra brsTSL1;
+	string $sel[] = `ls -sl`;
+	for ($s in $sel){textScrollList -e -append $s brsTSL1;}
+}
+global proc seedReplaceCmd()
+{
+	string $selnames[] = `textScrollList -q -si brsTSL1`;
+	textFieldGrp -e -text $selnames[0] brsTFG1;
+}
+global proc brsTypeCmd()
+{
+	int $rbtn = `radioButtonGrp -q -sl brsRBG1`;
+	if ($rbtn ==3){textFieldGrp -e -enable 1 brsTFG1;}
+	else{textFieldGrp -e -enable 0 brsTFG1;}
+}
+global proc brsRenameCmd()
+{
+	string $finalstr; string $renamed[];
+	string $sels[] = `ls -sl`;
+	string $newtext = `textFieldGrp -q -text brsTFG2`;
+	int $rbtn = `radioButtonGrp -q -sl brsRBG1`;
+	for ($s in $sels)
+	{
+		if ($rbtn == 1)
+			{$finalstr = ($newtext+$s);}
+		else if ($rbtn == 2)
+			{$finalstr = ($s+$newtext);}
+		else if ($rbtn == 3)
+		{
+			string $toBeSubbed = `textFieldGrp -q -text brsTFG1`;
+			$finalstr = substituteAllString($s,$toBeSubbed,$newtext);
+		}
+		$finalstr = cleanStrForObjectName($finalstr);
+		if(!`objExists $finalstr`)
+		{
+			string $actualNewname = `rename $s $finalstr`;
+			
+			// if renaming markers
+			string $meshName = `substitute "vtxAvg" $s "MrkrMesh"`;
+			$meshName = `substitute "CoM" $meshName "MrkrMesh"`;
+			if (`objExists $meshName`){rename $meshName ($actualNewname+"MrkrMesh");}
+		}
+		else
+			{print ("skipping "+$s+": Object with that name already exists\n");}
+	}
+	brsUpdateOnSelCmd;
+	//force update if marker export window is open
+	if(`window -exists CTMex2Window`){CTMexport2;}
+	if(`window -exists CTMexportWindow`){CTMexport;}
+}

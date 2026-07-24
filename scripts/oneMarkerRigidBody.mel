@@ -1,0 +1,67 @@
+global proc oneMarkerRigidBody()
+{
+	if (`window -exists mrb1Window` == true){deleteUI mrb1Window;}  
+
+	string $mainWindow = `window -title "Create One Marker Rigid Body Control(OMC)"
+		-menuBar true -maximizeButton false -minimizeButton true -sizeable true 
+		-resizeToFitChildren true mrb1Window`;
+	int $w = 310; int $h = 180;	
+	frameLayout -label "One marker control";
+	    columnLayout -co "left" 10 -gsp 5; 
+	    	separator -h 5;
+	        textFieldButtonGrp -label "Rigid Body: " -cat 1 "left" 0
+	        	-cw3 60 210 40 -buttonLabel "Insert Selection" 
+	        	-buttonCommand ("mrb1Sel(\"mrb1TFBG1\")")
+	        	-text "Select rigid body and click Insert Selection" mrb1TFBG1;
+	        textFieldButtonGrp -label "Pin Marker: " -cat 1 "left" 0
+	        	-cw3 60 210 40
+	        	-text "Select rigid body and click Insert Selection" 
+	            -buttonLabel "Insert Selection" 
+	            -buttonCommand ("mrb1Sel(\"mrb1TFBG2\")") mrb1TFBG2;
+				separator -h 5;
+	        textFieldGrp -l "Control Name" -text "myOMC" -cat 1 "left" 0 -cw2 70 150  mrb1CtrlNameTF;
+	        setParent..;
+	    button	-label "Create control" -enable 1 -command mrb1CreateCtrl;
+	showWindow $mainWindow;
+	window -e -w $w -h $h $mainWindow;
+}
+global proc mrb1Sel(string $ctrl)
+{
+	string $sel[] = `ls -sl`;
+	textFieldButtonGrp -e -text $sel[0] $ctrl;
+}
+global proc mrb1CreateCtrl()
+{
+	// get user input
+	string $ctrlname = `textFieldGrp -q -text mrb1CtrlNameTF`;	
+	string $bone = `textFieldButtonGrp -q -text mrb1TFBG1`;
+	string $pin = `textFieldButtonGrp -q -text mrb1TFBG2`;
+	
+	// move to worldspace
+	parent -w $bone $pin;
+	
+	// create ctrl nodes
+	string $ctrl = `group -em -n ($ctrlname)`;
+	string $ctrlgrp = `group -em -n ($ctrlname+"Grp")`;
+	
+	// constrain controls
+	string $ptc[] = `pointConstraint $pin $ctrl`;
+	
+	// arrange grouping
+	parent $ctrl $pin;
+	xform -os -t 0 0 0 -ro 0 0 0 $ctrl;
+	parent -w $ctrl;
+	parent $bone $ctrl;
+	parent $pin $ctrlgrp;
+	parent $ctrl $ctrlgrp;
+		
+	//lock bone
+	string $lockAtts[] = {".tx",".ty",".tz",".rx",".ry",".rz"};
+	for ($att in $lockAtts)
+		{setAttr -lock true ($bone + $att);}
+	setAttr ($ctrl+".displayHandle") true;
+	select -r $ctrl;
+}
+	
+	
+	

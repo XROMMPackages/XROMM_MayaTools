@@ -1,0 +1,22 @@
+global proc int nodeHasTformKeys(string$obj)
+{
+	int $hasKeys =0;
+	if(size($obj)==0){string $objs[] = `ls -sl -tr`;$obj = $objs[0];}
+	
+	if (size($obj)>0)
+	{
+		string $attrs[] = {"tx", "ty", "tz", "rx", "ry", "rz"};
+		
+		for ($attr in $attrs) 
+		{
+			int $keys = `keyframe -q -kc ($obj + "." + $attr)`;
+			if ($keys > 0) {$hasKeys=1;}
+		}
+	}
+	else
+	{
+		print "No input provided";
+		$hasKeys = -1;
+	}
+	return $hasKeys;
+}

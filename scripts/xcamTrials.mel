@@ -1,0 +1,332 @@
+global proc xcamTrials()
+{
+// UI for changing the image sequence associated with shaders in a maya scene   
+    // get the xcam list
+	string $fileNodes[] = `ls -type "file"`;
+	
+    int $height = (111*size($fileNodes)+111);
+    if ($height > 600){$height = 600;} 	int $width = 600;
+  
+	if (`window -exists xcamTrialsWindow` == true) {deleteUI xcamTrialsWindow;}
+	string $mainWindow = `window -title "Create/Manage Trials" 
+	-maximizeButton false -minimizeButton true -sizeable false 
+	-resizeToFitChildren true -closeCommand xctSavePrefs xcamTrialsWindow`;
+		
+	columnLayout -co "left" 10 -gsp 5 xctCL1;
+		text -l "" -h 10;
+		rowLayout -nc 4 -gsp 5 xctRL1;
+			textFieldButtonGrp -adj 2 -cat 1 "left" 0 -label "Trial Name:"
+			-buttonLabel "\\/" -cw3 60 100 40 -cc xctChangeTrialName 
+			-buttonCommand xctTrialBtnCmd xctTrialTFBG;			
+			string $pop = `popupMenu -parent ("xctTrialTFBG|button") -button 1 xctPM`;
+			button -l "Add Trial" -c xctAddTrCmd xctAddTrBtn;
+			button -l "Delete Trial" -c xctDelTrCmd xctDelTrBtn;
+			checkBox -l "Show All Trials" -v 0 -cc xctShowAllCmd xctShowAllChk;
+		setParent..;
+		// allow "previous name" storage if user renames trial
+		textField -vis 0 xctstoreTnameTF;
+		textFieldButtonGrp -adj 2 -cat 1 "left" 0 -label "Individual:"
+				-w ($width-30) -buttonLabel "  . . .  " -columnWidth3 60 450 40
+				-buttonCommand xctIndivTFBGcmd -cc xctUpdateTrial xctIndivTFBG;
+		textFieldGrp -l "namespace" -cl2 "left" "left" -cw2 60 100 -cc xctNSChangeCmd xctNameSpaceTFG;
+		scrollLayout -w ($width-20) -cr 1;	
+		for ($i = 1; $i < (size($fileNodes)+1); $i++)
+		{
+			frameLayout -label ($fileNodes[$i-1]) -bv 1 -w ($width-30) ("xctXimageFL"+$i);			
+				textFieldButtonGrp -adj 2 -cat 1 "left" 0 -label "Image path:" 
+					-w ($width-30) -buttonLabel " . . . " -columnWidth3 60 440 50
+					-buttonCommand ("chngXimageCmd("+$i+",\""+$fileNodes[$i-1]+"\")")
+					-cc ("manChngXimageCmd("+$i+",\""+$fileNodes[$i-1]+"\")")("xctTFBG"+$i);				
+				checkBox -label "image sequence" -value 1 -enable 1 ("xctImSeqChk"+($i));
+				text " ";
+			setParent..;
+		}
+		setParent..;
+		button -l "Import XMA data" -w ($width-10) -c impdata2 xctImpDataBtn;
+	setParent..;
+	showWindow $mainWindow;
+	window -e -width $width -height $height xcamTrialsWindow;	
+	xctInitialize;
+	xctPopUpdate;
+}
+proc string[] xctGetTrialList()
+{
+	string $ntwrks[] = `ls -type "network"`; 
+	string $trials[];
+	for ($n in $ntwrks){if(attributeExists("individual",$n)){$trials[size($trials)]=$n;}}
+	return $trials;
+}
+proc xctUpdateRefUnloading(string $tnode)
+{
+	string $trials[] = `xctGetTrialList`; int $isLoaded;
+	for ($t in $trials)
+	{
+		if($t != $tnode)
+		{
+			$refNode = `getAttr ($t+".refNode")`;
+			int $isLoaded = `referenceQuery -isLoaded $refNode`;
+			if($isLoaded){file -unloadReference $refNode;}
+		}
+	}
+}
+proc xctLoadAllRefs()
+{
+	string $trials[] = `xctGetTrialList`; int $isLoaded;
+	for ($t in $trials)
+	{
+		$refNode = `getAttr ($t+".refNode")`;
+		int $isLoaded = `referenceQuery -isLoaded $refNode`;
+		if(!$isLoaded){file -loadReference $refNode;}
+	}
+}
+global proc xctInitialize()
+{
+	// populate the Trials field
+	string $trials[] = `xctGetTrialList`;
+	// create new trial name if none exist
+	if (size($trials)==0){$trials[0] = "Trial01";}
+	// if previously closed the last selected trial will load
+	if (`optionVar -ex "lasttrial"`)
+	{
+		string $str = `optionVar -q "lasttrial"`;
+		if(`objExists $str`)
+			{$trials[0]= `optionVar -q "lasttrial"`;}
+	}
+	textFieldButtonGrp -e -text $trials[0] xctTrialTFBG;
+	// store as previous trial for last trial following selection of another trial
+	textField -e -text $trials[0] xctstoreTnameTF;
+	// if the trial exists, load it, otherwise create new
+	if(`objExists $trials[0]`){xctLoadTrial($trials[0]);}
+	else{xctAddTrCmd;}	
+}
+global proc xctPopSel(string $trial)
+{
+	textFieldButtonGrp -e -text $trial xctTrialTFBG;
+	textField -e -text $trial xctstoreTnameTF;
+	xctLoadTrial($trial);
+}
+global proc xctPopUpdate()
+{
+	string $pop = "xcamTrialsWindow|xctCL1|xctRL1|xctTrialTFBG|button|xctPM";
+	popupMenu -e -dai $pop;
+	string $trials[] = `xctGetTrialList`;
+	for ($i = 1; $i < (size($trials)+1); $i++)
+		{menuItem -p $pop -l $trials[$i-1] -c ("xctPopSel(\""+$trials[$i-1]+"\")") ("xctMI"+$i);}
+}
+global proc xctAddTrCmd()
+{
+	// get the last trial name in the list
+	string $pop = "xcamTrialsWindow|xctCL1|xctRL1|xctTrialTFBG|button|xctPM";
+	string $trials[] = `xctGetTrialList`; string $tname; string $nmSpc;	
+
+	// generate next trial name
+	if(size($trials)==0)
+	{
+		$tname = `textFieldButtonGrp -q -text xctTrialTFBG`;
+		if(size($tname)==0){$tname = "Trial01";}
+		$nmSpc = `textFieldGrp -q -text xctNameSpaceTFG`;
+		if(size($nmSpc)==0){$nmSpc = "t01";}
+	}
+	else
+	{
+		$tname = $trials[size($trials)-1];
+		$nmSpc = `getAttr ($tname+".tnamespace")`;
+		$nmSpc = nextEndIntWithPadding($nmSpc, 2);
+		// Hide previous trial reference if it exists
+		$ref = `getAttr ($tname+".individual")`;
+		$refNode = `getAttr ($tname+".refNode")`;
+		if(size($refNode)>0){file -unloadReference $refNode;}
+	}
+	
+	// clear individ and filepath controls
+	textFieldButtonGrp -e -text "" xctIndivTFBG;
+	
+	string $fileNodes[] = `ls -type "file"`;
+	for($i = 1;$i<size($fileNodes)+1;$i++)
+		{textFieldButtonGrp -e -text "" ("xctTFBG"+$i);
+		setAttr -type "string" ($fileNodes[$i-1]+".fileTextureName") "";
+		setAttr ($fileNodes[$i-1]+".useFrameExtension") 0;}
+	
+	// create new node
+	string $tnode =`createNode "network" -n $tname`;
+	addAttr -ln "individual" -sn "ind" -dataType "string" $tnode;
+	addAttr -ln "refNode" -sn "rn" -dataType "string" $tnode;
+	addAttr -ln "tnamespace" -sn "tns" -dataType "string" $tnode;
+	setAttr -type "string" ($tnode+".tnamespace") $nmSpc;
+	addAttr -ln "imagepaths" -dataType "stringArray" $tnode;
+	int $numCams = size(`ls -type "file"`);
+	// seed imagepaths with blank strings.
+	string $cmd = ("setAttr "+$tnode+".imagepaths -type \"stringArray\" " + $numCams);
+		for ($i=0;$i<$numCams;$i++){$cmd += (" \"\"");}
+	eval($cmd);
+	
+	textFieldButtonGrp -e -text $tnode xctTrialTFBG;
+	textField -e -text $tnode xctstoreTnameTF;
+	$nmSpc = `textFieldGrp -e -text $nmSpc  xctNameSpaceTFG`;
+	
+	xctPopUpdate;
+}
+proc xctImPthArrSet(string $tnode, string $newPath, int $i)
+{
+		// current image paths
+		string $curips[] = `getAttr ($tnode+".imagepaths")`;
+		// update the node listing for image path
+		$curips[($i)] = $newPath;
+		// rebuild the whole image path array in order
+		int $numElements = size($curips);
+		string $cmd = ("setAttr "+$tnode+".imagepaths -type \"stringArray\" " + $numElements);
+		for ($c in $curips){$cmd += (" \"" + $c + "\"");}
+		eval($cmd);
+}
+proc xctUpdatePlayback(string $imagepath)
+{
+	// update frames
+	string $selimage = basenameEx($imagepath);
+	string $endint = `match "[0-9]+$" $selimage`;
+	if(size($endint)>0)
+	{
+		int $first = int($endint);
+		string $folder = dirname($imagepath);
+		string $images[] = `getFileList -folder $folder`; 
+		int $numImages = size($images);
+		int $last = $first+$numImages;		
+		playbackOptions -minTime $first -maxTime $last;
+	}
+}
+global proc xctLoadTrial(string $tnode)
+{
+	// Hide previous trial reference if it exists
+	if(`checkBox -q -v xctShowAllChk`)
+		{xctLoadAllRefs;}
+	else
+		{xctUpdateRefUnloading($tnode);}
+
+	string $individual = `getAttr ($tnode+".individual")`;
+	textFieldButtonGrp -e -text $individual xctIndivTFBG;
+	string $refNode = `getAttr ($tnode+".refNode")`;
+	if(size($refNode)>0){file -loadReference $refNode;}
+	string $ns = `getAttr ($tnode+".tnamespace")`;
+	textFieldGrp -e -text $ns xctNameSpaceTFG;
+
+	string $fileNodes[] = `ls -type "file"`;
+	string $imagePath[] = `getAttr ($tnode+".imagepaths")`;
+	for($i=0;$i<(size($fileNodes));$i++)
+	{	
+		textFieldButtonGrp -e -text $imagePath[$i] ("xctTFBG"+($i+1));
+		setAttr -type "string" ($fileNodes[$i]+".fileTextureName") $imagePath[$i];
+		xctImPthArrSet($tnode, $imagePath[$i],$i);
+		xctUpdatePlayback($imagePath[$i]);
+	}
+}
+global proc xctSavePrefs()
+{
+	string $str = `textFieldButtonGrp -q -text xctTrialTFBG`;
+	optionVar -cat "xcTrialsPrefs" -sv "lasttrial" $str;
+}
+
+global proc chngXimageCmd(int $i, string $fileNode)
+{
+    string $newPath[] = xrmFileDlg("image", 1, "Image files (*.jpg *.tiff *.tif *.avi)",1,"");
+	if (`filetest -s $newPath[0]`)
+	{
+		textFieldButtonGrp -e -text $newPath[0] ("xctTFBG"+($i));
+		setAttr -type "string" ($fileNode+".fileTextureName") $newPath[0];
+		setAttr ($fileNode+".useFrameExtension") `checkBox -q -value ("xctImSeqChk"+$i)`;
+		// checkbox doesn't update playback - so we'll set the expression for it
+		// but we only need to do it the first time
+		if(!`connectionInfo -isDestination ($fileNode+".frameExtension")`)
+			{expression -s ($fileNode+".frameExtension = frame") -n "expression1";}
+		string $tnode = `textFieldButtonGrp -q -text "xctTrialTFBG"`;
+		xctImPthArrSet($tnode, $newPath[0],($i-1));
+		// update frames
+		xctUpdatePlayback($newPath[0]);	
+	}
+}
+global proc manChngXimageCmd(int $i, string $fileNode)
+{
+    string $newPath = `textFieldButtonGrp -q -text ("xctTFBG"+$i)`;
+    if (`filetest -s $newPath`)
+	{
+		setAttr -type "string" ($fileNode+".fileTextureName")  $newPath;
+		setAttr ($fileNode+".useFrameExtension") `checkBox -q -value ("xctImSeqChk"+$i)`;
+		expression -s ($fileNode+".frameExtension = frame") -n "expression1";
+		string $tnode = `textFieldButtonGrp -q -text("xctTrialTFBG")`;
+		xctImPthArrSet($tnode, $newPath,($i-1));
+		xctUpdatePlayback($newPath);
+	}
+}
+global proc xctIndivTFBGcmd()
+{
+	string $pths[] = xrmFileDlg("Choose Individual", 1, "Maya Files (*.mb *.ma)",1,"");
+	if(`filetest -f $pths[0]`)
+	{
+		string $individual = $pths[0];
+		string $namespace = `textFieldGrp -q -text xctNameSpaceTFG`;
+		textFieldButtonGrp -e -text $individual xctIndivTFBG;
+		string $ref = `file -reference -namespace $namespace $pths[0]`;
+		string $refNode = `file -q -referenceNode ($ref)`;
+		string $tnode = `textFieldButtonGrp -q -text("xctTrialTFBG")`;
+		setAttr -type "string" ($tnode+".individual") $ref;
+		setAttr -type "string" ($tnode+".refNode") $refNode;
+	}
+}
+global proc xctChangeTrialName()
+{
+	string $tnode = `textFieldButtonGrp -q -text xctTrialTFBG`;
+	string $orignode =`textField -q -text xctstoreTnameTF`;
+	if($tnode != $orignode)
+	{
+		$tnode = `rename $orignode $tnode`;
+		xctUpdateTrial;
+	}
+}
+global proc xctNSChangeCmd()
+{
+	string $tnode = `textFieldButtonGrp -q -text xctTrialTFBG`;
+	string $oldns = `getAttr ($tnode+".tnamespace")`;
+	string $newns = `textFieldGrp -q -text xctNameSpaceTFG`;
+	setAttr -type "string" ($tnode+".tnamespace") $newns;
+	if(`namespace -ex $oldns`)
+		{namespace -rename $oldns $newns;}
+}
+global proc xctUpdateTrial()
+{
+	string $tnode = `textFieldButtonGrp -q -text xctTrialTFBG`;
+	
+	string $individual = `textFieldButtonGrp -q -text xctIndivTFBG`;
+	setAttr -type "string" ($tnode+".individual") $individual ;	
+	string $ns = `textFieldGrp -q -text xctNameSpaceTFG`;
+	setAttr -type "string" ($tnode+".tnamespace") $ns;
+	
+	string $fileNodes[] = `ls -type "file"`;
+	string $imagePath;
+	for($i=1;$i<(size($fileNodes)+1);$i++)
+	{
+		$imagePath=`textFieldButtonGrp -q -t ("xctTFBG"+$i)`;
+		xctImPthArrSet($tnode, $imagePath,($i-1));
+	}
+}	
+global proc xctDelTrCmd()
+{
+	// get the current trial node
+	string $tnode = `textFieldButtonGrp -q -text xctTrialTFBG`;
+	// remove ref if needed
+	string $ref = `getAttr ($tnode+".individual")`;	
+	if(size($ref)>0){file -removeReference $ref;}
+	
+	delete $tnode;
+	string $trials[] = `xctGetTrialList`;
+	textFieldButtonGrp -e -text $trials[0] xctTrialTFBG;
+	xctLoadTrial($trials[0]);
+	xctPopUpdate;
+}
+global proc xctShowAllCmd()
+{
+	if(`checkBox -q -v xctShowAllChk`)
+		{xctLoadAllRefs;}
+	else
+	{
+		string $tnode = `textFieldButtonGrp -q -text xctTrialTFBG`;
+		xctUpdateRefUnloading($tnode);
+	}
+}

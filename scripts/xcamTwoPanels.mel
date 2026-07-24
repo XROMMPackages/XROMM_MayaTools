@@ -1,0 +1,33 @@
+global proc xcamTwoPanels()
+{
+	//CrSeate 2 camera Xcam view	
+	TwoSideBySideViewArrangement;
+	switchPanes vertical2 0; 
+	
+	string $mpanels[];
+	string $visPanels[] = `getPanel -vis`; 
+	for($v in $visPanels)
+	{if(`getPanel -to $v` == "modelPanel")
+		{$mpanels[size($mpanels)]=$v;}
+	}
+	
+	if (size($mpanels) >= 2) 
+	{
+		string $camShapes[] = `ls -type "camera"`;
+		string $cams[] = `listRelatives -p $camShapes`;
+		string $xcams[];
+		for ($cam in $cams) 
+		{if (`attributeExists "xcam" $cam`){$xcams[size($xcams)] = $cam;}}
+		
+		if(size($xcams)>=2)
+		{modelPanel -edit -cam $xcams[0]  $mpanels[1];
+		modelPanel -edit -cam $xcams[1] $mpanels[0];}
+		else
+			{print "Missing Two Xcams in scene";}
+		
+		for($mp in $mpanels)
+		{modelEditor -edit -grid false $mp;
+		 modelEditor -edit -da "smoothShaded" -displayTextures true $mp;
+		}
+	}
+}

@@ -1,0 +1,14 @@
+global proc int polyCheckForHoles(string $obj)
+{
+    int $hasOpenBorder = 0;
+    if (size($obj) == 0){$objs = `ls -sl -o`; $obj = $objs[0];}
+    string $objEdges[] = `polyInfo -ef $obj`;
+    string $curEdge[];
+    
+    for ($o in $objEdges)
+    {
+        tokenize($o, $curEdge);
+        if (size($curEdge) == 3){$hasOpenBorder = 1;break;}
+    }
+    return $hasOpenBorder;  
+}
